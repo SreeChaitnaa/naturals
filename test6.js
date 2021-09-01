@@ -34,6 +34,9 @@ if($("div.modal-title")[0].innerText == "CheckList"){
   CheckListSubmit(this);
 }
 
-if($("#AppointMethod")[0].options.length == 3){
-    $("#AppointMethod")[0].options.remove(2)
+function NewAppointment(){
+    CreateAppoinment();
+    if($("#AppointMethod")[0].options.length == 3){
+        $("#AppointMethod")[0].options.remove(2)
+    }
 }
