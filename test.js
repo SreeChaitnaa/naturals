@@ -20,3 +20,5 @@ $.ajax(settings).done(function (response) {
 
 console.log("Test JS Loaded")
 add_product("Product100", 100)
+
+console.log("Test JS executed")
