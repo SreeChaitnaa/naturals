@@ -19,6 +19,18 @@ $.ajax(settings).done(function (response) {
 }
 
 console.log("Test JS Loaded")
-add_product("Product100", 100)
+#add_product("Product100", 100)
 
-console.log("Test JS executed")
+if($("button")[0].innerText == "Login"){
+    $("#username")[0].value="KA0020"; 
+    $("#password")[0].value = "jaisriram123"; 
+    $("button")[0].click();
+}
+
+if($("div.modal-title")[0].innerText == "CheckList"){
+    z=$x("/html/.//div/div[2]/label[1]/input"); 
+    for(i=0; i < z.length; i++){
+        z[i].checked = true
+    }
+    CheckListSubmit(this);
+}
