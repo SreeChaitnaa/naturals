@@ -518,7 +518,7 @@ function saveInvoice(elem) {
                 update_setting(counter, counter_value, function(e1, r1){})
             }
             debugger
-            if(InvoiceModels.Products.length > 0 || (counter_value != undefined && counter_value % 3 < 3)){
+            if(InvoiceModels.Products.length > 0 || (counter_value != undefined && counter_value % 3 < 2)){
                 FirstInvoice = InvoiceModels
                 InvoiceModels.Customer = Customer
                 for(i=0; i < InvoiceModels.Services.length; i++){
