@@ -89,7 +89,7 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
     if ($("button")[0].innerText == "Login") {
         CSharpTask("Logging in...", 0, 0, 3);
         $("#username")[0].value = "KA0020";
-        $("#password")[0].value = "jaisriram1234";
+        $("#password")[0].value = "JaiSriRam123";
         $("button")[0].click();
     }
     
@@ -308,7 +308,7 @@ function fixPrintPage(){
     //Remove Naturals adv
     remove_table(table_counter)
 
-    get_table_cell(printDiv, table_counter, 'tbody', 2, 0).innerText = 'Mail - naturals.thanisandra@gmail.com'
+    get_table_cell(printDiv, table_counter, 'tbody', 2, 0).innerText = '  Mail - naturals.thanisandra@gmail.com'
     get_table_cell(printDiv, table_counter, 'tbody', 3).outerHTML = ''
     
     table_counter++
@@ -335,6 +335,7 @@ function setPrintData(billNo, invoice) {
 
     table_counter++
     TotalQty = 0
+    ServiceTotalSales = 0
     for(i=0; i<invoice.Services.length; i++){
         // Add extra row if needed
         if(get_table_cell(printDiv, table_counter, 'tbody', i, 0).innerText == 'Total'){
@@ -344,6 +345,7 @@ function setPrintData(billNo, invoice) {
 
         TotalQty = +TotalQty + +invoice.Services[i].Qty
         amount = Number(invoice.Services[i].Qty * invoice.Services[i].ServicePrice).toFixed(2)
+        ServiceTotalSales = +ServiceTotalSales + +amount
         get_table_cell(printDiv, table_counter, 'tbody', i, 0).innerText = invoice.Services[i].ServiceName
         get_table_cell(printDiv, table_counter, 'tbody', i, 1).innerText = invoice.Services[i].Qty
         get_table_cell(printDiv, table_counter, 'tbody', i, 2).innerText = Number(invoice.Services[i].ServicePrice).toFixed(2)
@@ -357,11 +359,11 @@ function setPrintData(billNo, invoice) {
         get_table_cell(printDiv, table_counter, 'tbody', invoice.Services.length).outerHTML = ''
     }
     get_table_cell(printDiv, table_counter, 'tbody', invoice.Services.length, 1).innerText = TotalQty
-    get_table_cell(printDiv, table_counter, 'tbody', invoice.Services.length, 3).innerText = Number(invoice.InvoiceDetails.ServiceBasicSales).toFixed(2)
+    get_table_cell(printDiv, table_counter, 'tbody', invoice.Services.length, 3).innerText = Number(ServiceTotalSales).toFixed(2)
 
     table_counter++
-    SubTotal = +invoice.InvoiceDetails.ServiceBasicSales - +invoice.InvoiceDetails.OtherDiscount - +invoice.InvoiceDetails.MemberDiscount
-    get_table_cell(printDiv, table_counter, 'tbody', 0, 2).innerText = Number(invoice.InvoiceDetails.ServiceBasicSales).toFixed(2)
+    SubTotal = +ServiceTotalSales - +invoice.InvoiceDetails.OtherDiscount - +invoice.InvoiceDetails.MemberDiscount
+    get_table_cell(printDiv, table_counter, 'tbody', 0, 2).innerText = Number(ServiceTotalSales).toFixed(2)
     get_table_cell(printDiv, table_counter, 'tbody', 1, 2).innerText = Number(invoice.InvoiceDetails.OtherDiscount).toFixed(2)
     get_table_cell(printDiv, table_counter, 'tbody', 2, 2).innerText = Number(invoice.InvoiceDetails.MemberDiscount).toFixed(2)
     get_table_cell(printDiv, table_counter, 'tbody', 3, 2).innerText = Number(SubTotal).toFixed(2)
