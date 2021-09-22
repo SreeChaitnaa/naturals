@@ -16,6 +16,19 @@ function saveInvoice(elem) {
         }
     });
     
+    SCAProductList = undefined
+    $.ajax({
+        url: '/iNaturals/Invoice/SearchProduct',
+        type: "POST",
+        dataType: "json",
+        async: false,
+        data: { Name: "" },
+        success: function (data) {
+            //ProductList.length = 0;
+            SCAProductList = data;
+        }
+    })
+    
     var invoiceModel = new Object();
     var invoiceServiceArray = [];
     var invoiceProductArray = [];
@@ -512,8 +525,13 @@ function saveInvoice(elem) {
                     InvoiceModels.Services[i].ServiceName = ServiceList.filter(function(x){ return x.value == InvoiceModels.Services[i].ServiceID; })[0].ServiceName
                     InvoiceModels.Services[i].EmployeeName = EmployeeList.filter(function(x){ return x.value == InvoiceModels.Services[i].EmployeeID; })[0].EMPName
                 }
+                if(InvoiceModels.Products.length > 0){
+                    while(SCAProductList == undefined){
+                        console.log("Waiting for Prod List")
+                    }
+                }
                 for(i=0; i < InvoiceModels.Products.length; i++){
-                    InvoiceModels.Products[i].ProductName = ProductList.filter(function(x){ return x.value == InvoiceModels.Products[i].ProductID; })[0].ProductName
+                    InvoiceModels.Products[i].ProductName = SCAProductList.filter(function(x){ return x.value == InvoiceModels.Products[i].ProductID; })[0].ProductName
                     InvoiceModels.Products[i].EmployeeName = EmployeeList.filter(function(x){ return x.value == InvoiceModels.Products[i].EmployeeID; })[0].EMPName
                 }
 
