@@ -308,7 +308,7 @@ function fixPrintPage(){
     //Remove Naturals adv
     remove_table(table_counter)
 
-    get_table_cell(printDiv, table_counter, 'tbody', 2, 0).innerText = '  Mail - naturals.thanisandra@gmail.com'
+    get_table_cell(printDiv, table_counter, 'tbody', 2, 0).innerText = 'Mail - naturals.thanisandra@gmail.com'
     get_table_cell(printDiv, table_counter, 'tbody', 3).outerHTML = ''
     
     table_counter++
