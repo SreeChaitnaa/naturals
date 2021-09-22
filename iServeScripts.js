@@ -514,7 +514,7 @@ function saveInvoice(elem) {
         window.open("https://api.whatsapp.com/send/?phone=91" + Customer.MobileNo + "&text=" + SalesMessage, "_blank")
         get_setting(counter, function(err, counter_value){
             counter_value++
-            if(err!= null){
+            if(err == null){
                 update_setting(counter, counter_value, function(e1, r1){})
             }
             debugger
