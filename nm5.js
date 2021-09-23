@@ -470,7 +470,7 @@ function day_close(){
         }
         
         tbl = $('#exportTable')[0]
-        total += +get_table_cell(tbl, 0, 'tbody', today_date.getDate(), 19).innerText
+        total += Math.round(+get_table_cell(tbl, 0, 'tbody', today_date.getDate(), 19).innerText)
         services_total += +get_table_cell(tbl, 0, 'tbody', today_date.getDate()-1, 13).innerText
         services_count += +get_table_cell(tbl, 0, 'tbody', today_date.getDate()-1, 4).innerText
         products_total += +get_table_cell(tbl, 0, 'tbody', today_date.getDate()-1, 16).innerText
