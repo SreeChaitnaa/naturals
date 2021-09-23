@@ -27,6 +27,10 @@ print_url = "https://iservenaturals.in/iNaturals/Invoice/PrintBilling?invoiceID=
 allowd_urls = ["https://iservenaturals.in"]
 restdb_key = "612f97f843cedb6d1f97eba5"
 
+ReportOps = {
+    DayWiseSales: 2
+    }
+
 AppointmentMessage = "Thanks for contacting Naturals Thanisandra!%0a%0a*Appointment Details:*%0a" +
                      "Name: {CustomerName}%0a" +
                      "Date %26 Time: {DateTime}%0a" +
@@ -438,3 +442,51 @@ function setPrintData(billNo, invoice) {
     fixPrintPage()
 
 }
+
+function day_close(){
+    today_date = new Date()
+    $("#invfrom")[0].value = today_date.dateFormat('01/m/Y')
+    $("#invTo")[0].value = today_date.dateFormat('d/m/Y')
+    $('#ReportOption')[0].selectedIndex = ReportOps.DayWiseSales
+    Openresport();
+    get_invoice_by_date(today_date.dateFormat('Ym01'), today_date.dateFormat('Ymd'), function(err, res){
+        total = 0
+        services_total = 0
+        services_count = 0
+        products_total = 0
+        products_count = 0
+        client_count = 0
+        
+        for(i=0; i < res.length; i++){
+            inv = JSON.parse(res[i].invoice_json)
+            total += inv.InvoiceDetails.ServiceBasicSales + inv.InvoiceDetails.ProductBasicSales
+            if(res[i].date_number == today_date.dateFormat('Ymd')){
+                services_total += inv.InvoiceDetails.ServiceBasicSales
+                services_count += inv.Services.length
+                products_total += inv.InvoiceDetails.ProductBasicSales
+                products_count += inv.Products.length
+                client_count++
+            }
+        }
+        
+        tbl = $('#exportTable')[0]
+        total += +get_table_cell(tbl, 0, 'tbody', today_date.getDate(), 19).innerText
+        services_total += +get_table_cell(tbl, 0, 'tbody', today_date.getDate()-1, 13).innerText
+        services_count += +get_table_cell(tbl, 0, 'tbody', today_date.getDate()-1, 4).innerText
+        products_total += +get_table_cell(tbl, 0, 'tbody', today_date.getDate()-1, 16).innerText
+        products_count += +get_table_cell(tbl, 0, 'tbody', today_date.getDate()-1, 5).innerText
+        //client_count += +get_table_cell(tbl, 0, 'tbody', today_date.getDate()-1, 19).innerText
+        
+        day_close_message = "Date : *" + today_date.dateFormat('d-m-Y') +"*%0a" + 
+                            //"No of Clients : " + client_count + "%0a" + 
+                            "No of Services : " + services_count + "%0a" + 
+                            "Service Sales : " + services_total + "%0a" + 
+                            "No of Products : " + products_count + "%0a" + 
+                            "Product Sales : " + products_total + "%0a" + 
+                            "Today Total Sales : *" + (products_total+services_total) + "*%0a" + 
+                            "Month Total Sales : *" + total + "*%0a%0aClosing Now, Good Night!!!"
+        console.log(day_close_message)
+        window.open("https://api.whatsapp.com/send/?text="+day_close_message, "_blank")
+    })
+}
+    
