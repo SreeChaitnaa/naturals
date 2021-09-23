@@ -67,6 +67,19 @@ function get_invoice(invoice_id, callback){
     })
 }
 
+function get_invoice_by_date(max_date, min_date, callback){
+    initiate_db()
+    db.invoices.find({'date_number':{"$bt": [max_date, min_date]}},[],function(err, res){
+        if(err != null){
+            callback(err, null);
+        }
+        else{
+            console.log(res)
+            callback(null, res)
+        }
+    })
+}
+
 function get_setting(key, callback){
     initiate_db()
     db.settings.find({'key':key},[],function(err, res){
