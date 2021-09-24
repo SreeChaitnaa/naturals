@@ -109,9 +109,6 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
                     setPrintData(invoice_id, JSON.parse(invoice.invoice_json))
                 })
             }
-            else{
-                fixPrintPage()
-            }
             $('#btnSendMail')[0].style.display = 'none'
             $('#btnsms')[0].style.display = 'none'
         }
@@ -439,7 +436,8 @@ function setPrintData(billNo, invoice) {
     get_table_cell(printDiv, table_counter, 'tbody', 0, 1).innerText = Number(invoice.CommonTax[0].CGSTAmount).toFixed(2)
     get_table_cell(printDiv, table_counter, 'tbody', 1, 1).innerText = Number(invoice.CommonTax[0].SGSTAmount).toFixed(2)
 
-    fixPrintPage()
+    //fixPrintPage()
+    
 
 }
 
