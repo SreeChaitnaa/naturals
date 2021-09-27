@@ -557,7 +557,7 @@ setTimeout(function() {
             }
         })
     }
-}, 1000)
+}, 5000)
 
 
 //Inner methods for overwrites
