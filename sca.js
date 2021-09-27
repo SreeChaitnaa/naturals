@@ -548,6 +548,17 @@ function dateFromString(datestr){
     }
 }
 
+setTimeout(function() { 
+    if($('#navbar-collapse')[0] != undefined){
+        initiate_db()
+        get_invoice("921", function(err, res){
+            if(err == null){
+                xpath('//*[@id="navbar-collapse"]/div/table/tbody/tr/td[1]').innerText = " THANSANDRA"
+            }
+        })
+    }
+}, 1000)
+
 
 //Inner methods for overwrites
 SCAInvoice = "";
