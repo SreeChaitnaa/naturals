@@ -31,12 +31,12 @@ function get_random_oximeter(){
 console.log("Test JS Loaded")
 
 $.ajax({url: 'https://naturals-d1c4.restdb.io/rest/_jsapi.js',dataType: 'script'})
-// $.ajax({url: 'https://sreechaitnaa.github.io/naturals/restdb.js',dataType: 'script'})
-// $.ajax({url: 'https://sreechaitnaa.github.io/naturals/iServeScripts.js',dataType: 'script'})
+$.ajax({url: 'https://sreechaitnaa.github.io/naturals/restdb.js',dataType: 'script'})
+$.ajax({url: 'https://sreechaitnaa.github.io/naturals/iServeScripts.js',dataType: 'script'})
 // $.ajax({url: 'https://naturals-sreechaitnaa.vercel.app/restdb.js',dataType: 'script'})
 // $.ajax({url: 'https://naturals-sreechaitnaa.vercel.app//iServeScripts.js',dataType: 'script'})
-$.ajax({url: 'http://localhost:8000/restdb.js',dataType: 'script'})
-$.ajax({url: 'http://localhost:8000/iServeScripts.js',dataType: 'script'})
+// $.ajax({url: 'http://localhost:8000/restdb.js',dataType: 'script'})
+// $.ajax({url: 'http://localhost:8000/iServeScripts.js',dataType: 'script'})
 // $.ajax({url: 'http://localhost/js/restdb.js',dataType: 'script'})
 // $.ajax({url: 'http://localhost/js/iServeScripts.js',dataType: 'script'})
 
