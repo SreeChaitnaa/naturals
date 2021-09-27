@@ -553,7 +553,7 @@ setTimeout(function() {
         initiate_db()
         get_invoice("921", function(err, res){
             if(err == null){
-                xpath('//*[@id="navbar-collapse"]/div/table/tbody/tr/td[1]').innerText = " THANSANDRA"
+                xpath('//*[@id="navbar-collapse"]/div/table/tbody/tr/td[1]').innerHTML = xpath('//*[@id="navbar-collapse"]/div/table/tbody/tr/td[1]').innerHTML.replace('I','')
             }
         })
     }
