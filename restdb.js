@@ -96,7 +96,7 @@ function get_setting(key, callback){
 function update_setting(key, value, callback){
     initiate_db()
     db.settings.find({'key':key},[],function(err, res){
-        if(err != null){
+        if(err != null && callback){
             callback(err, null);
         }
         else{
