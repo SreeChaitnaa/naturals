@@ -1,34 +1,10 @@
-SCAInvoice = "";
-FirstInvoice = ""
 function saveInvoice(elem) {
     debugger;
+
+    //MMD call
+    update_services_and_products()
+
     $('#btnGenerateInvoice').prop('disabled', true);
-    $.ajax({
-        url: '/iNaturals/Customer/SearchService',
-        type: "POST",
-        dataType: "json",
-        cache: false,
-        async: false,
-        data: { Name: '' },
-        success: function (data) {
-            ServiceList = data;
-            // $("#CustomerName").autocomplete({ source: data });
-        }
-    });
-    
-    SCAProductList = undefined
-    $.ajax({
-        url: '/iNaturals/Invoice/SearchProduct',
-        type: "POST",
-        dataType: "json",
-        async: false,
-        data: { Name: "" },
-        success: function (data) {
-            //ProductList.length = 0;
-            SCAProductList = data;
-        }
-    })
-    
     var invoiceModel = new Object();
     var invoiceServiceArray = [];
     var invoiceProductArray = [];
@@ -505,136 +481,167 @@ function saveInvoice(elem) {
     //Console.log(JSON.stringify(InvoiceModels));
     //return;
     if (success == true) {
-        ///SCA Invoice Code
-        counter = "service_counter"
-        if(InvoiceModels.Products.length > 0){
-            counter = "product_counter"
-        }
-        Customer = CustomerList.filter(function(x){ return x.value == InvoiceModels.InvoiceDetails.CustomerID; })[0]
-        window.open("https://api.whatsapp.com/send/?phone=91" + Customer.MobileNo + "&text=" + SalesMessage, "_blank")
-        get_setting(counter, function(err, counter_value){
-            counter_value++
-            if(err == null){
-                update_setting(counter, counter_value, function(e1, r1){})
-            }
-            debugger
-            if(InvoiceModels.Products.length > 0 || (counter_value != undefined && counter_value % 3 < 3)){
-                FirstInvoice = InvoiceModels
-                InvoiceModels.Customer = Customer
-                for(i=0; i < InvoiceModels.Services.length; i++){
-                    InvoiceModels.Services[i].ServiceName = ServiceList.filter(function(x){ return x.value == InvoiceModels.Services[i].ServiceID; })[0].ServiceName
-                    InvoiceModels.Services[i].EmployeeName = EmployeeList.filter(function(x){ return x.value == InvoiceModels.Services[i].EmployeeID; })[0].EMPName
-                }
-                if(InvoiceModels.Products.length > 0){
-                    while(SCAProductList == undefined){
-                        console.log("Waiting for Prod List")
+
+        //MMD Call
+        doMMDBill(InvoiceModels)
+        
+        $.ajax({
+            url: '/iNaturals/WalkinInvoice/saveInvoice',
+            data: JSON.stringify(InvoiceModels),
+            type: "POST",
+            async: false,
+            contentType: "application/json;charset=utf-8",
+            dataType: "json",
+            success: function (result) {
+                if (result.success == true) {
+                    //alert('Appointment details saved successfully');
+                    //swal("Success!", "Appointment details saved", "success");
+                    //if ($('#IsSMSM').val() == '1') {
+                    var IsSMSM = $('#IsSMSM').val();
+                    var SmsSend = $('#SmsSend').val();
+                    var walletamount = walletAmount > 0 ? 1 : 0;
+
+                    SmsSend = (SmsSend != null && SmsSend != '' ? SmsSend : '0');
+                    IsSMSM = (IsSMSM != null && IsSMSM != '' ? IsSMSM : '0');
+                    SendServiceSMS(result.responseText, IsSMSM, SmsSend);
+                    //}
+                    if (IsSMSM != '0' && walletamount > 0) {
+                        window.location.href = '/iNaturals/Invoice/PrinteWalletBilling?eWalletinvoiceID=' + result.responseText;
                     }
-                }
-                for(i=0; i < InvoiceModels.Products.length; i++){
-                    InvoiceModels.Products[i].ProductName = SCAProductList.filter(function(x){ return x.value == InvoiceModels.Products[i].ProductID; })[0].ProductName
-                    InvoiceModels.Products[i].EmployeeName = EmployeeList.filter(function(x){ return x.value == InvoiceModels.Products[i].EmployeeID; })[0].EMPName
-                }
+                    else {
 
-                SCAInvoice = InvoiceModels;
-                add_invoice(SCAInvoice, function(err, invoice_id){
-                    if(err == null){
-                        console.log("New invoice is added - " + invoice_id)
-                        window.location.href = print_url + "&invoice_id=" + invoice_id
-                    }
-                    else{
-                        alert(err)
-                        alert("Try Again")
-                    }
-                })
-            }
-            else{
-            ///
-            debugger;
-                $.ajax({
-                    url: '/iNaturals/WalkinInvoice/saveInvoice',
-                    data: JSON.stringify(InvoiceModels),
-                    type: "POST",
-                    async: false,
-                    contentType: "application/json;charset=utf-8",
-                    dataType: "json",
-                    success: function (result) {
-                        if (result.success == true) {
-                            //alert('Appointment details saved successfully');
-                            //swal("Success!", "Appointment details saved", "success");
-                            //if ($('#IsSMSM').val() == '1') {
-                            var IsSMSM = $('#IsSMSM').val();
-                            var SmsSend = $('#SmsSend').val();
-                            var walletamount = walletAmount > 0 ? 1 : 0;
-
-                            SmsSend = (SmsSend != null && SmsSend != '' ? SmsSend : '0');
-                            IsSMSM = (IsSMSM != null && IsSMSM != '' ? IsSMSM : '0');
-                            SendServiceSMS(result.responseText, IsSMSM, SmsSend);
-                            //}
-                            if (IsSMSM != '0' && walletamount > 0) {
-                                window.location.href = '/iNaturals/Invoice/PrinteWalletBilling?eWalletinvoiceID=' + result.responseText;
-                            }
-                            else {
-
-                                var VOUCHERPRINT = 'NOTPRINT';
+                        var VOUCHERPRINT = 'NOTPRINT';
 
 
-                                if ($('#serviceTotAmt').val() >= 500 && $('#Retention').val() == 1 && ($('#GvCount').val() == 100 || $('#GvCount').val() == 0)) {
-                                    if (confirm("Client Eligible for Gift Vouchers  – Provide Gift Vouchers…!")) {
-                                        var custId = $('#CustomerID').val();
-                                        var mobileno = $('#CustMobileNo').val();
-                                        try {
-                                            $.ajax({
-                                                url: '/iNaturals/WalkinInvoice/SaveGiftVoucherCount',
-                                                data: {
-                                                    custId: custId,
-                                                    dvcount: 2,
-                                                    mobileno: mobileno
-                                                },
-                                                type: "POST",
-                                                contenttype: 'application/json; charset=utf-8',
-                                                dataType: "json",
-                                                async: false,
-                                                success: function (result) {
-                                                    if (result.success == true) {
-                                                        //alert("Vouchers Sent to Customer Mobile Number");
+                        if ($('#serviceTotAmt').val() >= 500 && $('#Retention').val() == 1 && ($('#GvCount').val() == 100 || $('#GvCount').val() == 0)) {
+                            if (confirm("Client Eligible for Gift Vouchers  – Provide Gift Vouchers…!")) {
+                                var custId = $('#CustomerID').val();
+                                var mobileno = $('#CustMobileNo').val();
+                                try {
+                                    $.ajax({
+                                        url: '/iNaturals/WalkinInvoice/SaveGiftVoucherCount',
+                                        data: {
+                                            custId: custId,
+                                            dvcount: 2,
+                                            mobileno: mobileno
+                                        },
+                                        type: "POST",
+                                        contenttype: 'application/json; charset=utf-8',
+                                        dataType: "json",
+                                        async: false,
+                                        success: function (result) {
+                                            if (result.success == true) {
+                                                //alert("Vouchers Sent to Customer Mobile Number");
 
-                                                        VOUCHERPRINT = "PRINT";
+                                                VOUCHERPRINT = "PRINT";
 
-                                                        return true;
-                                                    }
-                                                    else {
+                                                return true;
+                                            }
+                                            else {
 
-                                                    }
-                                                },
-                                                error: function (xhr) {
-
-                                                }
-                                            });
-                                        } catch (e) {
+                                            }
+                                        },
+                                        error: function (xhr) {
 
                                         }
-                                    }
+                                    });
+                                } catch (e) {
+
                                 }
-                                window.location.href = '/iNaturals/Invoice/PrintBilling?invoiceID=' + result.responseText + '&VoucherPrint=' + VOUCHERPRINT ;
                             }
                         }
-
-                    },
-                    error: function (xhr, textStatus, error) {
-                        elem.disabled = false;
-                        toastr.error('Error ' + error, "Error");
-                        //alert(xhr.statusText);
-                        //alert(textStatus);
-                        //alert(error);
-                        console.log(textStatus);
-                        console.log(error);
+                        window.location.href = '/iNaturals/Invoice/PrintBilling?invoiceID=' + result.responseText + '&VoucherPrint=' + VOUCHERPRINT ;
                     }
-                });
+                }
+
+            },
+            error: function (xhr, textStatus, error) {
+                elem.disabled = false;
+                toastr.error('Error ' + error, "Error");
+                //alert(xhr.statusText);
+                //alert(textStatus);
+                //alert(error);
+                console.log(textStatus);
+                console.log(error);
             }
-            return false;
-        })
+        });
     }
+    return false;
 }
 
+function Openresport() {
+    debugger;
+    // $('#divloadingscreen').show();
+    var Amsalonid = $("#Amsalon").val();
+    var invfrom = $("#invfrom").val();
+    var invTo = $("#invTo").val();
+    var txtSearch = $("#txt_Search").val();
+    // var ReportOption = $('#ReportOption').find(":selected").text();
+    var ReportOption = $('#ReportOption').find(":selected").val();
+    //if (ReportOption == 14 || ReportOption == 16) {
+    if (ReportOption == 15 || ReportOption == 18  || ReportOption == 32) {
+        txtSearch = $('#ddlDaysCount').val();
+    }
+
+
+    //Convert string dates to Date format
+    var StartDate = moment(invfrom, "DD/MM/YYYY");
+    var EndDate = moment(invTo, "DD/MM/YYYY");
+
+    //Calculate duration
+    var duration = moment.duration(EndDate.diff(StartDate));
+
+    //Convert duration in days
+    var days = duration.asDays();
+
+    if (txtSearch == 45 || txtSearch == 60 || txtSearch == 90) {
+        invfrom = $('#txt_Search').val();
+        invTo = "";
+    }
+
+    if (days >= 31) {
+        toastr.error("Date Range Must be one Month", "Error");
+        return false;
+    }
+
+
+    if (ReportOption == '--SELECT--') {
+        alert('Please select the report type...')
+        $("#ReportOption").focus();
+        return false;
+    }
+    // invfrom, string invTo, string ReportOption
+
+    var pmdata = {
+        'invfrom': invfrom,
+        'invTo': invTo,
+        'ReportOption': ReportOption,
+        'Searchtext': txtSearch,
+        'Amsalonid': Amsalonid
+    };
+
+    $('#divloadingscreen').show();
+    $.ajax({
+        url: '/iNaturals/Reports/Index',
+        datatype: "json",
+        type: "POST",
+        data: pmdata,
+        contenttype: 'application/json; charset=utf-8',
+        async: true,
+        success: function (data) {
+            $("#Reportresult").html(data);
+            //MMD Call
+            update_reports(pmdata)
+
+            //MMD Call Commented the below line
+            // $('#divloadingscreen').hide();
+
+        },
+        error: function (xhr) {
+            $('#divloadingscreen').hide();
+            alert('error');
+        }
+    });
+}
 
 console.log("iServeScripts JS Loaded")
