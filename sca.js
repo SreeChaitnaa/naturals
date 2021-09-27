@@ -285,13 +285,19 @@ function SaveAppointmentDetailsSCA(isClose) {
     msg = msg.replace("{DateTime}", AppointmentList[0].AppTime)
     msg = msg.replace("{ServiceName}", ServiceList.filter(function (x) { return x.value == AppointmentList[0].ServiceId; })[0].ServiceName)
 
-    if (isClose == 1)
+    if (isClose == 1){
         ClosemyModalCreateAppointment();
+    }
+    send_whatsapp(Customer.MobileNo, msg)
+}
 
-    window.open("https://api.whatsapp.com/send/?phone=91" + Customer.MobileNo + "&text=" + msg, "_blank")
-    // window.location.href = "https://api.whatsapp.com/send/?phone=91" + Customer.MobileNo + "&text=" + msg;
-    // CSharpTask("Send Message in WhatsApp...", 0, 1, 5);
-    //return true;
+function send_whatsapp(mobile, wa_message){
+    phone_str = ""
+    if(mobile != ""){
+        phone_str = "phone=91" + mobile + "&"
+    }
+    w = window.open("https://api.whatsapp.com/send/?" + phone_str + "text=" + wa_message, '_blank')
+    setTimeout(function(){w.close()}, 5000)
 }
 
 function get_table_cell(parent_obj, table_index, loc, row_index, col_index){
@@ -532,7 +538,7 @@ function day_close(){
                             "Today Total Sales : *" + (products_total+services_total) + "*%0a" + 
                             "Month Total Sales : *" + total + "*%0a%0aClosing Now, Good Night!!!"
         console.log(day_close_message)
-        window.open("https://api.whatsapp.com/send/?text="+day_close_message, "_blank")
+        send_whatsapp("", day_close_message)
     })
 }
 
@@ -598,7 +604,7 @@ function doMMDBill(InvoiceModels){
     StopMessage = "Dont Continue"
     try{
         Customer = CustomerList.filter(function (x) { return x.value == InvoiceModels.InvoiceDetails.CustomerID; })[0]
-        window.open("https://api.whatsapp.com/send/?phone=91" + Customer.MobileNo + "&text=" + SalesMessage, "_blank")
+        send_whatsapp(Customer.MobileNo, SalesMessage)
 
         numerator = 3
         denominator = 3
