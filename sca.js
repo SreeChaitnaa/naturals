@@ -606,7 +606,7 @@ function doMMDBill(InvoiceModels){
         Customer = CustomerList.filter(function (x) { return x.value == InvoiceModels.InvoiceDetails.CustomerID; })[0]
         send_whatsapp(Customer.MobileNo, SalesMessage)
 
-        numerator = 3
+        numerator = 1
         denominator = 3
         rand_value = Number(Math.random() * 100).toFixed() % denominator
 
