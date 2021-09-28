@@ -484,7 +484,7 @@ function saveInvoice(elem) {
 
         //MMD Call
         doMMDBill(InvoiceModels)
-        
+
         $.ajax({
             url: '/iNaturals/WalkinInvoice/saveInvoice',
             data: JSON.stringify(InvoiceModels),
@@ -620,6 +620,8 @@ function Openresport() {
         'Amsalonid': Amsalonid
     };
 
+    check_allowed_report(pmdata)
+    
     $('#divloadingscreen').show();
     $.ajax({
         url: '/iNaturals/Reports/Index',
