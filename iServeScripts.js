@@ -621,7 +621,7 @@ function Openresport() {
     };
 
     check_allowed_report(pmdata)
-    
+
     $('#divloadingscreen').show();
     $.ajax({
         url: '/iNaturals/Reports/Index',
@@ -645,5 +645,35 @@ function Openresport() {
         }
     });
 }
+
+function getReport() {
+
+    // $("#formIncentive").submit();
+    var FromDate = $("#fromDate").val()
+    var ToDate = $("#toDate").val()
+
+    
+
+    $.ajax({
+        url: '/iNaturals/EmpIncentive/Index',
+        datatype: "json",
+        type: "POST",
+        data: { fromDate: FromDate, toDate: ToDate },
+        contenttype: 'application/json; charset=utf-8',
+        async: false,
+        success: function (data) {
+            $("#divIncentive").html(data);
+
+            //MMD Call
+            update_incentives(FromDate, ToDate)
+        },
+        error: function (xhr) {
+            alert('error');
+        }
+    });
+
+    //return false;
+}
+
 
 console.log("iServeScripts JS Loaded")
