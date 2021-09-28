@@ -86,7 +86,10 @@ if (!valid_url) {
 
 url_params = new URLSearchParams(window.location.search)
 
-function disable_click() { return false }
+function disable_click() { 
+    toastr.error("This feature not allowed for this User", "Error");
+    return false 
+}
 
 if (window.location.href.startsWith("https://iservenaturals.in")) {
 
@@ -106,6 +109,10 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
                 xpath('//*[@id="stacked-menu"]/li[2]/ul/li[2]/a').href = ''
                 xpath('//*[@id="stacked-menu"]/li[2]/ul/li[2]/a').onclick = disable_click
                 xpath('//*[@id="stacked-menu"]/li[3]/a').onclick = NewAppointment
+                xpath('//*[@id="stacked-menu"]/li[5]/ul/li[3]/a').href = ''
+                xpath('//*[@id="stacked-menu"]/li[5]/ul/li[3]/a').onclick = disable_click
+                xpath('//*[@id="stacked-menu"]/li[5]/ul/li[4]/a').href = ''
+                xpath('//*[@id="stacked-menu"]/li[5]/ul/li[4]/a').onclick = disable_click
                 xpath('//*[@id="stacked-menu"]/li[7]/a').href = ''
                 xpath('//*[@id="stacked-menu"]/li[7]/a').onclick = disable_click
                 xpath('//*[@id="stacked-menu"]/li[8]/a').href = ''
@@ -691,6 +698,16 @@ function get_row_structure(reportOp){
             row_struct += '<td onclick="return OpenBillPrint(&quot;8252623&quot;);" style="cursor: pointer;align-items:center;"><i class="fa fa-print fa-2x" aria-hidden="true"></i></td>'
     }
     return row_struct + "</tr>"
+}
+
+function check_allowed_report(pmdata){
+    if(['39'].indexOf(pmdata.ReportOption) > -1){
+        console.log("Allowed Report")
+    }
+    else{
+        toastr.error("This report is not available for current user", "Error")
+        throw "Not allowed report"
+    }
 }
 
 function update_reports(pmdata){
