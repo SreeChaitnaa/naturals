@@ -49,7 +49,8 @@ restdb_key = "612f97f843cedb6d1f97eba5"
 
 ReportOps = {
     DayWiseSales: '3',
-    Invoices: '39'
+    Invoices: '39',
+    SmileProviderSales: '38'
     }
 
 AppointmentMessage = "Thanks for contacting Naturals Thanisandra!%0a%0a*Appointment Details:*%0a" +
@@ -925,6 +926,56 @@ function update_reports(pmdata){
                         get_table_cell(tbl, 0, 'tbody', i, 0).innerText = i+1
                     }
                     break
+                case ReportOps.SmileProviderSales:
+                    rows = get_table_cell(tbl, 0, 'tbody').getElementsByTagName('tr')
+                    for(var i in invoices){
+                        invoice = JSON.parse(invoices[i].invoice_json)
+                        sps = []
+                        for(var si in invoice.Services){
+                            for(var ri=0; ri< rows.length-1; ri++){
+                                if(get_table_cell(tbl, 0, 'tbody', ri, 1).innerText.toLowerCase() == invoice.Services[si].EmployeeName.toLowerCase()){
+                                    if(!sps.includes(invoice.Services[si].EmployeeName)){
+                                        sps.push(invoice.Services[si].EmployeeName)
+                                        increase_table_cell_number(tbl, ri, 4, 1, 0)
+                                    }
+                                    increase_table_cell_number(tbl, ri, 5, 1, 0)
+                                    increase_table_cell_number(tbl, ri, 6, invoice.Services[si].NetPrice)
+                                    increase_table_cell_number(tbl, ri, 8, invoice.Services[si].DiscountAmount)
+
+                                    increase_table_cell_number(tbl, ri, 14, invoice.Services[si].NetPrice + invoice.Services[si].DiscountAmount, 2, true)
+                                    increase_table_cell_number(tbl, ri, 15, invoice.Services[si].NetPrice, 2, true)
+                                    break
+                                }
+                            }
+                        }
+                        for(var pi in invoice.Products){
+                            for(var ri=0; ri< rows.length-1; ri++){
+                                if(get_table_cell(tbl, 0, 'tbody', ri, 1).innerText.toLowerCase() == invoice.Products[pi].EmployeeName.toLowerCase()){
+                                    if(!sps.includes(invoice.Products[pi].EmployeeName)){
+                                        sps.push(invoice.Products[pi].EmployeeName)
+                                        increase_table_cell_number(tbl, ri, 4, 1, 0)
+                                    }
+
+                                    increase_table_cell_number(tbl, ri, 12, 1, 0)
+                                    increase_table_cell_number(tbl, ri, 13, invoice.Products[pi].NetPrice)
+
+                                    increase_table_cell_number(tbl, ri, 14, invoice.Products[pi].NetPrice, 2, true)
+                                    increase_table_cell_number(tbl, ri, 15, invoice.Products[pi].NetPrice, 2, true)
+                                    break
+                                }
+                            }
+                        }
+                    }
+                    for(var ri=0; ri< rows.length-1; ri++){
+                        console.log(tbl)
+                        console.log(ri)
+                        sold = Number(get_table_cell(tbl, 0, 'tbody', ri, 6).innerText)
+                        if(sold > 0){
+                            clientCount = Number(get_table_cell(tbl, 0, 'tbody', ri, 4).innerText)
+                            set_table_cell_number(tbl, ri, 7, sold/clientCount, 0)
+                        }
+                    }
+                    break
             }
         }
         $('#divloadingscreen').hide();
@@ -940,7 +991,7 @@ function update_incentives(fromDate, toDate){
         for(var i in invoices){
             invoice = JSON.parse(invoices[i].invoice_json)
             for(var si in invoice.Services){
-                for(var ri in rows){
+                for(var ri=0; ri< rows.length; ri++){
                     if(get_table_cell(tbl, 0, 'tbody', ri, 3).innerText.toLowerCase() == invoice.Services[si].EmployeeName.toLowerCase()){
                         increase_table_cell_number(tbl, ri, 6, 1, 0, true)
                         increase_table_cell_number(tbl, ri, 7, invoice.Services[si].NetPrice, 2, true)
