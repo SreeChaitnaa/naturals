@@ -48,7 +48,7 @@ allowd_urls = ["https://iservenaturals.in"]
 restdb_key = "612f97f843cedb6d1f97eba5"
 
 ReportOps = {
-    DayWiseSales: '2',
+    DayWiseSales: '3',
     Invoices: '39'
     }
 
@@ -113,8 +113,8 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
                 xpath('//*[@id="stacked-menu"]/li[5]/ul/li[3]/a').onclick = disable_click
                 xpath('//*[@id="stacked-menu"]/li[5]/ul/li[4]/a').href = ''
                 xpath('//*[@id="stacked-menu"]/li[5]/ul/li[4]/a').onclick = disable_click
-                xpath('//*[@id="stacked-menu"]/li[7]/a').href = ''
-                xpath('//*[@id="stacked-menu"]/li[7]/a').onclick = disable_click
+                // xpath('//*[@id="stacked-menu"]/li[7]/a').href = ''
+                // xpath('//*[@id="stacked-menu"]/li[7]/a').onclick = disable_click
                 xpath('//*[@id="stacked-menu"]/li[8]/a').href = ''
                 xpath('//*[@id="stacked-menu"]/li[8]/a').onclick = disable_click
                 xpath('//*[@id="stacked-menu"]/li[9]/a').href = ''
@@ -608,11 +608,25 @@ function update_services_and_products(){
 }
 
 function doMMDBill(InvoiceModels){
+    debugger
     StopMessage = "Dont Continue"
     try{
         Customer = CustomerList.filter(function (x) { return x.value == InvoiceModels.InvoiceDetails.CustomerID; })[0]
         send_whatsapp(Customer.MobileNo, SalesMessage)
-
+        if(Customer.Membership.indexOf("Non") > -1 || Number(InvoiceModels.InvoiceDetails.MemberDiscount) > 0){
+            return
+        }
+        NewMember = false
+        for(i in InvoiceModels.Products){
+            if(Number(InvoiceModels.Products[i].hdnIsMembershipSales) > 0){
+                NewMember = true
+                break
+            }
+        }
+        if(NewMember || (InvoiceModels.InvoiceDetails.RemarksRating.toLowerCase().indexOf("good") > 0)){
+            return
+        }
+        
         numerator = 1
         denominator = 3
         rand_value = Number(Math.random() * 100).toFixed() % denominator
@@ -680,6 +694,37 @@ function get_table_structure(reportOp){
                 "PaymentType",
                 "Print"
             ]
+            break
+        case ReportOps.DayWiseSales:
+            columns = [
+                "S.No",
+                "Invoice Date",
+                "Outlet Code",
+                "Outlet Name",
+                "Services",
+                "Products",
+                "MEMCARDS",
+                "MEMCARDS VALUE",
+                "M.CGST",
+                "M.SGST",
+                "S.Sales",
+                "S.Dis",
+                "S.Mem Dis",
+                "S.Basic Sales",
+                "S.CGST",
+                "S.SGST",
+                "P.Basic Sales",
+                "P.CGST",
+                "P.SGST",
+                "SP. Basic Sales",
+                "Net Total",
+                "Round Off",
+                "G.Sales",
+                "Cash Amount",
+                "Card Amount",
+                "Paytm Amount",
+                "PhonePe"
+            ]
     }
     for(i in columns){
         table_struct += '<th>' + columns[i] + '</th>'
@@ -696,12 +741,33 @@ function get_row_structure(reportOp){
                 row_struct += "<td></td>"
             }
             row_struct += '<td onclick="return OpenBillPrint(&quot;8252623&quot;);" style="cursor: pointer;align-items:center;"><i class="fa fa-print fa-2x" aria-hidden="true"></i></td>'
+            break
+        
+        case ReportOps.DayWiseSales:
+            row_struct += "<td></td><td></td><td>KA0020</td><td>NT-KAR-FOFO-THANISANDRA</td>"
+            for(i=0; i<3;i++){
+                row_struct += "<td>0</td>"
+            }
+            for(i=0; i<9;i++){
+                row_struct += "<td>0.0</td>"
+            }
+            for(i=0; i<3;i++){
+                row_struct += "<td></td>"
+            }
+            for(i=0; i<8;i++){
+                row_struct += "<td>0.0</td>"
+            }
+            break
     }
     return row_struct + "</tr>"
 }
 
 function check_allowed_report(pmdata){
-    if(['39'].indexOf(pmdata.ReportOption) > -1){
+    allowed_ops = []
+    for(i in ReportOps){
+        allowed_ops.push(ReportOps[i])
+    }
+    if(allowed_ops.includes(pmdata.ReportOption)){
         console.log("Allowed Report")
     }
     else{
@@ -710,9 +776,41 @@ function check_allowed_report(pmdata){
     }
 }
 
+function dateNumber_from_datestr(datestr, separator){
+    return Number(datestr.split(separator).reverse().join(""))
+}
+
+function set_table_cell_string(tbl, row_index, col_index, dataStr){
+    get_table_cell(tbl, 0, 'tbody', row_index, col_index).innerText = dataStr
+}
+
+function set_table_cell_number(tbl, row_index, col_index, num_value, decimals){
+    if(decimals == undefined || decimals == null){
+        decimals = 2
+    }
+    set_table_cell_string(tbl, row_index, col_index, Number(num_value).toFixed(decimals))
+}
+
+function increase_table_cell_number(tbl, row_index, col_index, num_value, decimals, dont_update_last_row){
+    if(num_value > 0){
+        if(decimals == undefined || decimals == null){
+            decimals = 2
+        }
+        num_value = Number(num_value)
+        current_value = Number(get_table_cell(tbl, 0, 'tbody', row_index, col_index).innerText)
+        set_table_cell_string(tbl, row_index, col_index, Number(num_value + current_value).toFixed(decimals))
+        if(!dont_update_last_row){
+            lastrow_index = get_table_cell(tbl, 0, 'tbody').getElementsByTagName('tr').length - 1
+            current_value = Number(get_table_cell(tbl, 0, 'tbody', lastrow_index, col_index).innerText)
+            set_table_cell_string(tbl, lastrow_index, col_index, Number(num_value + current_value).toFixed(decimals))
+        }
+    }
+}
+
+
 function update_reports(pmdata){
-    get_invoice_by_date(pmdata.invTo.split("/").reverse().join(""), 
-    pmdata.invfrom.split("/").reverse().join(""), 
+    get_invoice_by_date(dateNumber_from_datestr(pmdata.invTo, "/"),
+    dateNumber_from_datestr(pmdata.invfrom, "/"), 
     function(err, invoices){ 
         if((invoices != null) && (invoices.length > 0)){
             row_structure = get_row_structure(pmdata.ReportOption)
@@ -731,6 +829,7 @@ function update_reports(pmdata){
                 invoices[i].date = new Date(invoices[i].date)
             }
             invoices.sort(function(x,y){return x.date-y.date})
+            sca_invoices = invoices
             switch(pmdata.ReportOption){
                 case ReportOps.Invoices:
                     row_counter = 0
@@ -742,24 +841,24 @@ function update_reports(pmdata){
                         get_table_cell(tbl, 0, 'tbody', row_counter).innerHTML = row_structure
 
                         invoice = JSON.parse(invoices[i].invoice_json)
-                        get_table_cell(tbl, 0, 'tbody', row_counter, 2).innerText = invoices[i].date.dateFormat('d-m-Y H:i')
-                        get_table_cell(tbl, 0, 'tbody', row_counter, 3).innerText = invoice.Customer.ProductName
-                        get_table_cell(tbl, 0, 'tbody', row_counter, 4).innerText = "******" + invoice.Customer.MobileNo.substring(6)
-                        get_table_cell(tbl, 0, 'tbody', row_counter, 5).innerText = invoice.Services.length
-                        get_table_cell(tbl, 0, 'tbody', row_counter, 6).innerText = invoice.Products.length
-                        get_table_cell(tbl, 0, 'tbody', row_counter, 7).innerText = Number(invoice.InvoiceDetails.OtherDiscount + invoice.InvoiceDetails.MemberDiscount).toFixed(2)
-                        get_table_cell(tbl, 0, 'tbody', row_counter, 8).innerText = Number(invoice.InvoiceDetails.ServiceBasicSales).toFixed(2)
-                        get_table_cell(tbl, 0, 'tbody', row_counter, 9).innerText = Number(invoice.InvoiceDetails.ServiceTaxAmount).toFixed(2)
-                        get_table_cell(tbl, 0, 'tbody', row_counter, 10).innerText = Number(invoice.InvoiceDetails.ServiceNetSales).toFixed(2)
-                        get_table_cell(tbl, 0, 'tbody', row_counter, 11).innerText = Number(invoice.InvoiceDetails.ProductBasicSales).toFixed(2)
-                        get_table_cell(tbl, 0, 'tbody', row_counter, 12).innerText = Number(invoice.InvoiceDetails.ProductTaxAmount).toFixed(2)
-                        get_table_cell(tbl, 0, 'tbody', row_counter, 13).innerText = Number(invoice.InvoiceDetails.ProductNetSales).toFixed(2)
-                        get_table_cell(tbl, 0, 'tbody', row_counter, 14).innerText = Number(invoice.InvoiceDetails.ProductNetSales + invoice.InvoiceDetails.ServiceNetSales).toFixed(2)
+                        set_table_cell_string(tbl, row_counter, 2, invoices[i].date.dateFormat('d-m-Y H:i'))
+                        set_table_cell_string(tbl, row_counter, 3, invoice.Customer.ProductName)
+                        set_table_cell_string(tbl, row_counter, 4, "******" + invoice.Customer.MobileNo.substring(6))
+                        set_table_cell_string(tbl, row_counter, 5, invoice.Services.length)
+                        set_table_cell_string(tbl, row_counter, 6, invoice.Products.length)
+                        set_table_cell_number(tbl, row_counter, 7, invoice.InvoiceDetails.OtherDiscount + invoice.InvoiceDetails.MemberDiscount)
+                        set_table_cell_number(tbl, row_counter, 8, invoice.InvoiceDetails.ServiceBasicSales)
+                        set_table_cell_number(tbl, row_counter, 9, invoice.InvoiceDetails.ServiceTaxAmount)
+                        set_table_cell_number(tbl, row_counter, 10, invoice.InvoiceDetails.ServiceNetSales)
+                        set_table_cell_number(tbl, row_counter, 11, invoice.InvoiceDetails.ProductBasicSales)
+                        set_table_cell_number(tbl, row_counter, 12, invoice.InvoiceDetails.ProductTaxAmount)
+                        set_table_cell_number(tbl, row_counter, 13, invoice.InvoiceDetails.ProductNetSales)
+                        set_table_cell_number(tbl, row_counter, 14, invoice.InvoiceDetails.ProductNetSales + invoice.InvoiceDetails.ServiceNetSales)
                         paymentThrough = get_payment_through(invoice).toUpperCase()
                         if(paymentThrough != 'CASH'){
                             paymentThrough = "/"+paymentThrough
                         }
-                        get_table_cell(tbl, 0, 'tbody', row_counter, 15).innerText = paymentThrough
+                        set_table_cell_string(tbl, row_counter, 15, paymentThrough)
                         get_table_cell(tbl, 0, 'tbody', row_counter, 16).onclick = (function(billNo, invoice) {
                                 return function(){openMMDBillPrint(billNo, invoice)}
                             })(invoices[i].invoice_id, invoice)
@@ -773,8 +872,82 @@ function update_reports(pmdata){
                         get_table_cell(tbl, 0, 'tbody', i).deleteCell(1)
                     }
                     break
+                case ReportOps.DayWiseSales:
+                    row_counter = 0
+                    for(var i in invoices) {
+                        console.log("Value of i - " + i)
+                        try{
+                            while(dateNumber_from_datestr(get_table_cell(tbl, 0, 'tbody', row_counter, 1).innerText, "-") < invoices[i].date_number){row_counter++}
+                        }catch{}
+
+                        if(get_table_cell(tbl, 0, 'tbody', row_counter, 1).innerText.toLowerCase().indexOf('total') > -1 || dateNumber_from_datestr(get_table_cell(tbl, 0, 'tbody', row_counter, 1).innerText, "-") > invoices[i].date_number){
+                            get_table_cell(tbl, 0, 'tbody').insertRow(row_counter)
+                            get_table_cell(tbl, 0, 'tbody', row_counter).innerHTML = get_row_structure(pmdata.ReportOption)
+                            console.log("Value of i2 - " + i)
+                            get_table_cell(tbl, 0, 'tbody', row_counter, 1).innerText = invoices[i].date.dateFormat("d-m-Y")
+                        }
+
+                        invoice = JSON.parse(invoices[i].invoice_json)
+                        increase_table_cell_number(tbl, row_counter, 4, invoice.Services.length, 0)
+                        increase_table_cell_number(tbl, row_counter, 5, invoice.Products.length, 0)
+                        
+                        increase_table_cell_number(tbl, row_counter, 10, invoice.InvoiceDetails.ServiceBasicSales + invoice.InvoiceDetails.OtherDiscount)
+                        increase_table_cell_number(tbl, row_counter, 11, invoice.InvoiceDetails.OtherDiscount)
+                        
+                        increase_table_cell_number(tbl, row_counter, 13, invoice.InvoiceDetails.ServiceBasicSales)
+                        increase_table_cell_number(tbl, row_counter, 14, invoice.InvoiceDetails.ServiceTaxAmount / 2)
+                        increase_table_cell_number(tbl, row_counter, 15, invoice.InvoiceDetails.ServiceTaxAmount / 2)
+                        
+                        increase_table_cell_number(tbl, row_counter, 16, invoice.InvoiceDetails.ProductBasicSales)
+                        increase_table_cell_number(tbl, row_counter, 17, invoice.InvoiceDetails.ProductTaxAmount / 2)
+                        increase_table_cell_number(tbl, row_counter, 18, invoice.InvoiceDetails.ProductTaxAmount / 2)
+
+                        increase_table_cell_number(tbl, row_counter, 19, invoice.InvoiceDetails.ProductBasicSales + invoice.InvoiceDetails.ServiceBasicSales)
+                        increase_table_cell_number(tbl, row_counter, 20, invoice.InvoiceDetails.ProductNetSales + invoice.InvoiceDetails.ServiceNetSales)
+                        increase_table_cell_number(tbl, row_counter, 21, invoice.InvoiceDetails.RoundingOff)
+                        increase_table_cell_number(tbl, row_counter, 22, invoice.InvoiceDetails.GrandTotal)
+
+                        if(invoice.InvoiceDetails.IsPhonePe == "1"){
+                            increase_table_cell_number(tbl, row_counter, 26, invoice.InvoiceDetails.GrandTotal)
+                        }
+                        else if(invoice.InvoiceDetails.IsPaytm == "1"){
+                            increase_table_cell_number(tbl, row_counter, 25, invoice.InvoiceDetails.GrandTotal)
+                        }
+                        else if(invoice.InvoiceDetails.isCardPayment == "1"){
+                            increase_table_cell_number(tbl, row_counter, 24, invoice.InvoiceDetails.GrandTotal)
+                        }
+                        else{
+                            increase_table_cell_number(tbl, row_counter, 23, invoice.InvoiceDetails.GrandTotal)
+                        }
+                    }
+
+                    for(i=0; i< lastrow_index; i++){
+                        get_table_cell(tbl, 0, 'tbody', i, 0).innerText = i+1
+                    }
+                    break
             }
         }
         $('#divloadingscreen').hide();
+    })
+}
+
+function update_incentives(fromDate, toDate){
+    toDate = dateNumber_from_datestr(toDate, "-")
+    fromDate = dateNumber_from_datestr(fromDate, "-")
+    get_invoice_by_date(toDate, fromDate, function(err, invoices){
+        tbl = $('#exportIncentive')[0]
+        rows = get_table_cell(tbl, 0, 'tbody').getElementsByTagName('tr')
+        for(var i in invoices){
+            invoice = JSON.parse(invoices[i].invoice_json)
+            for(var si in invoice.Services){
+                for(var ri in rows){
+                    if(get_table_cell(tbl, 0, 'tbody', ri, 3).innerText.toLowerCase() == invoice.Services[si].EmployeeName.toLowerCase()){
+                        increase_table_cell_number(tbl, ri, 6, 1, 0, true)
+                        increase_table_cell_number(tbl, ri, 7, invoice.Services[si].NetPrice, 2, true)
+                        break
+                    }
+                }
+            }
+        }
     })
 }
