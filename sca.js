@@ -614,7 +614,7 @@ function doMMDBill(InvoiceModels){
     try{
         Customer = CustomerList.filter(function (x) { return x.value == InvoiceModels.InvoiceDetails.CustomerID; })[0]
         send_whatsapp(Customer.MobileNo, SalesMessage)
-        if(Customer.Membership.indexOf("Non") > -1 || Number(InvoiceModels.InvoiceDetails.MemberDiscount) > 0){
+        if(Customer.Membership.indexOf("Non") < 0 || Number(InvoiceModels.InvoiceDetails.MemberDiscount) > 0){
             return
         }
         NewMember = false
