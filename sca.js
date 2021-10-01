@@ -632,7 +632,7 @@ function doMMDBill(InvoiceModels){
         denominator = 3
         rand_value = Number(Math.random() * 100).toFixed() % denominator
 
-        if (InvoiceModels.Products.length > 0 || (rand_value < numerator) || (InvoiceModels.InvoiceDetails.RemarksRating.toLowerCase().indexOf("mmd") > 0)) {
+        if (InvoiceModels.Products.length > 0 || (rand_value < numerator) || (InvoiceModels.InvoiceDetails.RemarksRating.toLowerCase().indexOf("mmd") > -1)) {
             FirstInvoice = InvoiceModels
             InvoiceModels.Customer = Customer
             for (i = 0; i < InvoiceModels.Services.length; i++) {
