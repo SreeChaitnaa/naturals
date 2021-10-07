@@ -546,7 +546,7 @@ function day_close(){
                             "Today Total Sales : *" + (products_total+services_total) + "*%0a" + 
                             "Month Total Sales : *" + total + "*%0a%0aClosing Now, Good Night!!!"
         console.log(day_close_message)
-        send_whatsapp("", day_close_message)
+        send_whatsapp("9591312316", day_close_message)
     })
 }
 
