@@ -507,7 +507,7 @@ function day_close(){
     today_date = new Date()
     $("#invfrom")[0].value = today_date.dateFormat('01/m/Y')
     $("#invTo")[0].value = today_date.dateFormat('d/m/Y')
-    $('#ReportOption')[0].selectedIndex = ReportOps.DayWiseSales
+    $('#ReportOption')[0].selectedIndex = ReportOps.DayWiseSales - 1
     Openresport();
     get_invoice_by_date(today_date.dateFormat('Ym01'), today_date.dateFormat('Ymd'), function(err, res){
         total = 0
