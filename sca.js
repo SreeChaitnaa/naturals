@@ -98,7 +98,7 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
         // CSharpTask("Logging in...", 0, 0, 3);
         $("#username")[0].value = "KA0020";
         $("#password")[0].value = "JaiSriRam";
-        $("button")[0].click();
+        //$("button")[0].click();
     }
     else{
         setTimeout(function () {
