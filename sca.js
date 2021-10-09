@@ -50,7 +50,7 @@ restdb_key = "612f97f843cedb6d1f97eba5"
 ReportOps = {
     DayWiseSales: '3',
     Invoices: '39',
-    ADInvoices: '39',
+    ADInvoices: '9',
     SmileProviderSales: '38'
     }
 
