@@ -571,7 +571,7 @@ setTimeout(function() {
 }, 5000)
 
 function update_dashboard(){
-    today_date = new Date()
+    today_date = new Date(xpath('//*[@id="txtdate"]').innerText)
     get_invoice_by_date(today_date.dateFormat('Ymd'), today_date.dateFormat('Ymd'), 
     function(err, res){ 
         if(err){
