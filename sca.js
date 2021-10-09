@@ -105,23 +105,23 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
     else{
         setTimeout(function () {
             try{
-                xpath('//*[@id="stacked-menu"]/li[1]/a').href = ''
-                xpath('//*[@id="stacked-menu"]/li[1]/a').onclick = disable_click
-                xpath('//*[@id="stacked-menu"]/li[2]/ul/li[1]/a').href = ''
-                xpath('//*[@id="stacked-menu"]/li[2]/ul/li[1]/a').onclick = disable_click
-                xpath('//*[@id="stacked-menu"]/li[2]/ul/li[2]/a').href = ''
-                xpath('//*[@id="stacked-menu"]/li[2]/ul/li[2]/a').onclick = disable_click
+                //xpath('//*[@id="stacked-menu"]/li[1]/a').href = ''
+                //xpath('//*[@id="stacked-menu"]/li[1]/a').onclick = disable_click
+                // xpath('//*[@id="stacked-menu"]/li[2]/ul/li[1]/a').href = ''
+                // xpath('//*[@id="stacked-menu"]/li[2]/ul/li[1]/a').onclick = disable_click
+                // xpath('//*[@id="stacked-menu"]/li[2]/ul/li[2]/a').href = ''
+                // xpath('//*[@id="stacked-menu"]/li[2]/ul/li[2]/a').onclick = disable_click
                 xpath('//*[@id="stacked-menu"]/li[3]/a').onclick = NewAppointment
-                xpath('//*[@id="stacked-menu"]/li[5]/ul/li[3]/a').href = ''
-                xpath('//*[@id="stacked-menu"]/li[5]/ul/li[3]/a').onclick = disable_click
-                xpath('//*[@id="stacked-menu"]/li[5]/ul/li[4]/a').href = ''
-                xpath('//*[@id="stacked-menu"]/li[5]/ul/li[4]/a').onclick = disable_click
+                // xpath('//*[@id="stacked-menu"]/li[5]/ul/li[3]/a').href = ''
+                // xpath('//*[@id="stacked-menu"]/li[5]/ul/li[3]/a').onclick = disable_click
+                // xpath('//*[@id="stacked-menu"]/li[5]/ul/li[4]/a').href = ''
+                // xpath('//*[@id="stacked-menu"]/li[5]/ul/li[4]/a').onclick = disable_click
                 // xpath('//*[@id="stacked-menu"]/li[7]/a').href = ''
                 // xpath('//*[@id="stacked-menu"]/li[7]/a').onclick = disable_click
-                xpath('//*[@id="stacked-menu"]/li[8]/a').href = ''
-                xpath('//*[@id="stacked-menu"]/li[8]/a').onclick = disable_click
-                xpath('//*[@id="stacked-menu"]/li[9]/a').href = ''
-                xpath('//*[@id="stacked-menu"]/li[9]/a').onclick = disable_click
+                // xpath('//*[@id="stacked-menu"]/li[8]/a').href = ''
+                // xpath('//*[@id="stacked-menu"]/li[8]/a').onclick = disable_click
+                // xpath('//*[@id="stacked-menu"]/li[9]/a').href = ''
+                // xpath('//*[@id="stacked-menu"]/li[9]/a').onclick = disable_click
             }
             catch(err) {console.log(err)}
             if (url_params.has('invoiceID')) {
