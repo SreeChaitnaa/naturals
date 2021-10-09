@@ -578,6 +578,8 @@ function update_dashboard(){
             alert(err)
             return
         }
+        rupee_symbol_innerHTML = '<span><i class="fa fa-inr"></i>&nbsp;</span>'
+        
         completed_total = xpath('//*[@id="page-content-wrapper"]/div[1]/div[5]/div/div[2]/span')
         appointment_total = xpath('//*[@id="page-content-wrapper"]/div[2]/div[1]/div/div[1]/span')
         appointment_walkin = xpath('//*[@id="page-content-wrapper"]/div[2]/div[1]/div/div[2]/div[1]/span[1]/span[2]')
@@ -596,6 +598,11 @@ function update_dashboard(){
         card_bill = xpath('//*[@id="page-content-wrapper"]/div[2]/div[4]/div/div[2]/div/div[2]/div[2]/span/span[2]')
         paytm_bill = xpath('//*[@id="page-content-wrapper"]/div[2]/div[4]/div/div[2]/div/div[2]/div[4]/span/span[2]')
         phonepe_bill = xpath('//*[@id="page-content-wrapper"]/div[2]/div[4]/div/div[2]/div/div[2]/div[6]/span/span[2]')
+        
+        today_bill_no_tax = xpath('//*[@id="page-content-wrapper"]/div[4]/div[1]/div/div[2]/div[1]/span[1]/span')
+        this_month_bill_no_tax = xpath('//*[@id="page-content-wrapper"]/div[4]/div[2]/div/div[2]/div[1]/span[1]/span')
+        this_weekend_bill_no_tax = xpath('//*[@id="page-content-wrapper"]/div[4]/div[3]/div/div[2]/div[1]/span[1]/span')
+        year_this_month_bill_no_tax = xpath('//*[@id="page-content-wrapper"]/div[4]/div[4]/div/div[2]/div[1]/span[2]/span')
 
         appointment_total.innerText = +appointment_total.innerText + res.length
         appointment_walkin.innerText = +appointment_walkin.innerText + res.length
@@ -604,8 +611,12 @@ function update_dashboard(){
         new_total.innerText = +new_total.innerText + res.length
         completed_total.innerText = +completed_total.innerText + res.length
 
+        today_total = 0
+        today_total_no_tax = 0
         for(i=0; i<res.length; i++){
             invoice = JSON.parse(res[i].invoice_json)
+            today_total = +today_total + +invoice.InvoiceDetails.GrandTotal
+            today_total_no_tax = +today_total_no_tax + +invoice.InvoiceDetails.ServiceBasicSales + +invoice.InvoiceDetails.ProductBasicSales
             if(invoice.Customer.Gender == 'FEMALE'){
                 women_new.innerText = +women_new.innerText + 1
                 women_total.innerText = +women_total.innerText + 1
@@ -614,7 +625,26 @@ function update_dashboard(){
                 men_new.innerText = +men_new.innerText + 1
                 men_total.innerText = +men_total.innerText + 1
             }
+
+            paymentThrough = get_payment_through(invoice).toLowerCase()
+            switch(paymentThrough){
+                case "cash":
+                    cash_bill.innerText = +cash_bill.innerText + +invoice.InvoiceDetails.GrandTotal
+                case "card":
+                    card_bill.innerText = +card_bill.innerText + +invoice.InvoiceDetails.GrandTotal
+                case "paytm":
+                    paytm_bill.innerText = +paytm_bill.innerText + +invoice.InvoiceDetails.GrandTotal
+                case "phonepe":
+                    phonepe_bill.innerText = +phonepe_bill.innerText + +invoice.InvoiceDetails.GrandTotal
+            }
         }
+        total_bill.innerHTML = rupee_symbol_innerHTML + (+total_bill.innerText + +today_total)
+        today_bill_no_tax.innerHTML = rupee_symbol_innerHTML + (+today_bill_no_tax.innerText + +today_total_no_tax)
+        this_month_bill_no_tax.innerHTML = rupee_symbol_innerHTML + (+this_month_bill_no_tax.innerText + +today_total_no_tax)
+        if(today_date.getDay() == 6 || today_date.getDay() == 0){
+            this_weekend_bill_no_tax.innerHTML = rupee_symbol_innerHTML + (+this_weekend_bill_no_tax.innerText + +today_total_no_tax)
+        }
+        year_this_month_bill_no_tax.innerHTML = rupee_symbol_innerHTML + (+year_this_month_bill_no_tax.innerText + +today_total_no_tax)
     })
 }
 
@@ -1015,8 +1045,6 @@ function update_reports(pmdata){
                         }
                     }
                     for(var ri=0; ri< rows.length-1; ri++){
-                        console.log(tbl)
-                        console.log(ri)
                         sold = Number(get_table_cell(tbl, 0, 'tbody', ri, 6).innerText)
                         if(sold > 0){
                             clientCount = Number(get_table_cell(tbl, 0, 'tbody', ri, 4).innerText)
