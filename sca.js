@@ -30,9 +30,11 @@ function get_random_oximeter(){
 
 console.log("Test JS Loaded")
 
-$.ajax({url: 'https://naturals-d1c4.restdb.io/rest/_jsapi.js',dataType: 'script'})
-$.ajax({url: 'https://sreechaitnaa.github.io/naturals/restdb.js',dataType: 'script'})
-$.ajax({url: 'https://sreechaitnaa.github.io/naturals/iServeScripts.js',dataType: 'script'})
+$.ajax({url: 'https://naturals-d1c4.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){
+    $.ajax({url: 'https://sreechaitnaa.github.io/naturals/iServeScripts.js',dataType: 'script', success: function(){
+        $.ajax({url: 'https://sreechaitnaa.github.io/naturals/restdb.js',dataType: 'script', success: LoadSCA()})
+    }}) 
+}})
 // $.ajax({url: 'https://naturals-sreechaitnaa.vercel.app/restdb.js',dataType: 'script'})
 // $.ajax({url: 'https://naturals-sreechaitnaa.vercel.app//iServeScripts.js',dataType: 'script'})
 // $.ajax({url: 'http://localhost:8000/restdb.js',dataType: 'script'})
@@ -94,85 +96,87 @@ function disable_click() {
     return false 
 }
 
-if (window.location.href.startsWith("https://iservenaturals.in")) {
+function LoadSCA(){
+    if (window.location.href.startsWith("https://iservenaturals.in")) {
 
-    if ($("button")[0].innerText == "Login") {
-        // CSharpTask("Logging in...", 0, 0, 3);
-        $("#username")[0].value = "KA0020";
-        $("#password")[0].value = "JaiSriRam";
-        //$("button")[0].click();
-    }
-    else{
-        setTimeout(function () {
-            try{
-                //xpath('//*[@id="stacked-menu"]/li[1]/a').href = ''
-                //xpath('//*[@id="stacked-menu"]/li[1]/a').onclick = disable_click
-                // xpath('//*[@id="stacked-menu"]/li[2]/ul/li[1]/a').href = ''
-                // xpath('//*[@id="stacked-menu"]/li[2]/ul/li[1]/a').onclick = disable_click
-                // xpath('//*[@id="stacked-menu"]/li[2]/ul/li[2]/a').href = ''
-                // xpath('//*[@id="stacked-menu"]/li[2]/ul/li[2]/a').onclick = disable_click
-                xpath('//*[@id="stacked-menu"]/li[3]/a').onclick = NewAppointment
-                // xpath('//*[@id="stacked-menu"]/li[5]/ul/li[3]/a').href = ''
-                // xpath('//*[@id="stacked-menu"]/li[5]/ul/li[3]/a').onclick = disable_click
-                // xpath('//*[@id="stacked-menu"]/li[5]/ul/li[4]/a').href = ''
-                // xpath('//*[@id="stacked-menu"]/li[5]/ul/li[4]/a').onclick = disable_click
-                // xpath('//*[@id="stacked-menu"]/li[7]/a').href = ''
-                // xpath('//*[@id="stacked-menu"]/li[7]/a').onclick = disable_click
-                // xpath('//*[@id="stacked-menu"]/li[8]/a').href = ''
-                // xpath('//*[@id="stacked-menu"]/li[8]/a').onclick = disable_click
-                // xpath('//*[@id="stacked-menu"]/li[9]/a').href = ''
-                // xpath('//*[@id="stacked-menu"]/li[9]/a').onclick = disable_click
-            }
-            catch(err) {console.log(err)}
-            if (url_params.has('invoiceID')) {
-                invoice_id = url_params.get('invoice_id')
-                if (invoice_id != null) {
-                    get_invoice(invoice_id, function(err, invoice){
-                        if(err){
-                            alert(err)
-                            return
-                        }
-                        setPrintData(invoice_id, JSON.parse(invoice.invoice_json))
-                    })
+        if ($("button")[0].innerText == "Login") {
+            // CSharpTask("Logging in...", 0, 0, 3);
+            $("#username")[0].value = "KA0020";
+            $("#password")[0].value = "JaiSriRam";
+            //$("button")[0].click();
+        }
+        else{
+            setTimeout(function () {
+                try{
+                    //xpath('//*[@id="stacked-menu"]/li[1]/a').href = ''
+                    //xpath('//*[@id="stacked-menu"]/li[1]/a').onclick = disable_click
+                    // xpath('//*[@id="stacked-menu"]/li[2]/ul/li[1]/a').href = ''
+                    // xpath('//*[@id="stacked-menu"]/li[2]/ul/li[1]/a').onclick = disable_click
+                    // xpath('//*[@id="stacked-menu"]/li[2]/ul/li[2]/a').href = ''
+                    // xpath('//*[@id="stacked-menu"]/li[2]/ul/li[2]/a').onclick = disable_click
+                    xpath('//*[@id="stacked-menu"]/li[3]/a').onclick = NewAppointment
+                    // xpath('//*[@id="stacked-menu"]/li[5]/ul/li[3]/a').href = ''
+                    // xpath('//*[@id="stacked-menu"]/li[5]/ul/li[3]/a').onclick = disable_click
+                    // xpath('//*[@id="stacked-menu"]/li[5]/ul/li[4]/a').href = ''
+                    // xpath('//*[@id="stacked-menu"]/li[5]/ul/li[4]/a').onclick = disable_click
+                    // xpath('//*[@id="stacked-menu"]/li[7]/a').href = ''
+                    // xpath('//*[@id="stacked-menu"]/li[7]/a').onclick = disable_click
+                    // xpath('//*[@id="stacked-menu"]/li[8]/a').href = ''
+                    // xpath('//*[@id="stacked-menu"]/li[8]/a').onclick = disable_click
+                    // xpath('//*[@id="stacked-menu"]/li[9]/a').href = ''
+                    // xpath('//*[@id="stacked-menu"]/li[9]/a').onclick = disable_click
                 }
-                $('#btnSendMail')[0].style.display = 'none'
-                $('#btnsms')[0].style.display = 'none'
-            }
-            else if(window.location.href.indexOf('WalkinInvoice') > 0){
-                setInterval(function (){
-                    if($('#commonGrandTotal').val() != ''){
-                        if($('#CustomerTEMP').val() == ''){
-                            $('#CustomerTEMP')[0].value = get_random_temp()
-                        }
-                        if($('#CustomerOXIM').val() == ''){
-                            $('#CustomerOXIM')[0].value = get_random_oximeter()
-                        }
+                catch(err) {console.log(err)}
+                if (url_params.has('invoiceID')) {
+                    invoice_id = url_params.get('invoice_id')
+                    if (invoice_id != null) {
+                        get_invoice(invoice_id, function(err, invoice){
+                            if(err){
+                                alert(err)
+                                return
+                            }
+                            setPrintData(invoice_id, JSON.parse(invoice.invoice_json))
+                        })
                     }
-                }, 500);
-            }
-            else if(window.location.href.indexOf('Home') > 0){
-                update_dashboard()
-            }
-            else if(window.location.href.indexOf('EmpIncentive') > 0){
-                FromDate = $("#fromDate").val()
-                ToDate = $("#toDate").val()
-                update_incentives(FromDate, ToDate)
-            }
-        }, 2000)
-
-        setInterval(function () {
-            $.ajax({
-                url: '/iNaturals/Customer/SearchEmployee',
-                type: "POST",
-                dataType: "json",
-                cache: false,
-                async: false,
-                data: { Name: '' },
-                success: function (data) {
-                    console.log("Keeping request alive")
+                    $('#btnSendMail')[0].style.display = 'none'
+                    $('#btnsms')[0].style.display = 'none'
                 }
-            });
-        }, 30000);
+                else if(window.location.href.indexOf('WalkinInvoice') > 0){
+                    setInterval(function (){
+                        if($('#commonGrandTotal').val() != ''){
+                            if($('#CustomerTEMP').val() == ''){
+                                $('#CustomerTEMP')[0].value = get_random_temp()
+                            }
+                            if($('#CustomerOXIM').val() == ''){
+                                $('#CustomerOXIM')[0].value = get_random_oximeter()
+                            }
+                        }
+                    }, 500);
+                }
+                else if(window.location.href.indexOf('Home') > 0){
+                    update_dashboard()
+                }
+                else if(window.location.href.indexOf('EmpIncentive') > 0){
+                    FromDate = $("#fromDate").val()
+                    ToDate = $("#toDate").val()
+                    update_incentives(FromDate, ToDate)
+                }
+            }, 500)
+
+            setInterval(function () {
+                $.ajax({
+                    url: '/iNaturals/Customer/SearchEmployee',
+                    type: "POST",
+                    dataType: "json",
+                    cache: false,
+                    async: false,
+                    data: { Name: '' },
+                    success: function (data) {
+                        console.log("Keeping request alive")
+                    }
+                });
+            }, 30000);
+        }
     }
 }
 
