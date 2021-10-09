@@ -151,51 +151,12 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
                 }, 500);
             }
             else if(window.location.href.indexOf('Home') > 0){
-                today_date = new Date()
-                get_invoice_by_date(today_date.dateFormat('Ymd'), today_date.dateFormat('Ymd'), 
-                function(err, res){ 
-                    if(err){
-                        alert(err)
-                        return
-                    }
-                    completed_total = xpath('//*[@id="page-content-wrapper"]/div[1]/div[5]/div/div[2]/span')
-                    appointment_total = xpath('//*[@id="page-content-wrapper"]/div[2]/div[1]/div/div[1]/span')
-                    appointment_walkin = xpath('//*[@id="page-content-wrapper"]/div[2]/div[1]/div/div[2]/div[1]/span[1]/span[2]')
-                    customer_total = xpath('//*[@id="page-content-wrapper"]/div[2]/div[2]/div/div[1]/span')
-                    gender_total = xpath('//*[@id="page-content-wrapper"]/div[2]/div[3]/div/div[1]/span')
-
-                    men_new = xpath('//*[@id="page-content-wrapper"]/div[2]/div[2]/div/div[2]/table/tbody/tr[2]/td[2]/a')
-                    women_new = xpath('//*[@id="page-content-wrapper"]/div[2]/div[2]/div/div[2]/table/tbody/tr[2]/td[3]/a')
-                    new_total = xpath('//*[@id="page-content-wrapper"]/div[2]/div[2]/div/div[2]/table/tbody/tr[2]/td[4]/a')
-
-                    men_total = xpath('//*[@id="page-content-wrapper"]/div[2]/div[3]/div/div[2]/div[1]/span[1]/span')
-                    women_total = xpath('//*[@id="page-content-wrapper"]/div[2]/div[3]/div/div[2]/div[2]/span[1]/span')
-
-                    total_bill = xpath('//*[@id="page-content-wrapper"]/div[2]/div[4]/div/div[1]/span')
-                    cash_bill = xpath('//*[@id="page-content-wrapper"]/div[2]/div[4]/div/div[2]/div/div[1]/div[2]/span/span[2]')
-                    card_bill = xpath('//*[@id="page-content-wrapper"]/div[2]/div[4]/div/div[2]/div/div[2]/div[2]/span/span[2]')
-                    paytm_bill = xpath('//*[@id="page-content-wrapper"]/div[2]/div[4]/div/div[2]/div/div[2]/div[4]/span/span[2]')
-                    phonepe_bill = xpath('//*[@id="page-content-wrapper"]/div[2]/div[4]/div/div[2]/div/div[2]/div[6]/span/span[2]')
-
-                    appointment_total.innerText = +appointment_total.innerText + res.length
-                    appointment_walkin.innerText = +appointment_walkin.innerText + res.length
-                    customer_total.innerText = +customer_total.innerText + res.length
-                    gender_total.innerText = +gender_total.innerText + res.length
-                    new_total.innerText = +new_total.innerText + res.length
-                    completed_total.innerText = +completed_total.innerText + res.length
-
-                    for(i=0; i<res.length; i++){
-                        invoice = JSON.parse(res[i].invoice_json)
-                        if(invoice.Customer.Gender == 'FEMALE'){
-                            women_new.innerText = +women_new.innerText + 1
-                            women_total.innerText = +women_total.innerText + 1
-                        }
-                        else{
-                            men_new.innerText = +men_new.innerText + 1
-                            men_total.innerText = +men_total.innerText + 1
-                        }
-                    }
-                })
+                update_dashboard()
+            }
+            else if(window.location.href.indexOf('EmpIncentive') > 0){
+                FromDate = $("#fromDate").val()
+                ToDate = $("#toDate").val()
+                update_incentives(FromDate, ToDate)
             }
         }, 2000)
 
@@ -609,6 +570,53 @@ setTimeout(function() {
     }
 }, 5000)
 
+function update_dashboard(){
+    today_date = new Date()
+    get_invoice_by_date(today_date.dateFormat('Ymd'), today_date.dateFormat('Ymd'), 
+    function(err, res){ 
+        if(err){
+            alert(err)
+            return
+        }
+        completed_total = xpath('//*[@id="page-content-wrapper"]/div[1]/div[5]/div/div[2]/span')
+        appointment_total = xpath('//*[@id="page-content-wrapper"]/div[2]/div[1]/div/div[1]/span')
+        appointment_walkin = xpath('//*[@id="page-content-wrapper"]/div[2]/div[1]/div/div[2]/div[1]/span[1]/span[2]')
+        customer_total = xpath('//*[@id="page-content-wrapper"]/div[2]/div[2]/div/div[1]/span')
+        gender_total = xpath('//*[@id="page-content-wrapper"]/div[2]/div[3]/div/div[1]/span')
+
+        men_new = xpath('//*[@id="page-content-wrapper"]/div[2]/div[2]/div/div[2]/table/tbody/tr[2]/td[2]/a')
+        women_new = xpath('//*[@id="page-content-wrapper"]/div[2]/div[2]/div/div[2]/table/tbody/tr[2]/td[3]/a')
+        new_total = xpath('//*[@id="page-content-wrapper"]/div[2]/div[2]/div/div[2]/table/tbody/tr[2]/td[4]/a')
+
+        men_total = xpath('//*[@id="page-content-wrapper"]/div[2]/div[3]/div/div[2]/div[1]/span[1]/span')
+        women_total = xpath('//*[@id="page-content-wrapper"]/div[2]/div[3]/div/div[2]/div[2]/span[1]/span')
+
+        total_bill = xpath('//*[@id="page-content-wrapper"]/div[2]/div[4]/div/div[1]/span')
+        cash_bill = xpath('//*[@id="page-content-wrapper"]/div[2]/div[4]/div/div[2]/div/div[1]/div[2]/span/span[2]')
+        card_bill = xpath('//*[@id="page-content-wrapper"]/div[2]/div[4]/div/div[2]/div/div[2]/div[2]/span/span[2]')
+        paytm_bill = xpath('//*[@id="page-content-wrapper"]/div[2]/div[4]/div/div[2]/div/div[2]/div[4]/span/span[2]')
+        phonepe_bill = xpath('//*[@id="page-content-wrapper"]/div[2]/div[4]/div/div[2]/div/div[2]/div[6]/span/span[2]')
+
+        appointment_total.innerText = +appointment_total.innerText + res.length
+        appointment_walkin.innerText = +appointment_walkin.innerText + res.length
+        customer_total.innerText = +customer_total.innerText + res.length
+        gender_total.innerText = +gender_total.innerText + res.length
+        new_total.innerText = +new_total.innerText + res.length
+        completed_total.innerText = +completed_total.innerText + res.length
+
+        for(i=0; i<res.length; i++){
+            invoice = JSON.parse(res[i].invoice_json)
+            if(invoice.Customer.Gender == 'FEMALE'){
+                women_new.innerText = +women_new.innerText + 1
+                women_total.innerText = +women_total.innerText + 1
+            }
+            else{
+                men_new.innerText = +men_new.innerText + 1
+                men_total.innerText = +men_total.innerText + 1
+            }
+        }
+    })
+}
 
 //Inner methods for overwrites
 SCAInvoice = "";
