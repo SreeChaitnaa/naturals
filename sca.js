@@ -50,6 +50,7 @@ restdb_key = "612f97f843cedb6d1f97eba5"
 ReportOps = {
     DayWiseSales: '3',
     Invoices: '39',
+    ADInvoices: '39',
     SmileProviderSales: '38'
     }
 
@@ -676,6 +677,7 @@ function get_table_structure(reportOp){
     columns = []
     switch(reportOp){
         case ReportOps.Invoices:
+        case ReportOps.ADInvoices:
             columns = [
                 "S.No",
                 "Invoice No",
@@ -738,6 +740,7 @@ function get_row_structure(reportOp){
     row_struct = "<tr>"
     switch(reportOp){
         case ReportOps.Invoices:
+        case ReportOps.ADInvoices:
             for(i=0; i<16;i++){
                 row_struct += "<td></td>"
             }
@@ -833,6 +836,7 @@ function update_reports(pmdata){
             sca_invoices = invoices
             switch(pmdata.ReportOption){
                 case ReportOps.Invoices:
+                case ReportOps.ADInvoices:
                     row_counter = 0
                     for(i in invoices){
                         try{
