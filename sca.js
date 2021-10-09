@@ -990,8 +990,8 @@ function update_reports(pmdata){
                                     increase_table_cell_number(tbl, ri, 6, invoice.Services[si].NetPrice)
                                     increase_table_cell_number(tbl, ri, 8, invoice.Services[si].DiscountAmount)
 
-                                    increase_table_cell_number(tbl, ri, 14, invoice.Services[si].NetPrice + invoice.Services[si].DiscountAmount, 2, true)
-                                    increase_table_cell_number(tbl, ri, 15, invoice.Services[si].NetPrice, 2, true)
+                                    increase_table_cell_number(tbl, ri, 14, invoice.Services[si].NetPrice + invoice.Services[si].DiscountAmount, 2)
+                                    increase_table_cell_number(tbl, ri, 15, invoice.Services[si].NetPrice, 2)
                                     break
                                 }
                             }
@@ -1007,8 +1007,8 @@ function update_reports(pmdata){
                                     increase_table_cell_number(tbl, ri, 12, 1, 0)
                                     increase_table_cell_number(tbl, ri, 13, invoice.Products[pi].NetPrice)
 
-                                    increase_table_cell_number(tbl, ri, 14, invoice.Products[pi].NetPrice, 2, true)
-                                    increase_table_cell_number(tbl, ri, 15, invoice.Products[pi].NetPrice, 2, true)
+                                    increase_table_cell_number(tbl, ri, 14, invoice.Products[pi].NetPrice, 2)
+                                    increase_table_cell_number(tbl, ri, 15, invoice.Products[pi].NetPrice, 2)
                                     break
                                 }
                             }
