@@ -51,7 +51,8 @@ ReportOps = {
     DayWiseSales: '3',
     Invoices: '39',
     ADInvoices: '9',
-    SmileProviderSales: '38'
+    SmileProviderSales: '38',
+    ADSmileProviderSales: '7'
     }
 
 AppointmentMessage = "Thanks for contacting Naturals Thanisandra!%0a%0a*Appointment Details:*%0a" +
@@ -137,30 +138,64 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
                 $('#btnSendMail')[0].style.display = 'none'
                 $('#btnsms')[0].style.display = 'none'
             }
-            else{
-                if($("#myModalCheckList")[0]){
-                    if($("#myModalCheckList")[0].style.display == 'block') {
-                        z = $('#myModalCheckList')[0].getElementsByClassName("list_here")[0].getElementsByTagName("input");
-                        for (i = 0; i < z.length; i++) {
-                            if (z[i].value == 1) {
-                                z[i].checked = true
-                            }
+            else if(window.location.href.indexOf('WalkinInvoice') > 0){
+                setInterval(function (){
+                    if($('#commonGrandTotal').val() != ''){
+                        if($('#CustomerTEMP').val() == ''){
+                            $('#CustomerTEMP')[0].value = get_random_temp()
                         }
-                        CheckListSubmit($("#myModalCheckList")[0]);
+                        if($('#CustomerOXIM').val() == ''){
+                            $('#CustomerOXIM')[0].value = get_random_oximeter()
+                        }
                     }
-                }
-                if(window.location.href.indexOf('WalkinInvoice') > 0){
-                    setInterval(function (){
-                        if($('#commonGrandTotal').val() != ''){
-                            if($('#CustomerTEMP').val() == ''){
-                                $('#CustomerTEMP')[0].value = get_random_temp()
-                            }
-                            if($('#CustomerOXIM').val() == ''){
-                                $('#CustomerOXIM')[0].value = get_random_oximeter()
-                            }
+                }, 500);
+            }
+            else if(window.location.href.indexOf('Home') > 0){
+                today_date = new Date()
+                get_invoice_by_date(today_date.dateFormat('Ymd'), today_date.dateFormat('Ymd'), 
+                function(err, res){ 
+                    if(err){
+                        alert(err)
+                        return
+                    }
+                    completed_total = xpath('//*[@id="page-content-wrapper"]/div[1]/div[5]/div/div[2]/span')
+                    appointment_total = xpath('//*[@id="page-content-wrapper"]/div[2]/div[1]/div/div[1]/span')
+                    appointment_walkin = xpath('//*[@id="page-content-wrapper"]/div[2]/div[1]/div/div[2]/div[1]/span[1]/span[2]')
+                    customer_total = xpath('//*[@id="page-content-wrapper"]/div[2]/div[2]/div/div[1]/span')
+                    gender_total = xpath('//*[@id="page-content-wrapper"]/div[2]/div[3]/div/div[1]/span')
+
+                    men_new = xpath('//*[@id="page-content-wrapper"]/div[2]/div[2]/div/div[2]/table/tbody/tr[2]/td[2]/a')
+                    women_new = xpath('//*[@id="page-content-wrapper"]/div[2]/div[2]/div/div[2]/table/tbody/tr[2]/td[3]/a')
+                    new_total = xpath('//*[@id="page-content-wrapper"]/div[2]/div[2]/div/div[2]/table/tbody/tr[2]/td[4]/a')
+
+                    men_total = xpath('//*[@id="page-content-wrapper"]/div[2]/div[3]/div/div[2]/div[1]/span[1]/span')
+                    women_total = xpath('//*[@id="page-content-wrapper"]/div[2]/div[3]/div/div[2]/div[2]/span[1]/span')
+
+                    total_bill = xpath('//*[@id="page-content-wrapper"]/div[2]/div[4]/div/div[1]/span')
+                    cash_bill = xpath('//*[@id="page-content-wrapper"]/div[2]/div[4]/div/div[2]/div/div[1]/div[2]/span/span[2]')
+                    card_bill = xpath('//*[@id="page-content-wrapper"]/div[2]/div[4]/div/div[2]/div/div[2]/div[2]/span/span[2]')
+                    paytm_bill = xpath('//*[@id="page-content-wrapper"]/div[2]/div[4]/div/div[2]/div/div[2]/div[4]/span/span[2]')
+                    phonepe_bill = xpath('//*[@id="page-content-wrapper"]/div[2]/div[4]/div/div[2]/div/div[2]/div[6]/span/span[2]')
+
+                    appointment_total.innerText = +appointment_total.innerText + res.length
+                    appointment_walkin.innerText = +appointment_walkin.innerText + res.length
+                    customer_total.innerText = +customer_total.innerText + res.length
+                    gender_total.innerText = +gender_total.innerText + res.length
+                    new_total.innerText = +new_total.innerText + res.length
+                    completed_total.innerText = +completed_total.innerText + res.length
+
+                    for(i=0; i<res.length; i++){
+                        invoice = JSON.parse(res[i].invoice_json)
+                        if(invoice.Customer.Gender == 'FEMALE'){
+                            women_new.innerText = +women_new.innerText + 1
+                            women_total.innerText = +women_total.innerText + 1
                         }
-                    }, 500);
-                }
+                        else{
+                            men_new.innerText = +men_new.innerText + 1
+                            men_total.innerText = +men_total.innerText + 1
+                        }
+                    }
+                })
             }
         }, 2000)
 
@@ -931,6 +966,7 @@ function update_reports(pmdata){
                     }
                     break
                 case ReportOps.SmileProviderSales:
+                case ReportOps.ADSmileProviderSales:
                     rows = get_table_cell(tbl, 0, 'tbody').getElementsByTagName('tr')
                     for(var i in invoices){
                         invoice = JSON.parse(invoices[i].invoice_json)
