@@ -628,7 +628,7 @@ function doMMDBill(InvoiceModels){
             return
         }
         
-        numerator = 3
+        numerator = 1
         denominator = 3
         rand_value = Number(Math.random() * 100).toFixed() % denominator
 
