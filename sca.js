@@ -1015,7 +1015,7 @@ function update_reports(pmdata){
                         sps = []
                         for(var si in invoice.Services){
                             for(var ri=0; ri< rows.length-1; ri++){
-                                if(get_table_cell(tbl, 0, 'tbody', ri, 1).innerText.toLowerCase() == invoice.Services[si].EmployeeName.toLowerCase()){
+                                if(get_table_cell(tbl, 0, 'tbody', ri, 1).innerText.toLowerCase().trim() == invoice.Services[si].EmployeeName.toLowerCase().trim()){
                                     if(!sps.includes(invoice.Services[si].EmployeeName)){
                                         sps.push(invoice.Services[si].EmployeeName)
                                         increase_table_cell_number(tbl, ri, 4, 1, 0)
@@ -1032,7 +1032,7 @@ function update_reports(pmdata){
                         }
                         for(var pi in invoice.Products){
                             for(var ri=0; ri< rows.length-1; ri++){
-                                if(get_table_cell(tbl, 0, 'tbody', ri, 1).innerText.toLowerCase() == invoice.Products[pi].EmployeeName.toLowerCase()){
+                                if(get_table_cell(tbl, 0, 'tbody', ri, 1).innerText.toLowerCase().trim() == invoice.Products[pi].EmployeeName.toLowerCase().trim()){
                                     if(!sps.includes(invoice.Products[pi].EmployeeName)){
                                         sps.push(invoice.Products[pi].EmployeeName)
                                         increase_table_cell_number(tbl, ri, 4, 1, 0)
