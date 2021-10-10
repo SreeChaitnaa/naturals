@@ -54,7 +54,9 @@ ReportOps = {
     Invoices: '39',
     ADInvoices: '9',
     SmileProviderSales: '38',
-    ADSmileProviderSales: '7'
+    ADSmileProviderSales: '7',
+    MemberShipSales: '12',
+    InvoiceCancellations : '8'
     }
 
 AppointmentMessage = "Thanks for contacting Naturals Thanisandra!%0a%0a*Appointment Details:*%0a" +
