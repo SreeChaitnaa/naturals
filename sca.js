@@ -55,7 +55,8 @@ ReportOps = {
     ADInvoices: '9',
     SmileProviderSales: '38',
     ADSmileProviderSales: '7',
-    MemberShipSales: '12',
+    ADMemberShipSales: '12',
+    MemberShipSales: '40',
     InvoiceCancellations : '8'
     }
 
