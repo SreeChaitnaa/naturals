@@ -351,6 +351,7 @@ function get_payment_through(invoice){
 
 function getPrintDiv(){
     if($('#printBill')[0].children[0].tagName == 'DIV'){
+        $('#printBill')[0].children[0].style['background-image'] = ''
         return $('#printBill')[0].children[0]
     }
     else{
