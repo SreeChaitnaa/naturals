@@ -51,13 +51,22 @@ restdb_key = "612f97f843cedb6d1f97eba5"
 
 ReportOps = {
     DayWiseSales: '3',
-    Invoices: '39',
-    ADInvoices: '9',
-    SmileProviderSales: '38',
     ADSmileProviderSales: '7',
+    InvoiceCancellations : '8',
+    ADInvoices: '9',
     ADMemberShipSales: '12',
+    AudirReport : '18',
+    eWalletReport : '34',
+    SmileProviderSales: '38',
+    Invoices: '39',
     MemberShipSales: '40',
-    InvoiceCancellations : '8'
+    eWalletServiceReport : '41',
+    CustomerRetenstion : '42',
+    AdvPayments : '43',
+    AppointmentsReport : '44',
+    FamilyCardReports : '46',
+    CheckListReport : '53',
+    UnlimitedOffer : '54'
     }
 
 AppointmentMessage = "Thanks for contacting Naturals Thanisandra!%0a%0a*Appointment Details:*%0a" +
