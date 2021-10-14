@@ -332,7 +332,7 @@ function SaveAppointmentDetailsSCA(isClose) {
     var Customer = CustomerList.filter(function (x) { return x.value == Customerid; })[0]
     msg = AppointmentMessage.replace("{CustomerName}", Customer.CustomerName)
     msg = msg.replace("{DateTime}", AppointmentList[0].AppTime)
-    msg = msg.replace("{ServiceName}", ServiceList.filter(function (x) { return x.value == AppointmentList[0].ServiceId; })[0].ServiceName)
+    msg = msg.replace("{ServiceName}", ServiceList.filter(function (x) { return x.value == AppointmentList[0].ServiceId; })[0].ServiceName.replace('&', '%26'))
 
     if (isClose == 1){
         ClosemyModalCreateAppointment();
