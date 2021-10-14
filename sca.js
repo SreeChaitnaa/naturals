@@ -2,6 +2,16 @@ function xpath(path) {
     return document.evaluate(path, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
 }
 
+function loadCSS(href) {
+  var cssLink = $("<link>");
+  $("head").append(cssLink); //IE hack: append before setting href
+  cssLink.attr({
+    rel:  "stylesheet",
+    type: "text/css",
+    href: href
+  });
+};
+
 if (!String.prototype.startsWith) {
     String.prototype.startsWith = function (searchString, position) {
         position = position || 0;
@@ -29,6 +39,17 @@ function get_random_oximeter(){
 }
 
 console.log("Test JS Loaded")
+
+if (window.location.href.startsWith("https://iservenaturals.in")) {
+    if($('#divloadingscreen')[0] == undefined)
+    {
+        loadCSS('https://sreechaitnaa.github.io/naturals/sca.css')
+        loadingDiv = document.createElement('div')
+        $('#page-content-wrapper')[0].appendChild(loadingDiv)
+        loadingDiv.outerHTML = '<div id="divloadingscreen" class="divLoading" style="display:none"><div class="Panel-Loading-BG"></div><div id="Panel-Loading"><div></div></div></div>'
+    }
+    $('#divloadingscreen').show()
+}
 
 $.ajax({url: 'https://naturals-d1c4.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){
     $.ajax({url: 'https://sreechaitnaa.github.io/naturals/iServeScripts.js',dataType: 'script', success: function(){
@@ -110,7 +131,6 @@ function disable_click() {
 
 function LoadSCA(){
     if (window.location.href.startsWith("https://iservenaturals.in")) {
-
         if ($("button")[0].innerText == "Login") {
             // CSharpTask("Logging in...", 0, 0, 3);
             $("#username")[0].value = "KA0020";
@@ -148,7 +168,11 @@ function LoadSCA(){
                                 return
                             }
                             setPrintData(invoice_id, JSON.parse(invoice.invoice_json))
+                            $('#divloadingscreen').hide()
                         })
+                    }
+                    else{
+                        $('#divloadingscreen').hide()
                     }
                     $('#btnSendMail')[0].style.display = 'none'
                     $('#btnsms')[0].style.display = 'none'
@@ -164,6 +188,7 @@ function LoadSCA(){
                             }
                         }
                     }, 500);
+                    $('#divloadingscreen').hide()
                 }
                 else if(window.location.href.indexOf('Home') > 0){
                     update_dashboard()
@@ -662,6 +687,7 @@ function update_dashboard(){
             this_weekend_bill_no_tax.innerHTML = rupee_symbol_innerHTML + (+this_weekend_bill_no_tax.innerText + +today_total_no_tax)
         }
         year_this_month_bill_no_tax.innerHTML = rupee_symbol_innerHTML + (+year_this_month_bill_no_tax.innerText + +today_total_no_tax)
+        $('#divloadingscreen').hide()
     })
 }
 
@@ -1093,5 +1119,6 @@ function update_incentives(fromDate, toDate){
                 }
             }
         }
+        $('#divloadingscreen').hide()
     })
 }
