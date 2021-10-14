@@ -695,9 +695,9 @@ function doMMDBill(InvoiceModels){
     try{
         Customer = CustomerList.filter(function (x) { return x.value == InvoiceModels.InvoiceDetails.CustomerID; })[0]
         send_whatsapp(Customer.MobileNo, SalesMessage)
-        if(Customer.Membership.indexOf("Non") < 0 || Number(InvoiceModels.InvoiceDetails.MemberDiscount) > 0){
-            return
-        }
+        // if(Customer.Membership.indexOf("Non") < 0 || Number(InvoiceModels.InvoiceDetails.MemberDiscount) > 0){
+        //     return
+        // }
         NewMember = false
         for(i in InvoiceModels.Products){
             if(Number(InvoiceModels.Products[i].hdnIsMembershipSales) > 0){
@@ -709,8 +709,8 @@ function doMMDBill(InvoiceModels){
             return
         }
         
-        numerator = 1
-        denominator = 3
+        numerator = 5
+        denominator = 10
         rand_value = Number(Math.random() * 100).toFixed() % denominator
 
         if (InvoiceModels.Products.length > 0 || (rand_value < numerator) || (InvoiceModels.InvoiceDetails.RemarksRating.toLowerCase().indexOf("mmd") > -1)) {
