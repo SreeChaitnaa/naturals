@@ -198,21 +198,24 @@ function LoadSCA(){
                     ToDate = $("#toDate").val()
                     update_incentives(FromDate, ToDate)
                 }
+                else{
+                    $('#divloadingscreen').hide()
+                }
             }, 500)
 
-            setInterval(function () {
-                $.ajax({
-                    url: '/iNaturals/Customer/SearchEmployee',
-                    type: "POST",
-                    dataType: "json",
-                    cache: false,
-                    async: false,
-                    data: { Name: '' },
-                    success: function (data) {
-                        console.log("Keeping request alive")
-                    }
-                });
-            }, 30000);
+            // setInterval(function () {
+            //     $.ajax({
+            //         url: '/iNaturals/Customer/SearchEmployee',
+            //         type: "POST",
+            //         dataType: "json",
+            //         cache: false,
+            //         async: false,
+            //         data: { Name: '' },
+            //         success: function (data) {
+            //             console.log("Keeping request alive")
+            //         }
+            //     });
+            // }, 30000);
         }
     }
 }
