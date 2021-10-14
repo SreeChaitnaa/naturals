@@ -345,8 +345,8 @@ function send_whatsapp(mobile, wa_message){
     if(mobile != ""){
         phone_str = "phone=91" + mobile + "&"
     }
-    w = window.open("https://api.whatsapp.com/send/?" + phone_str + "text=" + wa_message, '_blank')
-    setTimeout(function(){w.close()}, 5000)
+    waw = window.open("https://api.whatsapp.com/send/?" + phone_str + "text=" + wa_message,'window','toolbar=no, menubar=no, resizable=no')
+    setTimeout(function(){waw.close()}, 5000)
 }
 
 function get_table_cell(parent_obj, table_index, loc, row_index, col_index){
