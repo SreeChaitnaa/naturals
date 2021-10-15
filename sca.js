@@ -212,6 +212,8 @@ function LoadSCA(){
                 }
                 else if(window.location.href.indexOf('Home') > 0){
                     update_dashboard()
+                    xpath('//*[@id="stacked-menu"]/li[1]/a').href = ''
+                    xpath('//*[@id="stacked-menu"]/li[1]/a').onclick = function(){return false}
                 }
                 else if(window.location.href.indexOf('EmpIncentive') > 0){
                     FromDate = $("#fromDate").val()
@@ -700,12 +702,16 @@ function update_dashboard(){
             switch(paymentThrough){
                 case "cash":
                     cash_bill.innerText = +cash_bill.innerText + +invoice.InvoiceDetails.GrandTotal
+                    break
                 case "card":
                     card_bill.innerText = +card_bill.innerText + +invoice.InvoiceDetails.GrandTotal
+                    break
                 case "paytm":
                     paytm_bill.innerText = +paytm_bill.innerText + +invoice.InvoiceDetails.GrandTotal
+                    break
                 case "phonepe":
                     phonepe_bill.innerText = +phonepe_bill.innerText + +invoice.InvoiceDetails.GrandTotal
+                    break
             }
         }
         total_bill.innerHTML = rupee_symbol_innerHTML + (+total_bill.innerText + +today_total)
