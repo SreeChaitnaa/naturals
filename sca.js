@@ -89,6 +89,10 @@ ReportOps = {
     CheckListReport : '53',
     UnlimitedOffer : '54'
     }
+AdminReportOps = {
+    SalonWiseSales: '2',
+    SCAInvoices: "SCA1"
+}
 
 AppointmentMessage = "Thanks for contacting Naturals Thanisandra!%0a%0a*Appointment Details:*%0a" +
                      "Name: {CustomerName}%0a" +
@@ -109,6 +113,7 @@ SalesMessage = "Thank you for using our services @ Naturals Thanisandra!%0a" +
 
 
 valid_url = false;
+is_admin = false
 for (i = 0; i < allowd_urls.length; i++) {
     if (window.location.href.startsWith(allowd_urls[i])) {
         valid_url = true
@@ -129,6 +134,13 @@ function disable_click() {
     return false 
 }
 
+function add_sca_report(report_name, report_value){
+    var opt = document.createElement('option');
+    opt.value = report_value;
+    opt.innerHTML = report_name;
+    $('#ReportOption')[0].appendChild(opt)
+}
+
 function LoadSCA(){
     if (window.location.href.startsWith("https://iservenaturals.in")) {
         if ($("button")[0].innerText == "Login") {
@@ -140,13 +152,19 @@ function LoadSCA(){
         else{
             setTimeout(function () {
                 try{
+                    if(xpath('//*[@id="stacked-menu"]/li[3]/a').innerText == 'Masters'){
+                        is_admin = true
+                    }
+                    else{
+                        xpath('//*[@id="stacked-menu"]/li[3]/a').onclick = NewAppointment
+                    }
                     //xpath('//*[@id="stacked-menu"]/li[1]/a').href = ''
                     //xpath('//*[@id="stacked-menu"]/li[1]/a').onclick = disable_click
                     // xpath('//*[@id="stacked-menu"]/li[2]/ul/li[1]/a').href = ''
                     // xpath('//*[@id="stacked-menu"]/li[2]/ul/li[1]/a').onclick = disable_click
                     // xpath('//*[@id="stacked-menu"]/li[2]/ul/li[2]/a').href = ''
                     // xpath('//*[@id="stacked-menu"]/li[2]/ul/li[2]/a').onclick = disable_click
-                    xpath('//*[@id="stacked-menu"]/li[3]/a').onclick = NewAppointment
+
                     // xpath('//*[@id="stacked-menu"]/li[5]/ul/li[3]/a').href = ''
                     // xpath('//*[@id="stacked-menu"]/li[5]/ul/li[3]/a').onclick = disable_click
                     // xpath('//*[@id="stacked-menu"]/li[5]/ul/li[4]/a').href = ''
@@ -197,6 +215,10 @@ function LoadSCA(){
                     FromDate = $("#fromDate").val()
                     ToDate = $("#toDate").val()
                     update_incentives(FromDate, ToDate)
+                }
+                else if(window.location.href.indexOf('Reports') > 0){
+                    add_sca_report("SCA Invoices", "SCA1")
+                    $('#divloadingscreen').hide()
                 }
                 else{
                     $('#divloadingscreen').hide()
@@ -797,6 +819,7 @@ function get_table_structure(reportOp){
     switch(reportOp){
         case ReportOps.Invoices:
         case ReportOps.ADInvoices:
+        case AdminReportOps.SCAInvoices:
             columns = [
                 "S.No",
                 "Invoice No",
@@ -847,6 +870,7 @@ function get_table_structure(reportOp){
                 "Paytm Amount",
                 "PhonePe"
             ]
+            break
     }
     for(i in columns){
         table_struct += '<th>' + columns[i] + '</th>'
@@ -860,6 +884,7 @@ function get_row_structure(reportOp){
     switch(reportOp){
         case ReportOps.Invoices:
         case ReportOps.ADInvoices:
+        case AdminReportOps.SCAInvoices:
             for(i=0; i<16;i++){
                 row_struct += "<td></td>"
             }
@@ -881,6 +906,14 @@ function get_row_structure(reportOp){
                 row_struct += "<td>0.0</td>"
             }
             break
+        
+        case ReportOps.SalonWiseSales:
+            row_struct += "<td></td><td>KA0020</td><td>NT-KAR-FOFO-THANISANDRA</td>"
+            for(i=2; i<17;i++){
+                row_struct += "<td></td>"
+            }
+            row_struct += "<td>Allwyn Francis</td><td>ABHISHEK KUMAR</td>"
+            break
     }
     return row_struct + "</tr>"
 }
@@ -890,8 +923,17 @@ function check_allowed_report(pmdata){
     for(i in ReportOps){
         allowed_ops.push(ReportOps[i])
     }
+    if(is_admin){
+        for(i in AdminReportOps){
+            allowed_ops.push(AdminReportOps[i])
+        }
+    }
     if(allowed_ops.includes(pmdata.ReportOption)){
         console.log("Allowed Report")
+        if(pmdata.ReportOption.startsWith("SCA")){
+            update_reports(pmdata, true)
+            throw "Handled by SCA"
+        }
     }
     else{
         toastr.error("This report is not available for current user", "Error")
@@ -930,14 +972,29 @@ function increase_table_cell_number(tbl, row_index, col_index, num_value, decima
     }
 }
 
-
-function update_reports(pmdata){
+function update_reports(pmdata, sca_report){
+    if(sca_report == undefined){
+        sca_report = false
+    }
+    console.log(pmdata)
     get_invoice_by_date(dateNumber_from_datestr(pmdata.invTo, "/"),
     dateNumber_from_datestr(pmdata.invfrom, "/"), 
     function(err, invoices){ 
         if((invoices != null) && (invoices.length > 0)){
             row_structure = get_row_structure(pmdata.ReportOption)
             previous_exists = true
+            if(sca_report){
+                if($('#exportTable')[0] == undefined){
+                    new_table = document.createElement("div")
+                    $('#Reportresult')[0].appendChild(new_table)
+                    new_table.id = 'exportTable'
+                    new_table.innerHTML = get_table_structure(pmdata.ReportOption)
+                }
+                else{
+                    $('#exportTable')[0].innerHTML = get_table_structure(pmdata.ReportOption)
+                }
+                previous_exists = false
+            }
             if($('#dtNoRecords')[0]){
                 $('#dtNoRecords')[0].outerHTML = get_table_structure(pmdata.ReportOption)
                 $('#dtReport')[0].parentElement.id = 'exportTable'
@@ -956,6 +1013,8 @@ function update_reports(pmdata){
             switch(pmdata.ReportOption){
                 case ReportOps.Invoices:
                 case ReportOps.ADInvoices:
+                case AdminReportOps.SCAInvoices:
+                    console.log(pmdata.ReportOption)
                     row_counter = 0
                     for(i in invoices){
                         try{
