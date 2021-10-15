@@ -46,7 +46,7 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
         loadCSS('https://sreechaitnaa.github.io/naturals/sca.css')
         loadingDiv = document.createElement('div')
         document.body.appendChild(loadingDiv)
-        loadingDiv.outerHTML = '<div id="divloadingscreen" class="divLoading" style="display:none"><div class="Panel-Loading-BG"></div><div id="Panel-Loading"><div></div></div></div>'
+        loadingDiv.outerHTML = '<div id="divloadingscreen" class="divLoading" style="display:none"><div class="Panel-Loading-BG2"></div><div id="Panel-Loading"><div></div></div></div>'
     }
     $('#divloadingscreen').show()
 }
