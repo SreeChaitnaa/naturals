@@ -155,9 +155,11 @@ function LoadSCA(){
                 try{
                     if(xpath('//*[@id="stacked-menu"]/li[3]/a').innerText == 'Masters'){
                         is_admin = true
+                        xpath('//*[@id="stacked-menu"]/li[3]/ul/li[3]/a').href = 'https://iservenaturals.in/iNaturals/Reports/Index?dayClose'
                     }
                     else{
                         xpath('//*[@id="stacked-menu"]/li[3]/a').onclick = NewAppointment
+                        xpath('//*[@id="stacked-menu"]/li[5]/ul/li[4]/a').href = 'https://iservenaturals.in/iNaturals/Reports/Index?dayClose'
                     }
                     //xpath('//*[@id="stacked-menu"]/li[1]/a').href = ''
                     //xpath('//*[@id="stacked-menu"]/li[1]/a').onclick = disable_click
@@ -168,7 +170,6 @@ function LoadSCA(){
 
                     // xpath('//*[@id="stacked-menu"]/li[5]/ul/li[3]/a').href = ''
                     // xpath('//*[@id="stacked-menu"]/li[5]/ul/li[3]/a').onclick = disable_click
-                    // xpath('//*[@id="stacked-menu"]/li[5]/ul/li[4]/a').href = ''
                     // xpath('//*[@id="stacked-menu"]/li[5]/ul/li[4]/a').onclick = disable_click
                     // xpath('//*[@id="stacked-menu"]/li[7]/a').href = ''
                     // xpath('//*[@id="stacked-menu"]/li[7]/a').onclick = disable_click
@@ -221,8 +222,11 @@ function LoadSCA(){
                     if(is_admin){
                         add_sca_report("SCA Invoices", "SCA1")
                         add_sca_report("SCA DayWise Sales", "SCA2")
+                        $('#divloadingscreen').hide()
                     }
-                    $('#divloadingscreen').hide()
+                    if(window.location.href.indexOf('dayClose') > 0){
+                        setTimeout(day_close, 1000)
+                    }
                 }
                 else{
                     $('#divloadingscreen').hide()
@@ -573,49 +577,39 @@ function openMMDBillPrint(billNo, invoice){
 
 function day_close(){
     today_date = new Date()
-    $("#invfrom")[0].value = today_date.dateFormat('01/m/Y')
+    $("#invfrom")[0].value = today_date.dateFormat('d/m/Y')
     $("#invTo")[0].value = today_date.dateFormat('d/m/Y')
-    $('#ReportOption')[0].selectedIndex = ReportOps.DayWiseSales - 1
+    if(is_admin){
+        $('#ReportOption')[0].selectedIndex = 2
+    }
+    else{
+        $('#ReportOption')[0].selectedIndex = 1
+    }
     Openresport();
-    get_invoice_by_date(today_date.dateFormat('Ym01'), today_date.dateFormat('Ymd'), function(err, res){
-        total = 0
-        services_total = 0
-        services_count = 0
-        products_total = 0
-        products_count = 0
-        client_count = 0
-        
-        for(i=0; i<res.length; i++){
-            inv = JSON.parse(res[i].invoice_json)
-            total += inv.InvoiceDetails.ServiceBasicSales + inv.InvoiceDetails.ProductBasicSales
-            if(res[i].date_number == today_date.dateFormat('Ymd')){
-                services_total += inv.InvoiceDetails.ServiceBasicSales
-                services_count += inv.Services.length
-                products_total += inv.InvoiceDetails.ProductBasicSales
-                products_count += inv.Products.length
-                client_count++
-            }
-        }
-        
-        tbl = $('#exportTable')[0]
-        total += Math.round(+get_table_cell(tbl, 0, 'tbody', today_date.getDate(), 19).innerText)
-        services_total += +get_table_cell(tbl, 0, 'tbody', today_date.getDate()-1, 13).innerText
-        services_count += +get_table_cell(tbl, 0, 'tbody', today_date.getDate()-1, 4).innerText
-        products_total += +get_table_cell(tbl, 0, 'tbody', today_date.getDate()-1, 16).innerText
-        products_count += +get_table_cell(tbl, 0, 'tbody', today_date.getDate()-1, 5).innerText
-        //client_count += +get_table_cell(tbl, 0, 'tbody', today_date.getDate()-1, 19).innerText
-        
-        day_close_message = "Date : *" + today_date.dateFormat('d-m-Y') +"*%0a" + 
-                            //"No of Clients : " + client_count + "%0a" + 
-                            "No of Services : " + services_count + "%0a" + 
-                            "Service Sales : " + services_total + "%0a" + 
-                            "No of Products : " + products_count + "%0a" + 
-                            "Product Sales : " + products_total + "%0a" + 
-                            "Today Total Sales : *" + (products_total+services_total) + "*%0a" + 
-                            "Month Total Sales : *" + total + "*%0a%0aClosing Now, Good Night!!!"
-        console.log(day_close_message)
-        send_whatsapp("9591312316", day_close_message)
-    })
+}
+
+function day_close_part2(){
+    tbl = $('#exportTable')[0]
+    client_count = +get_table_cell(tbl, 0, 'tbody', lastrow_index, 3).innerText
+    services_count = +get_table_cell(tbl, 0, 'tbody', lastrow_index, 4).innerText
+    products_count = +get_table_cell(tbl, 0, 'tbody', lastrow_index, 5).innerText
+    mem_count = +get_table_cell(tbl, 0, 'tbody', lastrow_index, 6).innerText
+    mem_total = +get_table_cell(tbl, 0, 'tbody', lastrow_index, 7).innerText
+    services_total = +get_table_cell(tbl, 0, 'tbody', lastrow_index, 10).innerText
+    products_total = +get_table_cell(tbl, 0, 'tbody', lastrow_index, 11).innerText
+    total = +get_table_cell(tbl, 0, 'tbody', lastrow_index, 12).innerText
+    
+    day_close_message = "Date : *" + today_date.dateFormat('d-m-Y') +"*%0a" + 
+                        "No of Clients : " + client_count + "%0a" + 
+                        "No of Services : " + services_count + "%0a" + 
+                        "Service Sales : " + services_total + "%0a" + 
+                        "No of Products : " + products_count + "%0a" + 
+                        "Product Sales : " + products_total + "%0a" + 
+                        "No of Memberships : " + mem_count + "%0a" + 
+                        "Memberships Sales : " + mem_total + "%0a%0a" + 
+                        "Total Sales : *" + total + "*%0a%0aClosing Now, Good Night!!!"
+    console.log(day_close_message)
+    send_whatsapp("9591312316", day_close_message)
 }
 
 function dateFromString(datestr){
@@ -1216,6 +1210,9 @@ function update_reports(pmdata, sca_report){
                     if(sold > 0){
                         clientCount = Number(get_table_cell(tbl, 0, 'tbody', row_counter+1, 3).innerText)
                         set_table_cell_number(tbl, row_counter+1, 17, sold/clientCount)
+                    }
+                    if(window.location.href.indexOf('dayClose') > 0){
+                        day_close_part2()
                     }
                     break
             }
