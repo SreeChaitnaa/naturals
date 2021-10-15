@@ -600,6 +600,7 @@ function day_close_part2(){
     services_total = +get_table_cell(tbl, 0, 'tbody', lastrow_index, 10).innerText
     products_total = +get_table_cell(tbl, 0, 'tbody', lastrow_index, 11).innerText
     total = +get_table_cell(tbl, 0, 'tbody', lastrow_index, 12).innerText
+    abv = +get_table_cell(tbl, 0, 'tbody', lastrow_index, 17).innerText
     
     day_close_message = "Date : *" + today_date.dateFormat('d-m-Y') +"*%0a" + 
                         "No of Clients : " + client_count + "%0a" + 
@@ -609,7 +610,8 @@ function day_close_part2(){
                         "Product Sales : " + products_total + "%0a" + 
                         "No of Memberships : " + mem_count + "%0a" + 
                         "Memberships Sales : " + mem_total + "%0a%0a" + 
-                        "Total Sales : *" + total + "*%0a%0aClosing Now, Good Night!!!"
+                        "Total Sales : *" + total +  "*%0a" +
+                        "ABV : " + abv + "%0a%0aClosing Now, Good Night!!!"
     console.log(day_close_message)
     send_whatsapp("", day_close_message)
     $('#divloadingscreen').hide()
