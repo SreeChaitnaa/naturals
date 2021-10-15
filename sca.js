@@ -71,6 +71,7 @@ allowd_urls = ["https://iservenaturals.in"]
 restdb_key = "612f97f843cedb6d1f97eba5"
 
 ReportOps = {
+    SalonWiseSales: '2',
     DayWiseSales: '3',
     ADSmileProviderSales: '7',
     InvoiceCancellations : '8',
@@ -90,7 +91,6 @@ ReportOps = {
     UnlimitedOffer : '54'
     }
 AdminReportOps = {
-    SalonWiseSales: '2',
     SCAInvoices: "SCA1",
     SCADayWiseSales: "SCA2"
 }
@@ -218,8 +218,10 @@ function LoadSCA(){
                     update_incentives(FromDate, ToDate)
                 }
                 else if(window.location.href.indexOf('Reports') > 0){
-                    add_sca_report("SCA Invoices", "SCA1")
-                    add_sca_report("SCA DayWise Sales", "SCA2")
+                    if(is_admin){
+                        add_sca_report("SCA Invoices", "SCA1")
+                        add_sca_report("SCA DayWise Sales", "SCA2")
+                    }
                     $('#divloadingscreen').hide()
                 }
                 else{
@@ -912,7 +914,7 @@ function get_row_structure(reportOp){
             break
         
         case ReportOps.SalonWiseSales:
-            row_struct += "<td></td><td>KA0020</td><td>NT-KAR-FOFO-THANISANDRA</td>"
+            row_struct += "<td>1</td><td>KA0020</td><td>NT-KAR-FOFO-THANISANDRA</td>"
             for(i=2; i<17;i++){
                 row_struct += "<td></td>"
             }
@@ -1167,6 +1169,53 @@ function update_reports(pmdata, sca_report){
                             clientCount = Number(get_table_cell(tbl, 0, 'tbody', ri, 4).innerText)
                             set_table_cell_number(tbl, ri, 7, sold/clientCount, 0)
                         }
+                    }
+                    break
+            
+                case ReportOps.SalonWiseSales:
+                    row_counter = 0
+                    if(is_admin){
+                        if(get_table_cell(tbl, 0, 'tbody', row_counter, 2).innerText.toLowerCase().indexOf('total') < 0){
+                            row_counter++
+                        }
+                    }
+
+                    if(get_table_cell(tbl, 0, 'tbody', row_counter, 2).innerText.toLowerCase().indexOf('total') > -1){
+                        get_table_cell(tbl, 0, 'tbody').insertRow(row_counter)
+                        get_table_cell(tbl, 0, 'tbody', row_counter).outerHTML = get_row_structure(pmdata.ReportOption)
+                        get_table_cell(tbl, 0, 'tbody', row_counter+1, 0).innerText = 2
+                        if(is_admin){
+                            get_table_cell(tbl, 0, 'tbody', row_counter, 0).innerText = get_table_cell(tbl, 0, 'tbody', row_counter, 0).innerText + "-SCA"
+                        }
+                    }
+                    for(var i in invoices) {
+
+                        invoice = JSON.parse(invoices[i].invoice_json)
+                        increase_table_cell_number(tbl, row_counter, 3, 1, 0)
+                        increase_table_cell_number(tbl, row_counter, 4, invoice.Services.length, 0)
+                        increase_table_cell_number(tbl, row_counter, 5, invoice.Products.length, 0)
+                        
+                        increase_table_cell_number(tbl, row_counter, 9, invoice.InvoiceDetails.MemberDiscount + invoice.InvoiceDetails.OtherDiscount)
+
+                        increase_table_cell_number(tbl, row_counter, 10, invoice.InvoiceDetails.ServiceBasicSales)
+                        increase_table_cell_number(tbl, row_counter, 11, invoice.InvoiceDetails.ProductBasicSales)
+
+                        increase_table_cell_number(tbl, row_counter, 12, invoice.InvoiceDetails.ProductBasicSales + invoice.InvoiceDetails.ServiceBasicSales)
+                        increase_table_cell_number(tbl, row_counter, 13, invoice.InvoiceDetails.ServiceTaxAmount + invoice.InvoiceDetails.ProductTaxAmount)
+                        increase_table_cell_number(tbl, row_counter, 14, invoice.InvoiceDetails.ProductNetSales + invoice.InvoiceDetails.ServiceNetSales)
+
+                        increase_table_cell_number(tbl, row_counter, 15, invoice.InvoiceDetails.RoundingOff)
+                        increase_table_cell_number(tbl, row_counter, 16, invoice.InvoiceDetails.GrandTotal)
+                    }
+                    sold = Number(get_table_cell(tbl, 0, 'tbody', row_counter, 10).innerText)
+                    if(sold > 0){
+                        clientCount = Number(get_table_cell(tbl, 0, 'tbody', row_counter, 3).innerText)
+                        set_table_cell_number(tbl, row_counter, 17, sold/clientCount)
+                    }
+                    sold = Number(get_table_cell(tbl, 0, 'tbody', row_counter+1, 10).innerText)
+                    if(sold > 0){
+                        clientCount = Number(get_table_cell(tbl, 0, 'tbody', row_counter+1, 3).innerText)
+                        set_table_cell_number(tbl, row_counter+1, 17, sold/clientCount)
                     }
                     break
             }
