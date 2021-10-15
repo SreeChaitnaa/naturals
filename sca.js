@@ -222,10 +222,12 @@ function LoadSCA(){
                     if(is_admin){
                         add_sca_report("SCA Invoices", "SCA1")
                         add_sca_report("SCA DayWise Sales", "SCA2")
-                        $('#divloadingscreen').hide()
                     }
                     if(window.location.href.indexOf('dayClose') > 0){
                         setTimeout(day_close, 1000)
+                    }
+                    else{
+                        $('#divloadingscreen').hide()
                     }
                 }
                 else{
@@ -609,7 +611,8 @@ function day_close_part2(){
                         "Memberships Sales : " + mem_total + "%0a%0a" + 
                         "Total Sales : *" + total + "*%0a%0aClosing Now, Good Night!!!"
     console.log(day_close_message)
-    send_whatsapp("9591312316", day_close_message)
+    send_whatsapp("", day_close_message)
+    $('#divloadingscreen').hide()
 }
 
 function dateFromString(datestr){
