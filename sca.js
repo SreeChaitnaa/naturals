@@ -91,7 +91,8 @@ ReportOps = {
     }
 AdminReportOps = {
     SalonWiseSales: '2',
-    SCAInvoices: "SCA1"
+    SCAInvoices: "SCA1",
+    SCADayWiseSales: "SCA2"
 }
 
 AppointmentMessage = "Thanks for contacting Naturals Thanisandra!%0a%0a*Appointment Details:*%0a" +
@@ -218,6 +219,7 @@ function LoadSCA(){
                 }
                 else if(window.location.href.indexOf('Reports') > 0){
                     add_sca_report("SCA Invoices", "SCA1")
+                    add_sca_report("SCA DayWise Sales", "SCA2")
                     $('#divloadingscreen').hide()
                 }
                 else{
@@ -770,7 +772,7 @@ function doMMDBill(InvoiceModels){
             return
         }
         
-        numerator = 5
+        numerator = 4
         denominator = 10
         rand_value = Number(Math.random() * 100).toFixed() % denominator
 
@@ -841,6 +843,7 @@ function get_table_structure(reportOp){
             ]
             break
         case ReportOps.DayWiseSales:
+        case AdminReportOps.SCADayWiseSales:
             columns = [
                 "S.No",
                 "Invoice Date",
@@ -892,6 +895,7 @@ function get_row_structure(reportOp){
             break
         
         case ReportOps.DayWiseSales:
+        case AdminReportOps.SCADayWiseSales:
             row_struct += "<td></td><td></td><td>KA0020</td><td>NT-KAR-FOFO-THANISANDRA</td>"
             for(i=0; i<3;i++){
                 row_struct += "<td>0</td>"
@@ -1056,9 +1060,18 @@ function update_reports(pmdata, sca_report){
                     }
                     break
                 case ReportOps.DayWiseSales:
+                case AdminReportOps.SCADayWiseSales:
                     row_counter = 0
+                    if(pmdata.ReportOption == AdminReportOps.SCADayWiseSales){
+                        total_tr = document.createElement('tr')
+                        get_table_cell(tbl, 0, 'tbody').appendChild(total_tr)
+                        total_tr_innerHTML = "<td></td><td>Total</td>"
+                        for(tr_c = 2; tr_c < 27; tr_c++){
+                            total_tr_innerHTML = total_tr_innerHTML + "<td></td>"
+                        }
+                        total_tr.innerHTML = total_tr_innerHTML
+                    }
                     for(var i in invoices) {
-                        console.log("Value of i - " + i)
                         try{
                             while(dateNumber_from_datestr(get_table_cell(tbl, 0, 'tbody', row_counter, 1).innerText, "-") < invoices[i].date_number){row_counter++}
                         }catch{}
@@ -1066,7 +1079,6 @@ function update_reports(pmdata, sca_report){
                         if(get_table_cell(tbl, 0, 'tbody', row_counter, 1).innerText.toLowerCase().indexOf('total') > -1 || dateNumber_from_datestr(get_table_cell(tbl, 0, 'tbody', row_counter, 1).innerText, "-") > invoices[i].date_number){
                             get_table_cell(tbl, 0, 'tbody').insertRow(row_counter)
                             get_table_cell(tbl, 0, 'tbody', row_counter).innerHTML = get_row_structure(pmdata.ReportOption)
-                            console.log("Value of i2 - " + i)
                             get_table_cell(tbl, 0, 'tbody', row_counter, 1).innerText = invoices[i].date.dateFormat("d-m-Y")
                         }
 
