@@ -1025,7 +1025,6 @@ function update_reports(pmdata, sca_report){
                 case ReportOps.Invoices:
                 case ReportOps.ADInvoices:
                 case AdminReportOps.SCAInvoices:
-                    console.log(pmdata.ReportOption)
                     row_counter = 0
                     for(i in invoices){
                         try{
@@ -1226,6 +1225,11 @@ function update_reports(pmdata, sca_report){
                         day_close_part2()
                     }
                     break
+            }
+        }
+        else{
+            if(window.location.href.indexOf('dayClose') > 0 && pmdata.ReportOption == ReportOps.SalonWiseSales){
+                day_close_part2()
             }
         }
         $('#divloadingscreen').hide();
