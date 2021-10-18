@@ -379,7 +379,7 @@ function send_whatsapp(mobile, wa_message){
     if(mobile != ""){
         phone_str = "phone=91" + mobile + "&"
     }
-    //waw = window.open("https://api.whatsapp.com/send/?" + phone_str + "text=" + wa_message,'window','toolbar=no, menubar=no, resizable=no')
+    waw = window.open("https://api.whatsapp.com/send/?" + phone_str + "text=" + wa_message,'window','toolbar=no, menubar=no, resizable=no')
     //setTimeout(function(){waw.close()}, 5000)
 }
 
@@ -848,6 +848,9 @@ function get_table_structure(reportOp){
                 "PaymentType",
                 "Print"
             ]
+            if(is_admin){
+                columns.push("Bill To")
+            }
             break
         case ReportOps.DayWiseSales:
         case AdminReportOps.SCADayWiseSales:
@@ -1014,6 +1017,12 @@ function update_reports(pmdata, sca_report){
             tbl = $('#exportTable')[0]
             if(previous_exists){
                 row_structure = get_table_cell(tbl, 0, 'tbody', 0).outerHTML
+                if(is_admin){
+                    if(pmdata.ReportOption == ReportOps.ADInvoices){
+                        get_table_cell(tbl, 0, 'thead', 0).appendChild(document.createElement('th'))
+                        get_table_cell(tbl, 0, 'thead', 0).getElementsByTagName('th')[17].innerText = "Bill To"
+                    }
+                }
             }
 
             for(i in invoices){
@@ -1036,7 +1045,12 @@ function update_reports(pmdata, sca_report){
                         invoice = JSON.parse(invoices[i].invoice_json)
                         set_table_cell_string(tbl, row_counter, 2, invoices[i].date.dateFormat('d-m-Y H:i'))
                         set_table_cell_string(tbl, row_counter, 3, invoice.Customer.ProductName)
-                        set_table_cell_string(tbl, row_counter, 4, "******" + invoice.Customer.MobileNo.substring(6))
+                        if(is_admin){
+                            set_table_cell_string(tbl, row_counter, 4, invoice.Customer.MobileNo)
+                        }
+                        else{
+                            set_table_cell_string(tbl, row_counter, 4, "******" + invoice.Customer.MobileNo.substring(6))
+                        }
                         set_table_cell_string(tbl, row_counter, 5, invoice.Services.length)
                         set_table_cell_string(tbl, row_counter, 6, invoice.Products.length)
                         set_table_cell_number(tbl, row_counter, 7, invoice.InvoiceDetails.OtherDiscount + invoice.InvoiceDetails.MemberDiscount)
@@ -1055,12 +1069,22 @@ function update_reports(pmdata, sca_report){
                         get_table_cell(tbl, 0, 'tbody', row_counter, 16).onclick = (function(billNo, invoice) {
                                 return function(){openMMDBillPrint(billNo, invoice)}
                             })(invoices[i].invoice_id, invoice)
+                        if(is_admin){
+                            if(pmdata.ReportOption == ReportOps.ADInvoices){
+                                get_table_cell(tbl, 0, 'tbody', row_counter).insertCell(17)
+                                set_table_cell_string(tbl, row_counter, 17, "SCA")
+                            }
+                        }    
                         row_counter++
                     }
 
                     total_rows = get_table_cell(tbl, 0, 'tbody').getElementsByTagName('tr').length
                     get_table_cell(tbl, 0, 'thead', 0).deleteCell(1)
                     for(i=0; i< total_rows; i++){
+                        if(get_table_cell(tbl, 0, 'tbody', i, 17) == undefined){
+                            get_table_cell(tbl, 0, 'tbody', i).insertCell(17)
+                            set_table_cell_string(tbl, i, 17, "Naturals")
+                        }
                         get_table_cell(tbl, 0, 'tbody', i, 0).innerText = i+1
                         get_table_cell(tbl, 0, 'tbody', i).deleteCell(1)
                     }
