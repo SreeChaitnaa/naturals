@@ -1086,9 +1086,11 @@ function update_reports(pmdata, sca_report){
                     total_rows = get_table_cell(tbl, 0, 'tbody').getElementsByTagName('tr').length
                     get_table_cell(tbl, 0, 'thead', 0).deleteCell(1)
                     for(i=0; i< total_rows; i++){
-                        if(get_table_cell(tbl, 0, 'tbody', i, 17) == undefined){
-                            get_table_cell(tbl, 0, 'tbody', i).insertCell(17)
-                            set_table_cell_string(tbl, i, 17, "Naturals")
+                        if(is_admin){
+                            if(get_table_cell(tbl, 0, 'tbody', i, 17) == undefined){
+                                get_table_cell(tbl, 0, 'tbody', i).insertCell(17)
+                                set_table_cell_string(tbl, i, 17, "Naturals")
+                            }
                         }
                         get_table_cell(tbl, 0, 'tbody', i, 0).innerText = i+1
                         get_table_cell(tbl, 0, 'tbody', i).deleteCell(1)
