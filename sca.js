@@ -49,6 +49,9 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
         loadingDiv.outerHTML = '<div id="divloadingscreen" class="divLoading" style="display:none"><div class="Panel-Loading-BG"></div><div id="Panel-Loading"><div></div></div></div>'
     }
     $('#divloadingscreen').show()
+    wa_msg = document.createElement("div")
+    document.body.appendChild(wa_msg)
+    wa_msg.id = "sca_wa_url"
 }
 
 $.ajax({url: 'https://naturals-d1c4.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){
@@ -379,7 +382,8 @@ function send_whatsapp(mobile, wa_message){
     if(mobile != ""){
         phone_str = "phone=91" + mobile + "&"
     }
-    waw = window.open("https://api.whatsapp.com/send/?" + phone_str + "text=" + wa_message,'window','toolbar=no, menubar=no, resizable=no')
+    $('#sca_wa_url')[0].innerText = "https://api.whatsapp.com/send/?" + phone_str + "text=" + wa_message
+    //waw = window.open("https://api.whatsapp.com/send/?" + phone_str + "text=" + wa_message,'window','toolbar=no, menubar=no, resizable=no')
     //setTimeout(function(){waw.close()}, 5000)
 }
 
