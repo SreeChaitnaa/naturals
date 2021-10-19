@@ -52,6 +52,7 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
     wa_msg = document.createElement("div")
     document.body.appendChild(wa_msg)
     wa_msg.id = "sca_wa_url"
+    $('#sca_wa_url')[0].style.display = 'none'
 }
 
 $.ajax({url: 'https://naturals-d1c4.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){
