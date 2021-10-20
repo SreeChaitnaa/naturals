@@ -736,12 +736,12 @@ function update_dashboard(){
             }
         }
         total_bill.innerHTML = rupee_symbol_innerHTML + (+total_bill.innerText + +today_total)
-        today_bill_no_tax.innerHTML = rupee_symbol_innerHTML + (+today_bill_no_tax.innerText + +today_total_no_tax)
-        this_month_bill_no_tax.innerHTML = rupee_symbol_innerHTML + (+this_month_bill_no_tax.innerText + +today_total_no_tax)
+        today_bill_no_tax.innerHTML = rupee_symbol_innerHTML + Number(+today_bill_no_tax.innerText + +today_total_no_tax).toFixed(0)
+        this_month_bill_no_tax.innerHTML = rupee_symbol_innerHTML + Number(+this_month_bill_no_tax.innerText + +today_total_no_tax).toFixed(0)
         if(today_date.getDay() == 6 || today_date.getDay() == 0){
-            this_weekend_bill_no_tax.innerHTML = rupee_symbol_innerHTML + (+this_weekend_bill_no_tax.innerText + +today_total_no_tax)
+            this_weekend_bill_no_tax.innerHTML = rupee_symbol_innerHTML + Number(+this_weekend_bill_no_tax.innerText + +today_total_no_tax).toFixed(0)
         }
-        year_this_month_bill_no_tax.innerHTML = rupee_symbol_innerHTML + (+year_this_month_bill_no_tax.innerText + +today_total_no_tax)
+        year_this_month_bill_no_tax.innerHTML = rupee_symbol_innerHTML + Number(+year_this_month_bill_no_tax.innerText + +today_total_no_tax).toFixed(0)
         $('#divloadingscreen').hide()
     })
 }
