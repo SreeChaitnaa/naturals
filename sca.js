@@ -69,7 +69,7 @@ $.ajax({url: 'https://naturals-d1c4.restdb.io/rest/_jsapi.js',dataType: 'script'
 
 
 default_url = "https://iservenaturals.in/iNaturals/WalkinInvoice/WalkinInvoice";
-print_url = "https://iservenaturals.in/iNaturals/Invoice/PrintBilling?invoiceID=8303830&VoucherPrint=NOTPRINT"
+// print_url = "https://iservenaturals.in/iNaturals/Invoice/PrintBilling?invoiceID=8303830&VoucherPrint=NOTPRINT"
 print_url = "https://iservenaturals.in/iNaturals/Invoice/PrintBilling?invoiceID=8368146&VoucherPrint=NOTPRINT"
 allowd_urls = ["https://iservenaturals.in"]
 restdb_key = "612f97f843cedb6d1f97eba5"
@@ -196,6 +196,8 @@ function LoadSCA(){
                         })
                     }
                     else{
+                        mno = get_table_cell(getPrintDiv(), 1, 'tbody', 1, 1).innerText
+                        send_whatsapp(mno, SalesMessage)
                         $('#divloadingscreen').hide()
                     }
                     $('#btnSendMail')[0].style.display = 'none'
@@ -543,6 +545,9 @@ function setPrintData(billNo, invoice) {
     if(printDiv.tagName == 'DIV'){
         printDiv.style.backgroundImage = ""
     }
+    if(window.location.href.indexOf('invoice') > -1){
+        send_whatsapp(invoice.Customer.MobileNo, SalesMessage)
+    }
 
     table_counter = changePrintPage(printDiv, billNo, invoice)
 
@@ -769,7 +774,7 @@ function doMMDBill(InvoiceModels){
     StopMessage = "Dont Continue"
     try{
         Customer = CustomerList.filter(function (x) { return x.value == InvoiceModels.InvoiceDetails.CustomerID; })[0]
-        send_whatsapp(Customer.MobileNo, SalesMessage)
+        // send_whatsapp(Customer.MobileNo, SalesMessage)
         // if(Customer.Membership.indexOf("Non") < 0 || Number(InvoiceModels.InvoiceDetails.MemberDiscount) > 0){
         //     return
         // }
