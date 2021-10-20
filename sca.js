@@ -784,7 +784,19 @@ function doMMDBill(InvoiceModels){
     debugger
     StopMessage = "Dont Continue"
     try{
-        Customer = CustomerList.filter(function (x) { return x.value == InvoiceModels.InvoiceDetails.CustomerID; })[0]
+        InvoiceModels.Customer = undefined
+        $.ajax({
+            url: '/iNaturals/Customer/SearchCustomer_ByID',
+            type: "POST",
+            dataType: "json",
+            async: false,
+            data: { CustomerID: InvoiceModels.InvoiceDetails.CustomerID },
+            success: function (data) {
+                InvoiceModels.Customer = data[0];
+                InvoiceModels.Customer.ProductName = InvoiceModels.Customer.CustomerName
+            }
+        })
+        // Customer = CustomerList.filter(function (x) { return x.value == InvoiceModels.InvoiceDetails.CustomerID; })[0]
         // send_whatsapp(Customer.MobileNo, SalesMessage)
         // if(Customer.Membership.indexOf("Non") < 0 || Number(InvoiceModels.InvoiceDetails.MemberDiscount) > 0){
         //     return
@@ -806,7 +818,6 @@ function doMMDBill(InvoiceModels){
 
         if (InvoiceModels.Products.length > 0 || (rand_value < numerator) || (InvoiceModels.InvoiceDetails.RemarksRating.toLowerCase().indexOf("mmd") > -1)) {
             FirstInvoice = InvoiceModels
-            InvoiceModels.Customer = Customer
             for (i = 0; i < InvoiceModels.Services.length; i++) {
                 InvoiceModels.Services[i].ServiceName = ServiceList.filter(function (x) { return x.value == InvoiceModels.Services[i].ServiceID; })[0].ServiceName
                 InvoiceModels.Services[i].EmployeeName = EmployeeList.filter(function (x) { return x.value == InvoiceModels.Services[i].EmployeeID; })[0].EMPName
@@ -819,6 +830,9 @@ function doMMDBill(InvoiceModels){
             for (i = 0; i < InvoiceModels.Products.length; i++) {
                 InvoiceModels.Products[i].ProductName = SCAProductList.filter(function (x) { return x.value == InvoiceModels.Products[i].ProductID; })[0].ProductName
                 InvoiceModels.Products[i].EmployeeName = EmployeeList.filter(function (x) { return x.value == InvoiceModels.Products[i].EmployeeID; })[0].EMPName
+            }
+            while (InvoiceModels.Customer == undefined) {
+                console.log("Waiting for Customer info")
             }
 
             SCAInvoice = InvoiceModels;
