@@ -181,6 +181,17 @@ function LoadSCA(){
                     // xpath('//*[@id="stacked-menu"]/li[8]/a').onclick = disable_click
                     // xpath('//*[@id="stacked-menu"]/li[9]/a').href = ''
                     // xpath('//*[@id="stacked-menu"]/li[9]/a').onclick = disable_click
+
+                    if($('#navbar-collapse')[0] != undefined){
+                        initiate_db()
+                        setTimeout(function(){
+                            get_invoice("925", function(err, res){
+                                if(err == null){
+                                    xpath('//*[@id="navbar-collapse"]/div/table/tbody/tr/td[1]').innerHTML = xpath('//*[@id="navbar-collapse"]/div/table/tbody/tr/td[1]').innerHTML.replace('I','')
+                                }
+                            })
+                        }, 500)
+                    }
                 }
                 catch(err) {console.log(err)}
                 if (url_params.has('invoiceID')) {
