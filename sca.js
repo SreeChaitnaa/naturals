@@ -652,16 +652,16 @@ function dateFromString(datestr){
     }
 }
 
-setTimeout(function() { 
-    if($('#navbar-collapse')[0] != undefined){
-        initiate_db()
-        get_invoice("921", function(err, res){
-            if(err == null){
-                xpath('//*[@id="navbar-collapse"]/div/table/tbody/tr/td[1]').innerHTML = xpath('//*[@id="navbar-collapse"]/div/table/tbody/tr/td[1]').innerHTML.replace('I','')
-            }
-        })
-    }
-}, 5000)
+// setTimeout(function() { 
+//     if($('#navbar-collapse')[0] != undefined){
+//         initiate_db()
+//         get_invoice("921", function(err, res){
+//             if(err == null){
+//                 xpath('//*[@id="navbar-collapse"]/div/table/tbody/tr/td[1]').innerHTML = xpath('//*[@id="navbar-collapse"]/div/table/tbody/tr/td[1]').innerHTML.replace('I','')
+//             }
+//         })
+//     }
+// }, 5000)
 
 function update_dashboard(){
     today_date = new Date(xpath('//*[@id="txtdate"]').innerText)
