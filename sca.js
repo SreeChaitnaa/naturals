@@ -151,7 +151,7 @@ function LoadSCA(){
         if ($("button")[0].innerText == "Login") {
             // CSharpTask("Logging in...", 0, 0, 3);
             $("#username")[0].value = "KA0020";
-            $("#password")[0].value = "JaiSriRam";
+            $("#password")[0].value = "JaiSriRam1";
             $("button")[0].click();
         }
         else{
