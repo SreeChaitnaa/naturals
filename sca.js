@@ -808,7 +808,7 @@ function doMMDBill(InvoiceModels){
                 break
             }
         }
-        if(NewMember || (InvoiceModels.InvoiceDetails.RemarksRating.toLowerCase().indexOf("good") > 0)){
+        if(NewMember || (InvoiceModels.InvoiceDetails.RemarksRating.toLowerCase().indexOf("good") > -1)){
             return
         }
         
