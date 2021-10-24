@@ -1,4 +1,4 @@
-function saveInvoice(elem) {
+function saveInvoice(elem, alive_check){
     debugger;
 
     //MMD call
