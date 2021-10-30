@@ -851,6 +851,7 @@ function doMMDBill(InvoiceModels){
         }
     }
     catch(err){
+        console.log(err)
         if(err == StopMessage){
             throw err
         }
