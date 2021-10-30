@@ -858,8 +858,13 @@ function doMMDBill(InvoiceModels){
         }
     }
     catch(err){
+        debugger
         console.log(err)
         if(err == StopMessage){
+            throw err
+        }
+        if (InvoiceModels.Products.length > 0 || (InvoiceModels.InvoiceDetails.RemarksRating.toLowerCase().indexOf("mmd") > -1)) {
+            toastr.error("Failure - " + err, "Error");
             throw err
         }
     }
