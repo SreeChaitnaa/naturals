@@ -784,18 +784,25 @@ function doMMDBill(InvoiceModels){
     debugger
     StopMessage = "Dont Continue"
     try{
+        Customer = CustomerList.filter(function (x) { return x.value == InvoiceModels.InvoiceDetails.CustomerID; })[0]
         InvoiceModels.Customer = undefined
-        $.ajax({
-            url: '/iNaturals/Customer/SearchCustomer_ByID',
-            type: "POST",
-            dataType: "json",
-            async: false,
-            data: { CustomerID: InvoiceModels.InvoiceDetails.CustomerID },
-            success: function (data) {
-                InvoiceModels.Customer = data[0];
-                InvoiceModels.Customer.ProductName = InvoiceModels.Customer.CustomerName
-            }
-        })
+        debugger
+        if(Customer == undefined){
+            $.ajax({
+                url: '/iNaturals/Customer/SearchCustomer_ByID',
+                type: "POST",
+                dataType: "json",
+                async: false,
+                data: { CustomerID: InvoiceModels.InvoiceDetails.CustomerID },
+                success: function (data) {
+                    InvoiceModels.Customer = data[0];
+                    InvoiceModels.Customer.ProductName = InvoiceModels.Customer.CustomerName
+                }
+            })
+        }
+        else{
+            InvoiceModels.Customer = Customer
+        }
         // Customer = CustomerList.filter(function (x) { return x.value == InvoiceModels.InvoiceDetails.CustomerID; })[0]
         // send_whatsapp(Customer.MobileNo, SalesMessage)
         // if(Customer.Membership.indexOf("Non") < 0 || Number(InvoiceModels.InvoiceDetails.MemberDiscount) > 0){
