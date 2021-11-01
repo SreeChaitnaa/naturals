@@ -613,7 +613,7 @@ function day_close(){
     Openresport();
 }
 
-function day_close_part2(){
+function day_close_part2(pmdata){
     tbl = $('#exportTable')[0]
     client_count = +get_table_cell(tbl, 0, 'tbody', lastrow_index, 3).innerText
     services_count = +get_table_cell(tbl, 0, 'tbody', lastrow_index, 4).innerText
@@ -625,7 +625,11 @@ function day_close_part2(){
     total = +get_table_cell(tbl, 0, 'tbody', lastrow_index, 12).innerText
     abv = +get_table_cell(tbl, 0, 'tbody', lastrow_index, 17).innerText
     
-    day_close_message = "Date : *" + today_date.dateFormat('d-m-Y') +"*%0a" + 
+    date_str = pmdata.invTo.replaceAll("/", "-")
+    if(pmdata.invfrom != pmdata.invTo){
+        date_str = pmdata.invfrom.replaceAll("/", "-") + " to " + pmdata.invTo.replaceAll("/", "-")
+    }
+    day_close_message = "Date : *" + date_str +"*%0a" + 
                         "No of Clients : " + client_count + "%0a" + 
                         "No of Services : " + services_count + "%0a" + 
                         "Service Sales : " + services_total + "%0a" + 
@@ -1296,14 +1300,14 @@ function update_reports(pmdata, sca_report){
                         set_table_cell_number(tbl, row_counter+1, 17, sold/clientCount)
                     }
                     if(window.location.href.indexOf('dayClose') > 0){
-                        day_close_part2()
+                        day_close_part2(pmdata)
                     }
                     break
             }
         }
         else{
             if(window.location.href.indexOf('dayClose') > 0 && pmdata.ReportOption == ReportOps.SalonWiseSales){
-                day_close_part2()
+                day_close_part2(pmdata)
             }
         }
         $('#divloadingscreen').hide();
