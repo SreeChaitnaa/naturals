@@ -90,6 +90,7 @@ ReportOps = {
     CustomerRetenstion : '42',
     AdvPayments : '43',
     AppointmentsReport : '44',
+    ServiceClassReportNew: '45',
     FamilyCardReports : '46',
     CheckListReport : '53',
     UnlimitedOffer : '54'
@@ -936,6 +937,33 @@ function get_table_structure(reportOp){
                 "PhonePe"
             ]
             break
+        case ReportOps.ServiceClassReportNew:
+            columns = [
+                "S.No",
+                "InvoiceNo",
+                "Invoice Date",
+                "Outlet Name",
+                "Service Name",
+                "Service Code",
+                "Guest",
+                "Phone",
+                "Emp Code",
+                "Sold By",
+                "Qty",
+                "Price",
+                "Discount",
+                "Mem Discount",
+                "Net Price",
+                "CGST",
+                "SGST",
+                "Tax",
+                "Sale Value",
+                "PaymentType",
+                "AppointmentSource",
+                "FirstVisit",
+                "Member"
+            ]
+            break
     }
     for(i in columns){
         table_struct += '<th>' + columns[i] + '</th>'
@@ -979,6 +1007,13 @@ function get_row_structure(reportOp){
                 row_struct += "<td></td>"
             }
             row_struct += "<td>Allwyn Francis</td><td>ABHISHEK KUMAR</td>"
+            break
+        
+        case ReportOps.ServiceClassReportNew:
+            row_struct += "<td></td><td></td><td></td><td>NT-KAR-FOFO-THANISANDRA</td>"
+            for(i=0; i<19;i++){
+                row_struct += "<td></td>"
+            }
             break
     }
     return row_struct + "</tr>"
@@ -1301,6 +1336,67 @@ function update_reports(pmdata, sca_report){
                     }
                     if(window.location.href.indexOf('dayClose') > 0){
                         day_close_part2(pmdata)
+                    }
+                    break
+                case ReportOps.ServiceClassReportNew:
+                    row_counter = 0
+                    for(i in invoices){
+                        try{
+                            while(dateFromString(get_table_cell(tbl, 0, 'tbody', row_counter, 2).innerText) < invoices[i].date){row_counter++}
+                        }catch{}
+
+                        invoice = JSON.parse(invoices[i].invoice_json)
+                        for(j in invoice.Services){
+                            get_table_cell(tbl, 0, 'tbody').insertRow(row_counter)
+                            get_table_cell(tbl, 0, 'tbody', row_counter).innerHTML = row_structure
+                            set_table_cell_number(tbl, row_counter, 10, 0)
+                            set_table_cell_number(tbl, row_counter, 14, 0)
+                            set_table_cell_number(tbl, row_counter, 15, 0)
+                            set_table_cell_number(tbl, row_counter, 16, 0)
+                            set_table_cell_number(tbl, row_counter, 17, 0)
+                            set_table_cell_number(tbl, row_counter, 18, 0)
+
+                            set_table_cell_string(tbl, row_counter, 2, invoices[i].date.dateFormat('d-m-Y'))
+                            service = invoice.Services[j]
+                            set_table_cell_string(tbl, row_counter, 4, service.ServiceName)
+                            // set_table_cell_string(tbl, row_counter, 5, serviceCode)
+                            set_table_cell_string(tbl, row_counter, 6, invoice.Customer.ProductName)
+                            if(is_admin){
+                                set_table_cell_string(tbl, row_counter, 7, invoice.Customer.MobileNo)
+                            }
+                            else{
+                                set_table_cell_string(tbl, row_counter, 7, "******" + invoice.Customer.MobileNo.substring(6))
+                            }
+                            // set_table_cell_number(tbl, row_counter, 8, empCode)
+                            set_table_cell_string(tbl, row_counter, 9, service.EmployeeName)
+                            increase_table_cell_number(tbl, row_counter, 10, service.Qty, 0)
+                            set_table_cell_number(tbl, row_counter, 11, service.ServicePrice, 0)
+                            set_table_cell_number(tbl, row_counter, 12, service.DiscountAmount, 0)
+                            set_table_cell_number(tbl, row_counter, 13, service.MemberDiscount)
+                            increase_table_cell_number(tbl, row_counter, 14, service.NetPrice, 0)
+                            increase_table_cell_number(tbl, row_counter, 15, service.serviceCGST)
+                            increase_table_cell_number(tbl, row_counter, 16, service.serviceSGST)
+                            increase_table_cell_number(tbl, row_counter, 17, service.TaxPercentage, 0)
+                            increase_table_cell_number(tbl, row_counter, 18, service.GrandPrice, 0)
+                            paymentThrough = get_payment_through(invoice).toUpperCase()
+                            if(paymentThrough != 'CASH'){
+                                paymentThrough = "/"+paymentThrough
+                            }
+                            set_table_cell_string(tbl, row_counter, 19, paymentThrough)
+                            set_table_cell_string(tbl, row_counter, 22, 'N')  
+                            row_counter++
+                        }
+                    }
+
+                    total_rows = get_table_cell(tbl, 0, 'tbody').getElementsByTagName('tr').length
+                    get_table_cell(tbl, 0, 'thead', 0).deleteCell(1)
+                    get_table_cell(tbl, 0, 'thead', 0).deleteCell(4)
+                    get_table_cell(tbl, 0, 'thead', 0).deleteCell(6)
+                    for(i=0; i< total_rows; i++){
+                        get_table_cell(tbl, 0, 'tbody', i, 0).innerText = i+1
+                        get_table_cell(tbl, 0, 'tbody', i).deleteCell(1)
+                        get_table_cell(tbl, 0, 'tbody', i).deleteCell(4)
+                        get_table_cell(tbl, 0, 'tbody', i).deleteCell(6)
                     }
                     break
             }
