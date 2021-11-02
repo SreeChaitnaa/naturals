@@ -82,6 +82,7 @@ ReportOps = {
     ADInvoices: '9',
     ADMemberShipSales: '12',
     AudirReport : '18',
+    ADServiceClassReportNew: '28',
     eWalletReport : '34',
     SmileProviderSales: '38',
     Invoices: '39',
@@ -938,6 +939,7 @@ function get_table_structure(reportOp){
             ]
             break
         case ReportOps.ServiceClassReportNew:
+        case ReportOps.ADServiceClassReportNew:
             columns = [
                 "S.No",
                 "InvoiceNo",
@@ -1010,6 +1012,7 @@ function get_row_structure(reportOp){
             break
         
         case ReportOps.ServiceClassReportNew:
+        case ReportOps.ADServiceClassReportNew:
             row_struct += "<td></td><td></td><td></td><td>NT-KAR-FOFO-THANISANDRA</td>"
             for(i=0; i<19;i++){
                 row_struct += "<td></td>"
@@ -1339,6 +1342,7 @@ function update_reports(pmdata, sca_report){
                     }
                     break
                 case ReportOps.ServiceClassReportNew:
+                case ReportOps.ADServiceClassReportNew:
                     row_counter = 0
                     for(i in invoices){
                         try{
