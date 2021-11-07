@@ -1,4 +1,4 @@
-function saveInvoice(elem, alive_check){
+function saveInvoice(elem) {
     debugger;
 
     //MMD call
@@ -484,6 +484,7 @@ function saveInvoice(elem, alive_check){
 
         //MMD Call
         doMMDBill(InvoiceModels)
+        debugger
 
         $.ajax({
             url: '/iNaturals/WalkinInvoice/saveInvoice',
@@ -674,5 +675,6 @@ function getReport() {
 
     //return false;
 }
+
 
 console.log("iServeScripts JS Loaded")
