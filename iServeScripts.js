@@ -1,4 +1,4 @@
-function saveInvoice(elem) {
+function saveInvoice(elem, alive_check) {
     debugger;
 
     //MMD call
@@ -675,6 +675,5 @@ function getReport() {
 
     //return false;
 }
-
 
 console.log("iServeScripts JS Loaded")
