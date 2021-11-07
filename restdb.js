@@ -69,15 +69,20 @@ function get_invoice(invoice_id, callback){
 
 function get_invoice_by_date(max_date, min_date, callback){
     initiate_db()
-    db.invoices.find({'date_number':{"$bt": [max_date, min_date]}},[],function(err, res){
-        if(err != null){
-            callback(err, null);
-        }
-        else{
-            console.log(res)
-            callback(null, res)
-        }
-    })
+    if(max_date == "0"){
+        db.inventory.find({}, [], callback)
+    }
+    else{
+        db.invoices.find({'date_number':{"$bt": [max_date, min_date]}},[],function(err, res){
+            if(err != null){
+                callback(err, null);
+            }
+            else{
+                console.log(res)
+                callback(null, res)
+            }
+        })
+    }
 }
 
 function get_setting(key, callback){
@@ -104,6 +109,24 @@ function update_setting(key, value, callback){
             res[0].value = value
             res[0].save(callback)
         }
+    })
+}
+
+function add_inventory(prod_id, prod_name, prod_count){
+    initiate_db()
+    db.inventory.find({'prod_id':prod_id},[], function(err, res){
+        if(err){
+            throw err
+        }
+        var new_item = null
+        if(res.length > 0){
+            new_item = res[0]
+            new_item.count += prod_count
+        }
+        else{
+            new_item = new db.inventory({prod_name:prod_name, prod_id:prod_id, count :0+prod_count})
+        }
+        new_item.save()
     })
 }
 console.log("RESTDB JS Loaded")
