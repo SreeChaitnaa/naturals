@@ -96,7 +96,8 @@ ReportOps = {
     ServiceClassReportNew: '45',
     FamilyCardReports : '46',
     CheckListReport : '53',
-    UnlimitedOffer : '54'
+    UnlimitedOffer : '54',
+    SCAProductInventory: "SCA3"
     }
 AdminReportOps = {
     SCAInvoices: "SCA1",
@@ -169,6 +170,16 @@ function LoadSCA(){
                         xpath('//*[@id="stacked-menu"]/li[3]/a').onclick = NewAppointment
                         xpath('//*[@id="stacked-menu"]/li[5]/ul/li[4]/a').href = 'https://iservenaturals.in/iNaturals/Reports/Index?dayClose'
                     }
+                    if(is_admin){
+                        p = xpath('//*[@id="stacked-menu"]').children[5]
+                        q = document.createElement('li')
+                        xpath('//*[@id="stacked-menu"]').insertBefore(q, p)
+                        q.innerHTML = p.innerHTML
+                        q.children[0].children[0].setAttribute('class', 'fa fa-fw fa-2x')
+                        q.children[0].children[0].innerHTML = '<img width=35 src="/iNaturals/Images/Naturals_icon/psales.png"></img>'
+                        q.children[0].children[1].innerText = 'Add Products'
+                        q.children[0].href = '/iNaturals/WalkinInvoice/WalkinInvoice?AddProducts'
+                    }
                     //xpath('//*[@id="stacked-menu"]/li[1]/a').href = ''
                     //xpath('//*[@id="stacked-menu"]/li[1]/a').onclick = disable_click
                     // xpath('//*[@id="stacked-menu"]/li[2]/ul/li[1]/a').href = ''
@@ -229,6 +240,9 @@ function LoadSCA(){
                             }
                         }
                     }, 500);
+                    if(window.location.href.indexOf('AddProducts') > 0){
+                        add_products_page_setup()
+                    }
                     $('#divloadingscreen').hide()
                 }
                 else if(window.location.href.indexOf('Home') > 0){
@@ -242,9 +256,10 @@ function LoadSCA(){
                     update_incentives(FromDate, ToDate)
                 }
                 else if(window.location.href.indexOf('Reports') > 0){
+                    add_sca_report("Product Inventory", ReportOps.SCAProductInventory)
                     if(is_admin){
-                        add_sca_report("SCA Invoices", "SCA1")
-                        add_sca_report("SCA DayWise Sales", "SCA2")
+                        add_sca_report("SCA Invoices", AdminReportOps.SCAInvoices)
+                        add_sca_report("SCA DayWise Sales", AdminReportOps.SCADayWiseSales)
                     }
                     if(window.location.href.indexOf('dayClose') > 0){
                         setTimeout(day_close, 1000)
@@ -275,6 +290,40 @@ function LoadSCA(){
     }
 }
 
+function add_products_page_setup(){
+    y = $('#accordion')[0]
+    y.removeChild(y.children[0])
+    y.removeChild(y.children[0])
+    y.removeChild(y.children[1])
+    xpath('//*[@id="page-content-wrapper"]/div[2]/div[2]').innerHTML = ""
+    $('#productHead')[0].innerHTML = "Add Product Details"
+    z = document.createElement("input")
+    y.appendChild(z)
+    z.type = "button"
+    z.style.float = 'right'
+    z.setAttribute('class', 'btn btn-lightblue')
+    z.setAttribute('value', 'Add Products')
+    z.onclick = function(){
+        $('#divloadingscreen').show()
+        counter = 0
+        while(true){
+            product_id = document.getElementsByName('Products[' + counter +'].ProductID')[0].value
+            if(product_id == ''){
+                while(counter > 0){
+                    document.getElementsByClassName('removeProduct')[0].click()
+                    counter--
+                }
+                $('#divloadingscreen').hide()
+                toastr.success("Products Updated...", "Success")
+                break
+            }
+            product_qty = document.getElementsByName('Products[' + counter +'].Qty')[0].value
+            product_name = document.getElementsByName('Products[' + counter +'].ProductName')[0].value
+            add_inventory(+product_id, product_name, +product_qty)
+            counter++
+        }
+    }
+}
 
 function NewAppointment() {
     CreateAppoinment();
@@ -792,6 +841,12 @@ function doMMDBill(InvoiceModels){
     debugger
     StopMessage = "Dont Continue"
     try{
+        for(counter in InvoiceModels.Products){
+            product_id = +InvoiceModels.Products[counter].ProductID
+            product_qty = 0-(+InvoiceModels.Products[counter].Qty)
+            product_name = document.getElementsByName('Products[' + counter +'].ProductName')[0].value
+            add_inventory(product_id, product_name, product_qty)
+        }
         Customer = CustomerList.filter(function (x) { return x.value == InvoiceModels.InvoiceDetails.CustomerID; })[0]
         InvoiceModels.Customer = undefined
         debugger
@@ -940,6 +995,14 @@ function get_table_structure(reportOp){
                 "PhonePe"
             ]
             break
+        case ReportOps.SCAProductInventory:
+            columns = [
+                "S.No",
+                "Product ID",
+                "Product Name",
+                "Product Quantity"
+            ]
+            break
     }
     for(i in columns){
         table_struct += '<th>' + columns[i] + '</th>'
@@ -984,6 +1047,11 @@ function get_row_structure(reportOp){
             }
             row_struct += "<td>Allwyn Francis</td><td>ABHISHEK KUMAR</td>"
             break
+        case ReportOps.SCAProductInventory:
+            for(i=0; i<4;i++){
+                row_struct += "<td></td>"
+            }
+            break
     }
     return row_struct + "</tr>"
 }
@@ -1001,6 +1069,11 @@ function check_allowed_report(pmdata){
     if(allowed_ops.includes(pmdata.ReportOption)){
         console.log("Allowed Report")
         if(pmdata.ReportOption.startsWith("SCA")){
+            if(pmdata.ReportOption == ReportOps.SCAProductInventory){
+                pmdata.invTo = "0"
+                pmdata.invfrom = "0"
+            }
+            $('#divloadingscreen').show()
             update_reports(pmdata, true)
             throw "Handled by SCA"
         }
@@ -1080,407 +1153,419 @@ function update_reports(pmdata, sca_report){
                     }
                 }
             }
-
-            for(i in invoices){
-                invoices[i].date = new Date(invoices[i].date)
+            if(pmdata.ReportOption == ReportOps.SCAProductInventory){
+                for(row_counter in invoices){
+                    product = invoices[row_counter]
+                    get_table_cell(tbl, 0, 'tbody').insertRow(row_counter)
+                    get_table_cell(tbl, 0, 'tbody', row_counter).innerHTML = row_structure
+                    set_table_cell_string(tbl, row_counter, 0, +row_counter+1)
+                    set_table_cell_string(tbl, row_counter, 1, product.prod_id)
+                    set_table_cell_string(tbl, row_counter, 2, product.prod_name)
+                    set_table_cell_string(tbl, row_counter, 3, product.count)
+                }
             }
-            invoices.sort(function(x,y){return x.date-y.date})
-            sca_invoices = invoices
-            switch(pmdata.ReportOption){
-                case ReportOps.Invoices:
-                case ReportOps.ADInvoices:
-                case AdminReportOps.SCAInvoices:
-                    row_counter = 0
-                    for(i in invoices){
-                        try{
-                            while(dateFromString(get_table_cell(tbl, 0, 'tbody', row_counter, 2).innerText) < invoices[i].date){row_counter++}
-                        }catch{}
-                        get_table_cell(tbl, 0, 'tbody').insertRow(row_counter)
-                        get_table_cell(tbl, 0, 'tbody', row_counter).innerHTML = row_structure
-
-                        invoice = JSON.parse(invoices[i].invoice_json)
-                        set_table_cell_string(tbl, row_counter, 2, invoices[i].date.dateFormat('d-m-Y H:i'))
-                        set_table_cell_string(tbl, row_counter, 3, invoice.Customer.ProductName)
-                        if(is_admin){
-                            set_table_cell_string(tbl, row_counter, 4, invoice.Customer.MobileNo)
-                        }
-                        else{
-                            set_table_cell_string(tbl, row_counter, 4, "******" + invoice.Customer.MobileNo.substring(6))
-                        }
-                        set_table_cell_string(tbl, row_counter, 5, invoice.Services.length)
-                        set_table_cell_string(tbl, row_counter, 6, invoice.Products.length)
-                        set_table_cell_number(tbl, row_counter, 7, invoice.InvoiceDetails.OtherDiscount + invoice.InvoiceDetails.MemberDiscount)
-                        set_table_cell_number(tbl, row_counter, 8, invoice.InvoiceDetails.ServiceBasicSales)
-                        set_table_cell_number(tbl, row_counter, 9, invoice.InvoiceDetails.ServiceTaxAmount)
-                        set_table_cell_number(tbl, row_counter, 10, invoice.InvoiceDetails.ServiceNetSales)
-                        set_table_cell_number(tbl, row_counter, 11, invoice.InvoiceDetails.ProductBasicSales)
-                        set_table_cell_number(tbl, row_counter, 12, invoice.InvoiceDetails.ProductTaxAmount)
-                        set_table_cell_number(tbl, row_counter, 13, invoice.InvoiceDetails.ProductNetSales)
-                        set_table_cell_number(tbl, row_counter, 14, invoice.InvoiceDetails.ProductNetSales + invoice.InvoiceDetails.ServiceNetSales)
-                        paymentThrough = get_payment_through(invoice).toUpperCase()
-                        if(paymentThrough != 'CASH'){
-                            paymentThrough = "/"+paymentThrough
-                        }
-                        set_table_cell_string(tbl, row_counter, 15, paymentThrough)
-                        get_table_cell(tbl, 0, 'tbody', row_counter, 16).onclick = (function(billNo, invoice) {
-                                return function(){openMMDBillPrint(billNo, invoice)}
-                            })(invoices[i].invoice_id, invoice)
-                        if(is_admin){
-                            if(pmdata.ReportOption == ReportOps.ADInvoices){
-                                get_table_cell(tbl, 0, 'tbody', row_counter).insertCell(17)
-                                set_table_cell_string(tbl, row_counter, 17, "SCA")
-                            }
-                        }    
-                        row_counter++
-                    }
-
-                    total_rows = get_table_cell(tbl, 0, 'tbody').getElementsByTagName('tr').length
-                    get_table_cell(tbl, 0, 'thead', 0).deleteCell(1)
-                    for(i=0; i< total_rows; i++){
-                        if(is_admin){
-                            if(get_table_cell(tbl, 0, 'tbody', i, 17) == undefined){
-                                get_table_cell(tbl, 0, 'tbody', i).insertCell(17)
-                                set_table_cell_string(tbl, i, 17, "Naturals")
-                            }
-                        }
-                        get_table_cell(tbl, 0, 'tbody', i, 0).innerText = i+1
-                        get_table_cell(tbl, 0, 'tbody', i).deleteCell(1)
-                    }
-                    break
-                case ReportOps.DayWiseSales:
-                case AdminReportOps.SCADayWiseSales:
-                    row_counter = 0
-                    if(pmdata.ReportOption == AdminReportOps.SCADayWiseSales){
-                        total_tr = document.createElement('tr')
-                        get_table_cell(tbl, 0, 'tbody').appendChild(total_tr)
-                        total_tr_innerHTML = "<td></td><td>Total</td>"
-                        for(tr_c = 2; tr_c < 27; tr_c++){
-                            total_tr_innerHTML = total_tr_innerHTML + "<td></td>"
-                        }
-                        total_tr.innerHTML = total_tr_innerHTML
-                    }
-                    for(var i in invoices) {
-                        try{
-                            while(dateNumber_from_datestr(get_table_cell(tbl, 0, 'tbody', row_counter, 1).innerText, "-") < invoices[i].date_number){row_counter++}
-                        }catch{}
-
-                        if(get_table_cell(tbl, 0, 'tbody', row_counter, 1).innerText.toLowerCase().indexOf('total') > -1 || dateNumber_from_datestr(get_table_cell(tbl, 0, 'tbody', row_counter, 1).innerText, "-") > invoices[i].date_number){
-                            get_table_cell(tbl, 0, 'tbody').insertRow(row_counter)
-                            get_table_cell(tbl, 0, 'tbody', row_counter).innerHTML = get_row_structure(pmdata.ReportOption)
-                            get_table_cell(tbl, 0, 'tbody', row_counter, 1).innerText = invoices[i].date.dateFormat("d-m-Y")
-                        }
-
-                        invoice = JSON.parse(invoices[i].invoice_json)
-                        increase_table_cell_number(tbl, row_counter, 4, invoice.Services.length, 0)
-                        increase_table_cell_number(tbl, row_counter, 5, invoice.Products.length, 0)
-                        
-                        increase_table_cell_number(tbl, row_counter, 10, invoice.InvoiceDetails.ServiceBasicSales + invoice.InvoiceDetails.OtherDiscount)
-                        increase_table_cell_number(tbl, row_counter, 11, invoice.InvoiceDetails.OtherDiscount)
-                        
-                        increase_table_cell_number(tbl, row_counter, 13, invoice.InvoiceDetails.ServiceBasicSales)
-                        increase_table_cell_number(tbl, row_counter, 14, invoice.InvoiceDetails.ServiceTaxAmount / 2)
-                        increase_table_cell_number(tbl, row_counter, 15, invoice.InvoiceDetails.ServiceTaxAmount / 2)
-                        
-                        increase_table_cell_number(tbl, row_counter, 16, invoice.InvoiceDetails.ProductBasicSales)
-                        increase_table_cell_number(tbl, row_counter, 17, invoice.InvoiceDetails.ProductTaxAmount / 2)
-                        increase_table_cell_number(tbl, row_counter, 18, invoice.InvoiceDetails.ProductTaxAmount / 2)
-
-                        increase_table_cell_number(tbl, row_counter, 19, invoice.InvoiceDetails.ProductBasicSales + invoice.InvoiceDetails.ServiceBasicSales)
-                        increase_table_cell_number(tbl, row_counter, 20, invoice.InvoiceDetails.ProductNetSales + invoice.InvoiceDetails.ServiceNetSales)
-                        increase_table_cell_number(tbl, row_counter, 21, invoice.InvoiceDetails.RoundingOff)
-                        increase_table_cell_number(tbl, row_counter, 22, invoice.InvoiceDetails.GrandTotal)
-
-                        if(invoice.InvoiceDetails.IsPhonePe == "1"){
-                            increase_table_cell_number(tbl, row_counter, 26, invoice.InvoiceDetails.GrandTotal)
-                        }
-                        else if(invoice.InvoiceDetails.IsPaytm == "1"){
-                            increase_table_cell_number(tbl, row_counter, 25, invoice.InvoiceDetails.GrandTotal)
-                        }
-                        else if(invoice.InvoiceDetails.isCardPayment == "1"){
-                            increase_table_cell_number(tbl, row_counter, 24, invoice.InvoiceDetails.GrandTotal)
-                        }
-                        else{
-                            increase_table_cell_number(tbl, row_counter, 23, invoice.InvoiceDetails.GrandTotal)
-                        }
-                    }
-
-                    for(i=0; i< lastrow_index; i++){
-                        get_table_cell(tbl, 0, 'tbody', i, 0).innerText = i+1
-                    }
-                    break
-                case ReportOps.SmileProviderSales:
-                case ReportOps.ADSmileProviderSales:
-                    rows = get_table_cell(tbl, 0, 'tbody').getElementsByTagName('tr')
-                    for(var i in invoices){
-                        invoice = JSON.parse(invoices[i].invoice_json)
-                        sps = []
-                        for(var si in invoice.Services){
-                            for(var ri=0; ri< rows.length-1; ri++){
-                                if(get_table_cell(tbl, 0, 'tbody', ri, 1).innerText.toLowerCase().trim() == invoice.Services[si].EmployeeName.toLowerCase().trim()){
-                                    if(!sps.includes(invoice.Services[si].EmployeeName)){
-                                        sps.push(invoice.Services[si].EmployeeName)
-                                        increase_table_cell_number(tbl, ri, 4, 1, 0)
-                                    }
-                                    increase_table_cell_number(tbl, ri, 5, 1, 0)
-                                    increase_table_cell_number(tbl, ri, 6, invoice.Services[si].NetPrice)
-                                    increase_table_cell_number(tbl, ri, 8, invoice.Services[si].DiscountAmount)
-
-                                    increase_table_cell_number(tbl, ri, 14, invoice.Services[si].NetPrice + invoice.Services[si].DiscountAmount, 2)
-                                    increase_table_cell_number(tbl, ri, 15, invoice.Services[si].NetPrice, 2)
-                                    break
-                                }
-                            }
-                        }
-                        for(var pi in invoice.Products){
-                            for(var ri=0; ri< rows.length-1; ri++){
-                                if(get_table_cell(tbl, 0, 'tbody', ri, 1).innerText.toLowerCase().trim() == invoice.Products[pi].EmployeeName.toLowerCase().trim()){
-                                    if(!sps.includes(invoice.Products[pi].EmployeeName)){
-                                        sps.push(invoice.Products[pi].EmployeeName)
-                                        increase_table_cell_number(tbl, ri, 4, 1, 0)
-                                    }
-
-                                    increase_table_cell_number(tbl, ri, 12, 1, 0)
-                                    increase_table_cell_number(tbl, ri, 13, invoice.Products[pi].NetPrice)
-
-                                    increase_table_cell_number(tbl, ri, 14, invoice.Products[pi].NetPrice, 2)
-                                    increase_table_cell_number(tbl, ri, 15, invoice.Products[pi].NetPrice, 2)
-                                    break
-                                }
-                            }
-                        }
-                    }
-                    for(var ri=0; ri< rows.length-1; ri++){
-                        sold = Number(get_table_cell(tbl, 0, 'tbody', ri, 6).innerText)
-                        if(sold > 0){
-                            clientCount = Number(get_table_cell(tbl, 0, 'tbody', ri, 4).innerText)
-                            set_table_cell_number(tbl, ri, 7, sold/clientCount, 0)
-                        }
-                    }
-                    break
-            
-                case ReportOps.SalonWiseSales:
-                    row_counter = 0
-                    if(is_admin){
-                        if(get_table_cell(tbl, 0, 'tbody', row_counter, 2).innerText.toLowerCase().indexOf('total') < 0){
-                            row_counter++
-                        }
-                    }
-
-                    if(get_table_cell(tbl, 0, 'tbody', row_counter, 2).innerText.toLowerCase().indexOf('total') > -1){
-                        get_table_cell(tbl, 0, 'tbody').insertRow(row_counter)
-                        get_table_cell(tbl, 0, 'tbody', row_counter).outerHTML = get_row_structure(pmdata.ReportOption)
-                        get_table_cell(tbl, 0, 'tbody', row_counter+1, 0).innerText = 2
-                        if(is_admin){
-                            get_table_cell(tbl, 0, 'tbody', row_counter, 0).innerText = get_table_cell(tbl, 0, 'tbody', row_counter, 0).innerText + "-SCA"
-                        }
-                    }
-                    for(var i in invoices) {
-
-                        invoice = JSON.parse(invoices[i].invoice_json)
-                        increase_table_cell_number(tbl, row_counter, 3, 1, 0)
-                        increase_table_cell_number(tbl, row_counter, 4, invoice.Services.length, 0)
-                        increase_table_cell_number(tbl, row_counter, 5, invoice.Products.length, 0)
-                        
-                        increase_table_cell_number(tbl, row_counter, 9, invoice.InvoiceDetails.MemberDiscount + invoice.InvoiceDetails.OtherDiscount)
-
-                        increase_table_cell_number(tbl, row_counter, 10, invoice.InvoiceDetails.ServiceBasicSales)
-                        increase_table_cell_number(tbl, row_counter, 11, invoice.InvoiceDetails.ProductBasicSales)
-
-                        increase_table_cell_number(tbl, row_counter, 12, invoice.InvoiceDetails.ProductBasicSales + invoice.InvoiceDetails.ServiceBasicSales)
-                        increase_table_cell_number(tbl, row_counter, 13, invoice.InvoiceDetails.ServiceTaxAmount + invoice.InvoiceDetails.ProductTaxAmount)
-                        increase_table_cell_number(tbl, row_counter, 14, invoice.InvoiceDetails.ProductNetSales + invoice.InvoiceDetails.ServiceNetSales)
-
-                        increase_table_cell_number(tbl, row_counter, 15, invoice.InvoiceDetails.RoundingOff)
-                        increase_table_cell_number(tbl, row_counter, 16, invoice.InvoiceDetails.GrandTotal)
-                    }
-                    sold = Number(get_table_cell(tbl, 0, 'tbody', row_counter, 10).innerText)
-                    if(sold > 0){
-                        clientCount = Number(get_table_cell(tbl, 0, 'tbody', row_counter, 3).innerText)
-                        set_table_cell_number(tbl, row_counter, 17, sold/clientCount)
-                    }
-                    sold = Number(get_table_cell(tbl, 0, 'tbody', row_counter+1, 10).innerText)
-                    if(sold > 0){
-                        clientCount = Number(get_table_cell(tbl, 0, 'tbody', row_counter+1, 3).innerText)
-                        set_table_cell_number(tbl, row_counter+1, 17, sold/clientCount)
-                    }
-                    if(window.location.href.indexOf('dayClose') > 0){
-                        day_close_part2(pmdata)
-                    }
-                    break
-                case ReportOps.ServiceClassReportNew:
-                case ReportOps.ADServiceClassReportNew:
-                    row_counter = 0
-                    for(i in invoices){
-                        try{
-                            while(dateFromString(get_table_cell(tbl, 0, 'tbody', row_counter, 2).innerText) < invoices[i].date){row_counter++}
-                        }catch{}
-
-                        invoice = JSON.parse(invoices[i].invoice_json)
-                        for(j in invoice.Services){
+            else{
+                for(i in invoices){
+                    invoices[i].date = new Date(invoices[i].date)
+                }
+                invoices.sort(function(x,y){return x.date-y.date})
+                sca_invoices = invoices
+                switch(pmdata.ReportOption){
+                    case ReportOps.Invoices:
+                    case ReportOps.ADInvoices:
+                    case AdminReportOps.SCAInvoices:
+                        row_counter = 0
+                        for(i in invoices){
+                            try{
+                                while(dateFromString(get_table_cell(tbl, 0, 'tbody', row_counter, 2).innerText) < invoices[i].date){row_counter++}
+                            }catch{}
                             get_table_cell(tbl, 0, 'tbody').insertRow(row_counter)
                             get_table_cell(tbl, 0, 'tbody', row_counter).innerHTML = row_structure
-                            set_table_cell_number(tbl, row_counter, 10, 0)
-                            set_table_cell_number(tbl, row_counter, 14, 0)
-                            set_table_cell_number(tbl, row_counter, 15, 0)
-                            set_table_cell_number(tbl, row_counter, 16, 0)
-                            set_table_cell_number(tbl, row_counter, 17, 0)
-                            set_table_cell_number(tbl, row_counter, 18, 0)
 
-                            set_table_cell_string(tbl, row_counter, 1, "KA0020/" + invoices[i].invoice_id)
-                            set_table_cell_string(tbl, row_counter, 2, invoices[i].date.dateFormat('d-m-Y'))
-                            set_table_cell_string(tbl, row_counter, 3, 'NT-KAR-FOFO-THANISANDRA')
-                            service = invoice.Services[j]
-                            set_table_cell_string(tbl, row_counter, 4, service.ServiceName)
-                            set_table_cell_string(tbl, row_counter, 5, '')
-                            set_table_cell_string(tbl, row_counter, 6, invoice.Customer.ProductName)
+                            invoice = JSON.parse(invoices[i].invoice_json)
+                            set_table_cell_string(tbl, row_counter, 2, invoices[i].date.dateFormat('d-m-Y H:i'))
+                            set_table_cell_string(tbl, row_counter, 3, invoice.Customer.ProductName)
                             if(is_admin){
-                                set_table_cell_string(tbl, row_counter, 7, invoice.Customer.MobileNo)
+                                set_table_cell_string(tbl, row_counter, 4, invoice.Customer.MobileNo)
                             }
                             else{
-                                set_table_cell_string(tbl, row_counter, 7, "******" + invoice.Customer.MobileNo.substring(6))
+                                set_table_cell_string(tbl, row_counter, 4, "******" + invoice.Customer.MobileNo.substring(6))
                             }
-                            set_table_cell_string(tbl, row_counter, 8, '')
-                            set_table_cell_string(tbl, row_counter, 9, service.EmployeeName)
-                            increase_table_cell_number(tbl, row_counter, 10, service.Qty, 0)
-                            set_table_cell_number(tbl, row_counter, 11, service.ServicePrice, 0)
-                            set_table_cell_number(tbl, row_counter, 12, service.DiscountAmount, 0)
-                            set_table_cell_number(tbl, row_counter, 13, service.MemberDiscount)
-                            increase_table_cell_number(tbl, row_counter, 14, service.NetPrice, 0)
-                            increase_table_cell_number(tbl, row_counter, 15, service.serviceCGST)
-                            increase_table_cell_number(tbl, row_counter, 16, service.serviceSGST)
-                            increase_table_cell_number(tbl, row_counter, 17, service.TaxPercentage, 0)
-                            increase_table_cell_number(tbl, row_counter, 18, service.GrandPrice, 0)
-                            paymentThrough = get_payment_through(invoice).toUpperCase()
-                            if(paymentThrough != 'CASH'){
-                                paymentThrough = "/"+paymentThrough
-                            }
-                            set_table_cell_string(tbl, row_counter, 19, paymentThrough)
-                            set_table_cell_string(tbl, row_counter, 22, 'N')  
-                            row_counter++
-                        }
-                    }
-
-                    total_rows = get_table_cell(tbl, 0, 'tbody').getElementsByTagName('tr').length
-                    if(!is_admin){
-                        get_table_cell(tbl, 0, 'thead', 0).deleteCell(1)
-                        get_table_cell(tbl, 0, 'thead', 0).deleteCell(4)
-                        get_table_cell(tbl, 0, 'thead', 0).deleteCell(6)
-                    }
-                    for(i=0; i< total_rows; i++){
-                        get_table_cell(tbl, 0, 'tbody', i, 0).innerText = i+1
-                        if(!is_admin){
-                            get_table_cell(tbl, 0, 'tbody', i).deleteCell(1)
-                            get_table_cell(tbl, 0, 'tbody', i).deleteCell(4)
-                            get_table_cell(tbl, 0, 'tbody', i).deleteCell(6)
-                        }
-                    }
-                    break
-                case ReportOps.ProductSalesReport:
-                    row_counter = 0
-                    for(i in invoices){
-                        try{
-                            while(dateFromString(get_table_cell(tbl, 0, 'tbody', row_counter, 2).innerText) < invoices[i].date){row_counter++}
-                        }catch{}
-
-                        invoice = JSON.parse(invoices[i].invoice_json)
-                        for(j in invoice.Products){
-                            get_table_cell(tbl, 0, 'tbody').insertRow(row_counter)
-                            get_table_cell(tbl, 0, 'tbody', row_counter).innerHTML = row_structure
-                            set_table_cell_number(tbl, row_counter, 8, 0)
-                            set_table_cell_number(tbl, row_counter, 9, 0)
-                            set_table_cell_number(tbl, row_counter, 10, 0)
-                            set_table_cell_number(tbl, row_counter, 11, 0)
-                            set_table_cell_number(tbl, row_counter, 12, 0)
-                            set_table_cell_number(tbl, row_counter, 13, 0)
-
-                            set_table_cell_string(tbl, row_counter, 1, "KA0020/" + invoices[i].invoice_id)
-                            set_table_cell_string(tbl, row_counter, 2, invoices[i].date.dateFormat('d-m-Y'))
-                            set_table_cell_string(tbl, row_counter, 3, 'NT-KAR-FOFO-THANISANDRA')
-                            product = invoice.Products[j]
-                            console.log(product)
-                            set_table_cell_string(tbl, row_counter, 4, product.ProductName)
-                            // set_table_cell_string(tbl, row_counter, 5, "")
-                            set_table_cell_string(tbl, row_counter, 6, invoice.Customer.ProductName)
-                            set_table_cell_string(tbl, row_counter, 7, "******" + invoice.Customer.MobileNo.substring(6))
-                            increase_table_cell_number(tbl, row_counter, 8, product.Qty, 0)
-                            set_table_cell_number(tbl, row_counter, 9, product.ProductPrice)
-                            increase_table_cell_number(tbl, row_counter, 10, product.NetPrice)
-                            increase_table_cell_number(tbl, row_counter, 11, product.productCGST)
-                            increase_table_cell_number(tbl, row_counter, 12, product.productSGST)
-                            increase_table_cell_number(tbl, row_counter, 13, product.GrandPrice)
-                            paymentThrough = get_payment_through(invoice).toUpperCase()
-                            if(paymentThrough != 'CASH'){
-                                paymentThrough = "/"+paymentThrough
-                            }
-                            set_table_cell_string(tbl, row_counter, 14, paymentThrough)
-                            set_table_cell_string(tbl, row_counter, 17, 'N')  
-                            // set_table_cell_string(tbl, row_counter, 18, '')  
-                            set_table_cell_string(tbl, row_counter, 19, product.EmployeeName)  
-                            row_counter++
-                        }
-                    }
-
-                    total_rows = get_table_cell(tbl, 0, 'tbody').getElementsByTagName('tr').length
-                    get_table_cell(tbl, 0, 'thead', 0).deleteCell(1)
-                    get_table_cell(tbl, 0, 'thead', 0).deleteCell(4)
-                    get_table_cell(tbl, 0, 'thead', 0).deleteCell(16)
-                    for(i=0; i< total_rows; i++){
-                        get_table_cell(tbl, 0, 'tbody', i, 0).innerText = i+1
-                        get_table_cell(tbl, 0, 'tbody', i).deleteCell(1)
-                        get_table_cell(tbl, 0, 'tbody', i).deleteCell(4)
-                        get_table_cell(tbl, 0, 'tbody', i).deleteCell(16)
-                    }
-                    break
-                case ReportOps.ADProductSalesReport:
-                    row_counter = 0
-                    for(i in invoices){
-                        try{
-                            while(dateFromString(get_table_cell(tbl, 0, 'tbody', row_counter, 2).innerText) < invoices[i].date){row_counter++}
-                        }catch{}
-
-                        invoice = JSON.parse(invoices[i].invoice_json)
-                        for(j in invoice.Products){
-                            get_table_cell(tbl, 0, 'tbody').insertRow(row_counter)
-                            get_table_cell(tbl, 0, 'tbody', row_counter).innerHTML = row_structure
-                            set_table_cell_number(tbl, row_counter, 9, 0)
-                            set_table_cell_number(tbl, row_counter, 10, 0)
-                            set_table_cell_number(tbl, row_counter, 11, 0)
-                            set_table_cell_number(tbl, row_counter, 12, 0)
-                            set_table_cell_number(tbl, row_counter, 13, 0)
-                            set_table_cell_number(tbl, row_counter, 14, 0)
-
-                            set_table_cell_string(tbl, row_counter, 1, "KA0020/" + invoices[i].invoice_id)
-                            set_table_cell_string(tbl, row_counter, 2, invoices[i].date.dateFormat('d-m-Y'))
-                            set_table_cell_string(tbl, row_counter, 3, 'NT-KAR-FOFO-THANISANDRA')
-                            product = invoice.Products[j]
-                            console.log(product)
-                            set_table_cell_string(tbl, row_counter, 5, product.ProductName)
-                            set_table_cell_string(tbl, row_counter, 6, "")
-                            set_table_cell_string(tbl, row_counter, 7, invoice.Customer.ProductName)
-                            set_table_cell_string(tbl, row_counter, 8, invoice.Customer.MobileNo)
-                            increase_table_cell_number(tbl, row_counter, 9, product.Qty, 0)
-                            set_table_cell_number(tbl, row_counter, 10, product.ProductPrice)
-                            increase_table_cell_number(tbl, row_counter, 11, product.NetPrice)
-                            increase_table_cell_number(tbl, row_counter, 12, product.productCGST)
-                            increase_table_cell_number(tbl, row_counter, 13, product.productSGST)
-                            increase_table_cell_number(tbl, row_counter, 14, product.GrandPrice)
+                            set_table_cell_string(tbl, row_counter, 5, invoice.Services.length)
+                            set_table_cell_string(tbl, row_counter, 6, invoice.Products.length)
+                            set_table_cell_number(tbl, row_counter, 7, invoice.InvoiceDetails.OtherDiscount + invoice.InvoiceDetails.MemberDiscount)
+                            set_table_cell_number(tbl, row_counter, 8, invoice.InvoiceDetails.ServiceBasicSales)
+                            set_table_cell_number(tbl, row_counter, 9, invoice.InvoiceDetails.ServiceTaxAmount)
+                            set_table_cell_number(tbl, row_counter, 10, invoice.InvoiceDetails.ServiceNetSales)
+                            set_table_cell_number(tbl, row_counter, 11, invoice.InvoiceDetails.ProductBasicSales)
+                            set_table_cell_number(tbl, row_counter, 12, invoice.InvoiceDetails.ProductTaxAmount)
+                            set_table_cell_number(tbl, row_counter, 13, invoice.InvoiceDetails.ProductNetSales)
+                            set_table_cell_number(tbl, row_counter, 14, invoice.InvoiceDetails.ProductNetSales + invoice.InvoiceDetails.ServiceNetSales)
                             paymentThrough = get_payment_through(invoice).toUpperCase()
                             if(paymentThrough != 'CASH'){
                                 paymentThrough = "/"+paymentThrough
                             }
                             set_table_cell_string(tbl, row_counter, 15, paymentThrough)
-                            set_table_cell_string(tbl, row_counter, 18, 'N')  
-                            set_table_cell_string(tbl, row_counter, 19, '')  
-                            set_table_cell_string(tbl, row_counter, 20, product.EmployeeName)  
+                            get_table_cell(tbl, 0, 'tbody', row_counter, 16).onclick = (function(billNo, invoice) {
+                                    return function(){openMMDBillPrint(billNo, invoice)}
+                                })(invoices[i].invoice_id, invoice)
+                            if(is_admin){
+                                if(pmdata.ReportOption == ReportOps.ADInvoices){
+                                    get_table_cell(tbl, 0, 'tbody', row_counter).insertCell(17)
+                                    set_table_cell_string(tbl, row_counter, 17, "SCA")
+                                }
+                            }    
                             row_counter++
                         }
-                    }
 
-                    total_rows = get_table_cell(tbl, 0, 'tbody').getElementsByTagName('tr').length
-                    for(i=0; i< total_rows; i++){
-                        get_table_cell(tbl, 0, 'tbody', i, 0).innerText = i+1
-                    }
-                    break
+                        total_rows = get_table_cell(tbl, 0, 'tbody').getElementsByTagName('tr').length
+                        get_table_cell(tbl, 0, 'thead', 0).deleteCell(1)
+                        for(i=0; i< total_rows; i++){
+                            if(is_admin){
+                                if(get_table_cell(tbl, 0, 'tbody', i, 17) == undefined){
+                                    get_table_cell(tbl, 0, 'tbody', i).insertCell(17)
+                                    set_table_cell_string(tbl, i, 17, "Naturals")
+                                }
+                            }
+                            get_table_cell(tbl, 0, 'tbody', i, 0).innerText = i+1
+                            get_table_cell(tbl, 0, 'tbody', i).deleteCell(1)
+                        }
+                        break
+                    case ReportOps.DayWiseSales:
+                    case AdminReportOps.SCADayWiseSales:
+                        row_counter = 0
+                        if(pmdata.ReportOption == AdminReportOps.SCADayWiseSales){
+                            total_tr = document.createElement('tr')
+                            get_table_cell(tbl, 0, 'tbody').appendChild(total_tr)
+                            total_tr_innerHTML = "<td></td><td>Total</td>"
+                            for(tr_c = 2; tr_c < 27; tr_c++){
+                                total_tr_innerHTML = total_tr_innerHTML + "<td></td>"
+                            }
+                            total_tr.innerHTML = total_tr_innerHTML
+                        }
+                        for(var i in invoices) {
+                            try{
+                                while(dateNumber_from_datestr(get_table_cell(tbl, 0, 'tbody', row_counter, 1).innerText, "-") < invoices[i].date_number){row_counter++}
+                            }catch{}
+
+                            if(get_table_cell(tbl, 0, 'tbody', row_counter, 1).innerText.toLowerCase().indexOf('total') > -1 || dateNumber_from_datestr(get_table_cell(tbl, 0, 'tbody', row_counter, 1).innerText, "-") > invoices[i].date_number){
+                                get_table_cell(tbl, 0, 'tbody').insertRow(row_counter)
+                                get_table_cell(tbl, 0, 'tbody', row_counter).innerHTML = get_row_structure(pmdata.ReportOption)
+                                get_table_cell(tbl, 0, 'tbody', row_counter, 1).innerText = invoices[i].date.dateFormat("d-m-Y")
+                            }
+
+                            invoice = JSON.parse(invoices[i].invoice_json)
+                            increase_table_cell_number(tbl, row_counter, 4, invoice.Services.length, 0)
+                            increase_table_cell_number(tbl, row_counter, 5, invoice.Products.length, 0)
+                            
+                            increase_table_cell_number(tbl, row_counter, 10, invoice.InvoiceDetails.ServiceBasicSales + invoice.InvoiceDetails.OtherDiscount)
+                            increase_table_cell_number(tbl, row_counter, 11, invoice.InvoiceDetails.OtherDiscount)
+                            
+                            increase_table_cell_number(tbl, row_counter, 13, invoice.InvoiceDetails.ServiceBasicSales)
+                            increase_table_cell_number(tbl, row_counter, 14, invoice.InvoiceDetails.ServiceTaxAmount / 2)
+                            increase_table_cell_number(tbl, row_counter, 15, invoice.InvoiceDetails.ServiceTaxAmount / 2)
+                            
+                            increase_table_cell_number(tbl, row_counter, 16, invoice.InvoiceDetails.ProductBasicSales)
+                            increase_table_cell_number(tbl, row_counter, 17, invoice.InvoiceDetails.ProductTaxAmount / 2)
+                            increase_table_cell_number(tbl, row_counter, 18, invoice.InvoiceDetails.ProductTaxAmount / 2)
+
+                            increase_table_cell_number(tbl, row_counter, 19, invoice.InvoiceDetails.ProductBasicSales + invoice.InvoiceDetails.ServiceBasicSales)
+                            increase_table_cell_number(tbl, row_counter, 20, invoice.InvoiceDetails.ProductNetSales + invoice.InvoiceDetails.ServiceNetSales)
+                            increase_table_cell_number(tbl, row_counter, 21, invoice.InvoiceDetails.RoundingOff)
+                            increase_table_cell_number(tbl, row_counter, 22, invoice.InvoiceDetails.GrandTotal)
+
+                            if(invoice.InvoiceDetails.IsPhonePe == "1"){
+                                increase_table_cell_number(tbl, row_counter, 26, invoice.InvoiceDetails.GrandTotal)
+                            }
+                            else if(invoice.InvoiceDetails.IsPaytm == "1"){
+                                increase_table_cell_number(tbl, row_counter, 25, invoice.InvoiceDetails.GrandTotal)
+                            }
+                            else if(invoice.InvoiceDetails.isCardPayment == "1"){
+                                increase_table_cell_number(tbl, row_counter, 24, invoice.InvoiceDetails.GrandTotal)
+                            }
+                            else{
+                                increase_table_cell_number(tbl, row_counter, 23, invoice.InvoiceDetails.GrandTotal)
+                            }
+                        }
+
+                        for(i=0; i< lastrow_index; i++){
+                            get_table_cell(tbl, 0, 'tbody', i, 0).innerText = i+1
+                        }
+                        break
+                    case ReportOps.SmileProviderSales:
+                    case ReportOps.ADSmileProviderSales:
+                        rows = get_table_cell(tbl, 0, 'tbody').getElementsByTagName('tr')
+                        for(var i in invoices){
+                            invoice = JSON.parse(invoices[i].invoice_json)
+                            sps = []
+                            for(var si in invoice.Services){
+                                for(var ri=0; ri< rows.length-1; ri++){
+                                    if(get_table_cell(tbl, 0, 'tbody', ri, 1).innerText.toLowerCase().trim() == invoice.Services[si].EmployeeName.toLowerCase().trim()){
+                                        if(!sps.includes(invoice.Services[si].EmployeeName)){
+                                            sps.push(invoice.Services[si].EmployeeName)
+                                            increase_table_cell_number(tbl, ri, 4, 1, 0)
+                                        }
+                                        increase_table_cell_number(tbl, ri, 5, 1, 0)
+                                        increase_table_cell_number(tbl, ri, 6, invoice.Services[si].NetPrice)
+                                        increase_table_cell_number(tbl, ri, 8, invoice.Services[si].DiscountAmount)
+
+                                        increase_table_cell_number(tbl, ri, 14, invoice.Services[si].NetPrice + invoice.Services[si].DiscountAmount, 2)
+                                        increase_table_cell_number(tbl, ri, 15, invoice.Services[si].NetPrice, 2)
+                                        break
+                                    }
+                                }
+                            }
+                            for(var pi in invoice.Products){
+                                for(var ri=0; ri< rows.length-1; ri++){
+                                    if(get_table_cell(tbl, 0, 'tbody', ri, 1).innerText.toLowerCase().trim() == invoice.Products[pi].EmployeeName.toLowerCase().trim()){
+                                        if(!sps.includes(invoice.Products[pi].EmployeeName)){
+                                            sps.push(invoice.Products[pi].EmployeeName)
+                                            increase_table_cell_number(tbl, ri, 4, 1, 0)
+                                        }
+
+                                        increase_table_cell_number(tbl, ri, 12, 1, 0)
+                                        increase_table_cell_number(tbl, ri, 13, invoice.Products[pi].NetPrice)
+
+                                        increase_table_cell_number(tbl, ri, 14, invoice.Products[pi].NetPrice, 2)
+                                        increase_table_cell_number(tbl, ri, 15, invoice.Products[pi].NetPrice, 2)
+                                        break
+                                    }
+                                }
+                            }
+                        }
+                        for(var ri=0; ri< rows.length-1; ri++){
+                            sold = Number(get_table_cell(tbl, 0, 'tbody', ri, 6).innerText)
+                            if(sold > 0){
+                                clientCount = Number(get_table_cell(tbl, 0, 'tbody', ri, 4).innerText)
+                                set_table_cell_number(tbl, ri, 7, sold/clientCount, 0)
+                            }
+                        }
+                        break
+                
+                    case ReportOps.SalonWiseSales:
+                        row_counter = 0
+                        if(is_admin){
+                            if(get_table_cell(tbl, 0, 'tbody', row_counter, 2).innerText.toLowerCase().indexOf('total') < 0){
+                                row_counter++
+                            }
+                        }
+
+                        if(get_table_cell(tbl, 0, 'tbody', row_counter, 2).innerText.toLowerCase().indexOf('total') > -1){
+                            get_table_cell(tbl, 0, 'tbody').insertRow(row_counter)
+                            get_table_cell(tbl, 0, 'tbody', row_counter).outerHTML = get_row_structure(pmdata.ReportOption)
+                            get_table_cell(tbl, 0, 'tbody', row_counter+1, 0).innerText = 2
+                            if(is_admin){
+                                get_table_cell(tbl, 0, 'tbody', row_counter, 0).innerText = get_table_cell(tbl, 0, 'tbody', row_counter, 0).innerText + "-SCA"
+                            }
+                        }
+                        for(var i in invoices) {
+
+                            invoice = JSON.parse(invoices[i].invoice_json)
+                            increase_table_cell_number(tbl, row_counter, 3, 1, 0)
+                            increase_table_cell_number(tbl, row_counter, 4, invoice.Services.length, 0)
+                            increase_table_cell_number(tbl, row_counter, 5, invoice.Products.length, 0)
+                            
+                            increase_table_cell_number(tbl, row_counter, 9, invoice.InvoiceDetails.MemberDiscount + invoice.InvoiceDetails.OtherDiscount)
+
+                            increase_table_cell_number(tbl, row_counter, 10, invoice.InvoiceDetails.ServiceBasicSales)
+                            increase_table_cell_number(tbl, row_counter, 11, invoice.InvoiceDetails.ProductBasicSales)
+
+                            increase_table_cell_number(tbl, row_counter, 12, invoice.InvoiceDetails.ProductBasicSales + invoice.InvoiceDetails.ServiceBasicSales)
+                            increase_table_cell_number(tbl, row_counter, 13, invoice.InvoiceDetails.ServiceTaxAmount + invoice.InvoiceDetails.ProductTaxAmount)
+                            increase_table_cell_number(tbl, row_counter, 14, invoice.InvoiceDetails.ProductNetSales + invoice.InvoiceDetails.ServiceNetSales)
+
+                            increase_table_cell_number(tbl, row_counter, 15, invoice.InvoiceDetails.RoundingOff)
+                            increase_table_cell_number(tbl, row_counter, 16, invoice.InvoiceDetails.GrandTotal)
+                        }
+                        sold = Number(get_table_cell(tbl, 0, 'tbody', row_counter, 10).innerText)
+                        if(sold > 0){
+                            clientCount = Number(get_table_cell(tbl, 0, 'tbody', row_counter, 3).innerText)
+                            set_table_cell_number(tbl, row_counter, 17, sold/clientCount)
+                        }
+                        sold = Number(get_table_cell(tbl, 0, 'tbody', row_counter+1, 10).innerText)
+                        if(sold > 0){
+                            clientCount = Number(get_table_cell(tbl, 0, 'tbody', row_counter+1, 3).innerText)
+                            set_table_cell_number(tbl, row_counter+1, 17, sold/clientCount)
+                        }
+                        if(window.location.href.indexOf('dayClose') > 0){
+                            day_close_part2(pmdata)
+                        }
+                        break
+                    case ReportOps.ServiceClassReportNew:
+                    case ReportOps.ADServiceClassReportNew:
+                        row_counter = 0
+                        for(i in invoices){
+                            try{
+                                while(dateFromString(get_table_cell(tbl, 0, 'tbody', row_counter, 2).innerText) < invoices[i].date){row_counter++}
+                            }catch{}
+
+                            invoice = JSON.parse(invoices[i].invoice_json)
+                            for(j in invoice.Services){
+                                get_table_cell(tbl, 0, 'tbody').insertRow(row_counter)
+                                get_table_cell(tbl, 0, 'tbody', row_counter).innerHTML = row_structure
+                                set_table_cell_number(tbl, row_counter, 10, 0)
+                                set_table_cell_number(tbl, row_counter, 14, 0)
+                                set_table_cell_number(tbl, row_counter, 15, 0)
+                                set_table_cell_number(tbl, row_counter, 16, 0)
+                                set_table_cell_number(tbl, row_counter, 17, 0)
+                                set_table_cell_number(tbl, row_counter, 18, 0)
+
+                                set_table_cell_string(tbl, row_counter, 1, "KA0020/" + invoices[i].invoice_id)
+                                set_table_cell_string(tbl, row_counter, 2, invoices[i].date.dateFormat('d-m-Y'))
+                                set_table_cell_string(tbl, row_counter, 3, 'NT-KAR-FOFO-THANISANDRA')
+                                service = invoice.Services[j]
+                                set_table_cell_string(tbl, row_counter, 4, service.ServiceName)
+                                set_table_cell_string(tbl, row_counter, 5, '')
+                                set_table_cell_string(tbl, row_counter, 6, invoice.Customer.ProductName)
+                                if(is_admin){
+                                    set_table_cell_string(tbl, row_counter, 7, invoice.Customer.MobileNo)
+                                }
+                                else{
+                                    set_table_cell_string(tbl, row_counter, 7, "******" + invoice.Customer.MobileNo.substring(6))
+                                }
+                                set_table_cell_string(tbl, row_counter, 8, '')
+                                set_table_cell_string(tbl, row_counter, 9, service.EmployeeName)
+                                increase_table_cell_number(tbl, row_counter, 10, service.Qty, 0)
+                                set_table_cell_number(tbl, row_counter, 11, service.ServicePrice, 0)
+                                set_table_cell_number(tbl, row_counter, 12, service.DiscountAmount, 0)
+                                set_table_cell_number(tbl, row_counter, 13, service.MemberDiscount)
+                                increase_table_cell_number(tbl, row_counter, 14, service.NetPrice, 0)
+                                increase_table_cell_number(tbl, row_counter, 15, service.serviceCGST)
+                                increase_table_cell_number(tbl, row_counter, 16, service.serviceSGST)
+                                increase_table_cell_number(tbl, row_counter, 17, service.TaxPercentage, 0)
+                                increase_table_cell_number(tbl, row_counter, 18, service.GrandPrice, 0)
+                                paymentThrough = get_payment_through(invoice).toUpperCase()
+                                if(paymentThrough != 'CASH'){
+                                    paymentThrough = "/"+paymentThrough
+                                }
+                                set_table_cell_string(tbl, row_counter, 19, paymentThrough)
+                                set_table_cell_string(tbl, row_counter, 22, 'N')  
+                                row_counter++
+                            }
+                        }
+
+                        total_rows = get_table_cell(tbl, 0, 'tbody').getElementsByTagName('tr').length
+                        if(!is_admin){
+                            get_table_cell(tbl, 0, 'thead', 0).deleteCell(1)
+                            get_table_cell(tbl, 0, 'thead', 0).deleteCell(4)
+                            get_table_cell(tbl, 0, 'thead', 0).deleteCell(6)
+                        }
+                        for(i=0; i< total_rows; i++){
+                            get_table_cell(tbl, 0, 'tbody', i, 0).innerText = i+1
+                            if(!is_admin){
+                                get_table_cell(tbl, 0, 'tbody', i).deleteCell(1)
+                                get_table_cell(tbl, 0, 'tbody', i).deleteCell(4)
+                                get_table_cell(tbl, 0, 'tbody', i).deleteCell(6)
+                            }
+                        }
+                        break
+                    case ReportOps.ProductSalesReport:
+                        row_counter = 0
+                        for(i in invoices){
+                            try{
+                                while(dateFromString(get_table_cell(tbl, 0, 'tbody', row_counter, 2).innerText) < invoices[i].date){row_counter++}
+                            }catch{}
+
+                            invoice = JSON.parse(invoices[i].invoice_json)
+                            for(j in invoice.Products){
+                                get_table_cell(tbl, 0, 'tbody').insertRow(row_counter)
+                                get_table_cell(tbl, 0, 'tbody', row_counter).innerHTML = row_structure
+                                set_table_cell_number(tbl, row_counter, 8, 0)
+                                set_table_cell_number(tbl, row_counter, 9, 0)
+                                set_table_cell_number(tbl, row_counter, 10, 0)
+                                set_table_cell_number(tbl, row_counter, 11, 0)
+                                set_table_cell_number(tbl, row_counter, 12, 0)
+                                set_table_cell_number(tbl, row_counter, 13, 0)
+
+                                set_table_cell_string(tbl, row_counter, 1, "KA0020/" + invoices[i].invoice_id)
+                                set_table_cell_string(tbl, row_counter, 2, invoices[i].date.dateFormat('d-m-Y'))
+                                set_table_cell_string(tbl, row_counter, 3, 'NT-KAR-FOFO-THANISANDRA')
+                                product = invoice.Products[j]
+                                console.log(product)
+                                set_table_cell_string(tbl, row_counter, 4, product.ProductName)
+                                // set_table_cell_string(tbl, row_counter, 5, "")
+                                set_table_cell_string(tbl, row_counter, 6, invoice.Customer.ProductName)
+                                set_table_cell_string(tbl, row_counter, 7, "******" + invoice.Customer.MobileNo.substring(6))
+                                increase_table_cell_number(tbl, row_counter, 8, product.Qty, 0)
+                                set_table_cell_number(tbl, row_counter, 9, product.ProductPrice)
+                                increase_table_cell_number(tbl, row_counter, 10, product.NetPrice)
+                                increase_table_cell_number(tbl, row_counter, 11, product.productCGST)
+                                increase_table_cell_number(tbl, row_counter, 12, product.productSGST)
+                                increase_table_cell_number(tbl, row_counter, 13, product.GrandPrice)
+                                paymentThrough = get_payment_through(invoice).toUpperCase()
+                                if(paymentThrough != 'CASH'){
+                                    paymentThrough = "/"+paymentThrough
+                                }
+                                set_table_cell_string(tbl, row_counter, 14, paymentThrough)
+                                set_table_cell_string(tbl, row_counter, 17, 'N')  
+                                // set_table_cell_string(tbl, row_counter, 18, '')  
+                                set_table_cell_string(tbl, row_counter, 19, product.EmployeeName)  
+                                row_counter++
+                            }
+                        }
+
+                        total_rows = get_table_cell(tbl, 0, 'tbody').getElementsByTagName('tr').length
+                        get_table_cell(tbl, 0, 'thead', 0).deleteCell(1)
+                        get_table_cell(tbl, 0, 'thead', 0).deleteCell(4)
+                        get_table_cell(tbl, 0, 'thead', 0).deleteCell(16)
+                        for(i=0; i< total_rows; i++){
+                            get_table_cell(tbl, 0, 'tbody', i, 0).innerText = i+1
+                            get_table_cell(tbl, 0, 'tbody', i).deleteCell(1)
+                            get_table_cell(tbl, 0, 'tbody', i).deleteCell(4)
+                            get_table_cell(tbl, 0, 'tbody', i).deleteCell(16)
+                        }
+                        break
+                    case ReportOps.ADProductSalesReport:
+                        row_counter = 0
+                        for(i in invoices){
+                            try{
+                                while(dateFromString(get_table_cell(tbl, 0, 'tbody', row_counter, 2).innerText) < invoices[i].date){row_counter++}
+                            }catch{}
+
+                            invoice = JSON.parse(invoices[i].invoice_json)
+                            for(j in invoice.Products){
+                                get_table_cell(tbl, 0, 'tbody').insertRow(row_counter)
+                                get_table_cell(tbl, 0, 'tbody', row_counter).innerHTML = row_structure
+                                set_table_cell_number(tbl, row_counter, 9, 0)
+                                set_table_cell_number(tbl, row_counter, 10, 0)
+                                set_table_cell_number(tbl, row_counter, 11, 0)
+                                set_table_cell_number(tbl, row_counter, 12, 0)
+                                set_table_cell_number(tbl, row_counter, 13, 0)
+                                set_table_cell_number(tbl, row_counter, 14, 0)
+
+                                set_table_cell_string(tbl, row_counter, 1, "KA0020/" + invoices[i].invoice_id)
+                                set_table_cell_string(tbl, row_counter, 2, invoices[i].date.dateFormat('d-m-Y'))
+                                set_table_cell_string(tbl, row_counter, 3, 'NT-KAR-FOFO-THANISANDRA')
+                                product = invoice.Products[j]
+                                console.log(product)
+                                set_table_cell_string(tbl, row_counter, 5, product.ProductName)
+                                set_table_cell_string(tbl, row_counter, 6, "")
+                                set_table_cell_string(tbl, row_counter, 7, invoice.Customer.ProductName)
+                                set_table_cell_string(tbl, row_counter, 8, invoice.Customer.MobileNo)
+                                increase_table_cell_number(tbl, row_counter, 9, product.Qty, 0)
+                                set_table_cell_number(tbl, row_counter, 10, product.ProductPrice)
+                                increase_table_cell_number(tbl, row_counter, 11, product.NetPrice)
+                                increase_table_cell_number(tbl, row_counter, 12, product.productCGST)
+                                increase_table_cell_number(tbl, row_counter, 13, product.productSGST)
+                                increase_table_cell_number(tbl, row_counter, 14, product.GrandPrice)
+                                paymentThrough = get_payment_through(invoice).toUpperCase()
+                                if(paymentThrough != 'CASH'){
+                                    paymentThrough = "/"+paymentThrough
+                                }
+                                set_table_cell_string(tbl, row_counter, 15, paymentThrough)
+                                set_table_cell_string(tbl, row_counter, 18, 'N')  
+                                set_table_cell_string(tbl, row_counter, 19, '')  
+                                set_table_cell_string(tbl, row_counter, 20, product.EmployeeName)  
+                                row_counter++
+                            }
+                        }
+
+                        total_rows = get_table_cell(tbl, 0, 'tbody').getElementsByTagName('tr').length
+                        for(i=0; i< total_rows; i++){
+                            get_table_cell(tbl, 0, 'tbody', i, 0).innerText = i+1
+                        }
+                        break
+                }
             }
         }
         else{
