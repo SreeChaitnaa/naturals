@@ -1154,7 +1154,7 @@ function update_reports(pmdata, sca_report){
                 }
             }
             if(pmdata.ReportOption == ReportOps.SCAProductInventory){
-                invoices.sort(function(x,y){return x.prod_name-y.prod_name})
+                invoices.sort(function(a,b){return (a.prod_name > b.prod_name) ? 1 : ((a.prod_name < b.prod_name) ? -1 : 0)})
                 total_prod_count = 0
                 for(row_counter in invoices){
                     product = invoices[row_counter]
