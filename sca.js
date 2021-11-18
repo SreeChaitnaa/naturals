@@ -2,6 +2,16 @@ function xpath(path) {
     return document.evaluate(path, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
 }
 
+try{
+    x= xpath('//*[@id="stacked-menu"]/li[2]')
+    if(x.innerText == 'Outlet Performance'){
+        x.parentElement.removeChild(x)
+    }
+}
+catch(e){
+    console.log(e)
+}
+
 function loadCSS(href) {
   var cssLink = $("<link>");
   $("head").append(cssLink); //IE hack: append before setting href
