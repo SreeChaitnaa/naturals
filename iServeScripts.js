@@ -1,4 +1,4 @@
-function saveInvoice(elem, alive_check) {
+function saveInvoice(elem, alive_check){
     debugger;
 
     //MMD call
@@ -484,7 +484,6 @@ function saveInvoice(elem, alive_check) {
 
         //MMD Call
         doMMDBill(InvoiceModels)
-        debugger
 
         $.ajax({
             url: '/iNaturals/WalkinInvoice/saveInvoice',
@@ -675,5 +674,134 @@ function getReport() {
 
     //return false;
 }
+
+function BindAutoCompleList_ProductNew() {
+    $(".productname").live("keyup", function () {
+
+        var isSMSM = $('#IsSMSM').val();
+        isSMSM = (isSMSM != null && isSMSM != '' ? isSMSM : 0);
+
+        var serCnt = 0;
+        $("table#serviceTable > tbody > tr").each(function (i, row) {
+            var $row = $(row);
+            var serviceId = $row.find('input[name$=ServiceID][type=hidden]').val();
+            var qty = $row.find('input[name$=Qty][type=text]').val();
+
+            if (parseInt(serviceId) >= parseInt(0) && qty != "0" && qty != "") {
+                serCnt++;
+            }
+        });
+
+        if (serCnt > 0 && isSMSM > 0) {
+            toastr.error("This is eWallet reduction – Bill Products separately.", "Error");
+            return false;
+        }
+
+        $(this).autocomplete({
+            minLength: 0,
+            source: function (request, response) {
+                var productname = request.term;
+                if (productname == '')
+                    return false;
+
+                if (productname.length < 3)
+                    return false;
+                $.ajax({
+                    url: '/iNaturals/Invoice/SearchProduct',
+                    type: "POST",
+                    dataType: "json",
+                    async: false,
+                    data: { Name: productname },
+                    success: function (data) {
+                        //ProductList.length = 0;
+
+                        // MMD Call - comment the direct assign and called filter_sca_products
+                        // ProductList = data;
+                        ProductList = filter_sca_products(data);
+                        response(ProductList);
+
+                    }
+                })
+            },
+            select: function (event, ui) {
+                // Get the current row
+                debugger;
+                var row = $(this).closest('tr');
+
+                $(this).val(ui.item.label);
+                $(this).parent().find('input[name$=ProductID][type=hidden]').val(ui.item.value);
+
+                // Adjust the total
+                row.find('input[name$=ActualMRP][type=hidden]').val(ui.item.mrp);
+                row.find('input[name$=ProductPrice][type=text]').val(ui.item.price);
+                row.find('input[name$=TaxID][type=hidden]').val(ui.item.taxid);
+                row.find('input[name$=TaxName][type=text]').val(ui.item.taxname);
+                row.find('input[name$=TaxPercentage][type=hidden]').val(ui.item.taxpercent);
+                row.find('input[name$=CGSTPercentage][type=hidden]').val(ui.item.cgstpercent);
+                row.find('input[name$=SGSTPercentage][type=hidden]').val(ui.item.sgstpercent);
+                row.find('input[name$=KFCTPercentage][type=hidden]').val(ui.item.cesspercent);
+                row.find('input[name$=hdnIsMembershipSales][type=hidden]').val('0');
+
+
+                // var row1 = $(this).closest('tr');
+                Product_CalculateAmount(row);
+
+                // MMD Call
+                set_sca_mrp(ui.item, row.find('input[name$=ProductMRP]'))
+
+                var element = $("a.addNewProduct", $(row));
+                element.click();
+                var prevrow = $(this).closest('tr').prev();
+
+                row.find('input[name$=EmployeeName][type=text]').val(prevrow.find('input[name$=EmployeeName][type=text]').val());
+                row.find('input[name$=EmployeeID][type=hidden]').val(prevrow.find('input[name$=EmployeeID][type=hidden]').val());
+
+
+                if (!prevrow.find('input[name$=EmployeeID][type=hidden]').val())
+                    row.find('input[name$=EmployeeName][type=text]').focus();
+
+                return false;
+            },
+            change: function (event, ui) {
+                var row = $(this).closest('tr');
+
+                var name = $(this).val();
+                var id = $(this).parent().find('input[name$=ProductID][type=hidden]').val();
+
+                var exists = compare_stringToarrystring("value", id, "label", name, ProductList);
+
+                if (!exists) {
+                    $(this).val("");
+                    $(this).focus();
+
+                    $(this).parent().find('input[name$=DiscountID][type=hidden]').val('');
+                    row.find('input[name$=Qty][type=text]').val('');
+                    row.find('input[name$=ProductPrice][type=text]').val('');
+                    row.find('input[name$=ActualMRP][type=hidden]').val('');
+
+                    // MMD Call - Ser MRP to empty
+                    row.find('input[name$=ProductMRP]').val('');
+
+                    row.find('input[name$=TaxID][type=hidden]').val('');
+                    row.find('input[name$=TaxName][type=text]').val('');
+                    row.find('input[name$=TaxPercentage][type=hidden]').val('');
+                    row.find('input[name$=CGSTPercentage][type=hidden]').val('');
+                    row.find('input[name$=SGSTPercentage][type=hidden]').val('');
+                    row.find('input[name$=KFCTPercentage][type=hidden]').val('');
+                    row.find('input[name$=hdnIsMembershipSales][type=hidden]').val('0');
+                    Product_CalculateAmount(row);
+                    return false;
+                }
+            },
+            messages: {
+                noResults: "",
+                results: function (count) {
+                    return count + (count > 1 ? ' results' : ' result ') + ' found';
+                }
+            }
+        });
+    });
+}
+BindAutoCompleList_ProductNew()
 
 console.log("iServeScripts JS Loaded")
