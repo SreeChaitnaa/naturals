@@ -1015,7 +1015,8 @@ function get_table_structure(reportOp){
                 "S.No",
                 "Product ID",
                 "Product Name",
-                "Product Quantity"
+                "Quantity",
+                "MRP"
             ]
             break
     }
@@ -1063,7 +1064,7 @@ function get_row_structure(reportOp){
             row_struct += "<td>Allwyn Francis</td><td>ABHISHEK KUMAR</td>"
             break
         case ReportOps.SCAProductInventory:
-            for(i=0; i<4;i++){
+            for(i=0; i<5;i++){
                 row_struct += "<td></td>"
             }
             break
@@ -1179,6 +1180,7 @@ function update_reports(pmdata, sca_report){
                     set_table_cell_string(tbl, row_counter, 1, product.prod_id)
                     set_table_cell_string(tbl, row_counter, 2, product.prod_name)
                     set_table_cell_string(tbl, row_counter, 3, product.count)
+                    set_table_cell_string(tbl, row_counter, 4, product.mrp)
                     total_prod_count += product.count
                 }
                 row_counter = invoices.length
