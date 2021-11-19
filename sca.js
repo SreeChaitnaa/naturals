@@ -131,6 +131,8 @@ SalesMessage = "Thank you for using our services @ Naturals Thanisandra!%0a" +
                "*Facebook:* https://www.facebook.com/naturals.thanisandra/ %0a%0a" +
                "We look forward to serving you again soon!!!"
 
+SCAProducts = []
+
 
 valid_url = false;
 is_admin = false
@@ -240,18 +242,21 @@ function LoadSCA(){
                     $('#btnsms')[0].style.display = 'none'
                 }
                 else if(window.location.href.indexOf('WalkinInvoice') > 0){
-                    setInterval(function (){
-                        if($('#commonGrandTotal').val() != ''){
-                            if($('#CustomerTEMP').val() == ''){
-                                $('#CustomerTEMP')[0].value = get_random_temp()
-                            }
-                            if($('#CustomerOXIM').val() == ''){
-                                $('#CustomerOXIM')[0].value = get_random_oximeter()
-                            }
-                        }
-                    }, 500);
                     if(window.location.href.indexOf('AddProducts') > 0){
                         add_products_page_setup()
+                    }
+                    else{
+                        get_invoice_by_date("0", "0", function(err, res){SCAProducts = res})
+                        setInterval(function (){
+                            if($('#commonGrandTotal').val() != ''){
+                                if($('#CustomerTEMP').val() == ''){
+                                    $('#CustomerTEMP')[0].value = get_random_temp()
+                                }
+                                if($('#CustomerOXIM').val() == ''){
+                                    $('#CustomerOXIM')[0].value = get_random_oximeter()
+                                }
+                            }
+                        }, 500);
                     }
                     $('#divloadingscreen').hide()
                 }
@@ -854,7 +859,7 @@ function doMMDBill(InvoiceModels){
         for(counter in InvoiceModels.Products){
             product_id = +InvoiceModels.Products[counter].ProductID
             product_qty = 0-(+InvoiceModels.Products[counter].Qty)
-            product_name = document.getElementsByName('Products[' + counter +'].ProductName')[0].value
+            product_name = "Unknown-"+product_id
             add_inventory(product_id, product_name, product_qty)
         }
         Customer = CustomerList.filter(function (x) { return x.value == InvoiceModels.InvoiceDetails.CustomerID; })[0]
@@ -892,7 +897,7 @@ function doMMDBill(InvoiceModels){
             return
         }
         
-        numerator = 0
+        numerator = 4
         denominator = 10
         rand_value = Number(Math.random() * 100).toFixed() % denominator
 
@@ -1164,8 +1169,6 @@ function update_reports(pmdata, sca_report){
                 }
             }
             if(pmdata.ReportOption == ReportOps.SCAProductInventory){
-                invoices.sort(function(a,b){return (a.prod_name > b.prod_name) ? 1 : ((a.prod_name < b.prod_name) ? -1 : 0)})
-                total_prod_count = 0
                 for(row_counter in invoices){
                     product = invoices[row_counter]
                     get_table_cell(tbl, 0, 'tbody').insertRow(row_counter)
@@ -1174,13 +1177,7 @@ function update_reports(pmdata, sca_report){
                     set_table_cell_string(tbl, row_counter, 1, product.prod_id)
                     set_table_cell_string(tbl, row_counter, 2, product.prod_name)
                     set_table_cell_string(tbl, row_counter, 3, product.count)
-                    total_prod_count += product.count
                 }
-                row_counter = invoices.length
-                get_table_cell(tbl, 0, 'tbody').insertRow(row_counter)
-                get_table_cell(tbl, 0, 'tbody', row_counter).innerHTML = row_structure
-                set_table_cell_string(tbl, row_counter, 2, "Total")
-                set_table_cell_string(tbl, row_counter, 3, total_prod_count)
             }
             else{
                 for(i in invoices){
@@ -1615,4 +1612,22 @@ function update_incentives(fromDate, toDate){
         }
         $('#divloadingscreen').hide()
     })
+}
+
+function filter_sca_products(products){
+    if(SCAProducts.length > 0){
+        products = products.filter(function(o1){
+                                    return SCAProducts.some(function(o2){
+                                        return o1.value == o2.prod_id;
+                                    })})
+    }
+    return products
+}
+
+function set_sca_mrp(product, mrp_field){
+    if(SCAProducts.length > 0){
+        mrp_field.focus()
+        mrp_field.val(SCAProducts.filter(function (x) { return x.prod_id == Number(product.value); })[0].mrp)
+        mrp_field.blur()
+    }
 }
