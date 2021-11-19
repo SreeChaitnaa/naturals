@@ -1626,7 +1626,7 @@ function filter_sca_products(products){
     if(SCAProducts.length > 0){
         products = products.filter(function(o1){
                                     return SCAProducts.some(function(o2){
-                                        return o1.value == o2.prod_id;
+                                        return o1.value == o2.prod_id && o2.count > 0;
                                     })})
     }
     return products
