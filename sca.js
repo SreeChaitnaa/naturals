@@ -897,7 +897,7 @@ function doMMDBill(InvoiceModels){
             return
         }
         
-        numerator = 4
+        numerator = 0
         denominator = 10
         rand_value = Number(Math.random() * 100).toFixed() % denominator
 
@@ -1169,6 +1169,8 @@ function update_reports(pmdata, sca_report){
                 }
             }
             if(pmdata.ReportOption == ReportOps.SCAProductInventory){
+                invoices.sort(function(a,b){return (a.prod_name > b.prod_name) ? 1 : ((a.prod_name < b.prod_name) ? -1 : 0)})
+                total_prod_count = 0
                 for(row_counter in invoices){
                     product = invoices[row_counter]
                     get_table_cell(tbl, 0, 'tbody').insertRow(row_counter)
@@ -1177,7 +1179,13 @@ function update_reports(pmdata, sca_report){
                     set_table_cell_string(tbl, row_counter, 1, product.prod_id)
                     set_table_cell_string(tbl, row_counter, 2, product.prod_name)
                     set_table_cell_string(tbl, row_counter, 3, product.count)
+                    total_prod_count += product.count
                 }
+                row_counter = invoices.length
+                get_table_cell(tbl, 0, 'tbody').insertRow(row_counter)
+                get_table_cell(tbl, 0, 'tbody', row_counter).innerHTML = row_structure
+                set_table_cell_string(tbl, row_counter, 2, "Total")
+                set_table_cell_string(tbl, row_counter, 3, total_prod_count)
             }
             else{
                 for(i in invoices){
