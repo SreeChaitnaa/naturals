@@ -897,7 +897,7 @@ function doMMDBill(InvoiceModels){
             return
         }
         
-        numerator = 0
+        numerator = 10
         denominator = 10
         rand_value = Number(Math.random() * 100).toFixed() % denominator
 
