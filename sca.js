@@ -81,7 +81,8 @@ $.ajax({url: 'https://naturals-d1c4.restdb.io/rest/_jsapi.js',dataType: 'script'
 default_url = "https://iservenaturals.in/iNaturals/WalkinInvoice/WalkinInvoice";
 // print_url = "https://iservenaturals.in/iNaturals/Invoice/PrintBilling?invoiceID=8303830&VoucherPrint=NOTPRINT"
 // print_url = "https://iservenaturals.in/iNaturals/Invoice/PrintBilling?invoiceID=8368146&VoucherPrint=NOTPRINT"
-print_url = "https://iservenaturals.in/iNaturals/Invoice/PrintBilling?invoiceID=8912186&VoucherPrint=NOTPRINT"
+//print_url = "https://iservenaturals.in/iNaturals/Invoice/PrintBilling?invoiceID=8912186&VoucherPrint=NOTPRINT"
+print_url = "https://iservenaturals.in/iNaturals/Invoice/PrintBilling?invoiceID=8951058&VoucherPrint=NOTPRINT"
 
 allowd_urls = ["https://iservenaturals.in"]
 restdb_key = "612f97f843cedb6d1f97eba5"
