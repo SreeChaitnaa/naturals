@@ -66,9 +66,9 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
 }
 
 $.ajax({url: 'https://naturals-d1c4.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){
-    $.ajax({url: 'https://sreechaitnaa.github.io/naturals/iServeScripts.js',dataType: 'script', success: function(){
-        $.ajax({url: 'https://sreechaitnaa.github.io/naturals/restdb.js',dataType: 'script', success: LoadSCA()})
-    }}) 
+    // $.ajax({url: 'https://sreechaitnaa.github.io/naturals/iServeScripts.js',dataType: 'script', success: function(){
+    //     $.ajax({url: 'https://sreechaitnaa.github.io/naturals/restdb.js',dataType: 'script', success: LoadSCA()})
+    // }}) 
 }})
 // $.ajax({url: 'https://naturals-sreechaitnaa.vercel.app/restdb.js',dataType: 'script'})
 // $.ajax({url: 'https://naturals-sreechaitnaa.vercel.app//iServeScripts.js',dataType: 'script'})
@@ -135,6 +135,7 @@ SalesMessage = "Thank you for using our services @ Naturals Thanisandra!%0a" +
                "We look forward to serving you again soon!!!"
 
 SCAProducts = []
+SCAServices = []
 
 
 valid_url = false;
@@ -250,6 +251,7 @@ function LoadSCA(){
                     }
                     else{
                         get_invoice_by_date("0", "0", function(err, res){SCAProducts = res})
+                        get_nt_services(function(nt_services){SCAServices = nt_services})
                         setInterval(function (){
                             if($('#commonGrandTotal').val() != ''){
                                 if($('#CustomerTEMP').val() == ''){
@@ -826,8 +828,10 @@ SCAInvoice = "";
 FirstInvoice = ""
 sca_invoices = ""
 SCAProductList = undefined
+SCAServiceList = []
 
 function update_services_and_products(){
+    SCAServiceList = []
     $.ajax({
         url: '/iNaturals/Customer/SearchService',
         type: "POST",
@@ -836,10 +840,14 @@ function update_services_and_products(){
         async: false,
         data: { Name: '' },
         success: function (data) {
-            ServiceList = data;
+            SCAServiceList = SCAServices.concat(data);
             // $("#CustomerName").autocomplete({ source: data });
         }
     });
+
+    // get_nt_services(function(nt_services){
+    //     SCAServiceList = SCAServiceList.concat(nt_services);
+    // })
 
     SCAProductList = undefined
     $.ajax({
@@ -896,7 +904,21 @@ function doMMDBill(InvoiceModels){
                 break
             }
         }
+
+        CustomServices = false
+        debugger
+        for(i in InvoiceModels.Services){
+            if(Number(InvoiceModels.Services[i].ServiceID) > 100000){
+                CustomServices = true
+                break
+            }
+        }
+
         if(NewMember || (InvoiceModels.InvoiceDetails.RemarksRating.toLowerCase().indexOf("good") > -1)){
+            if(CustomServices){
+                toastr.error("Failure - New user can not have Custom Packages", "Error");
+                throw StopMessage
+            }
             return
         }
         
@@ -904,10 +926,11 @@ function doMMDBill(InvoiceModels){
         denominator = 10
         rand_value = Number(Math.random() * 100).toFixed() % denominator
 
-        if (InvoiceModels.Products.length > 0 || (rand_value < numerator) || (InvoiceModels.InvoiceDetails.RemarksRating.toLowerCase().indexOf("mmd") > -1)) {
+        debugger
+        if (CustomServices || InvoiceModels.Products.length > 0 || (rand_value < numerator) || (InvoiceModels.InvoiceDetails.RemarksRating.toLowerCase().indexOf("mmd") > -1)) {
             FirstInvoice = InvoiceModels
             for (i = 0; i < InvoiceModels.Services.length; i++) {
-                InvoiceModels.Services[i].ServiceName = ServiceList.filter(function (x) { return x.value == InvoiceModels.Services[i].ServiceID; })[0].ServiceName
+                InvoiceModels.Services[i].ServiceName = SCAServiceList.filter(function (x) { return x.value == InvoiceModels.Services[i].ServiceID; })[0].ServiceName
                 InvoiceModels.Services[i].EmployeeName = EmployeeList.filter(function (x) { return x.value == InvoiceModels.Services[i].EmployeeID; })[0].EMPName
             }
             if (InvoiceModels.Products.length > 0) {
@@ -1635,6 +1658,13 @@ function filter_sca_products(products){
                                     })})
     }
     return products
+}
+
+function add_sca_services(services, search_key){
+    selected_services = SCAServices.filter(function(x){
+        return x.label.toLowerCase().indexOf(search_key.toLowerCase()) > -1
+    })
+    return services.concat(selected_services)
 }
 
 function set_sca_mrp(product, mrp_field){
