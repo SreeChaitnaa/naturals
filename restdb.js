@@ -129,4 +129,27 @@ function add_inventory(prod_id, prod_name, prod_count){
         new_item.save()
     })
 }
+
+function get_nt_services(callback){
+    initiate_db()
+    db.ntservices.find({},[], function(err, nt_services){
+        if(err){
+            throw err
+        }
+        if(nt_services.length > 0){
+            for(i in nt_services){
+                nt_services[i].cgstpercent = 9
+                nt_services[i].kfcpercent = 0
+                nt_services[i].label = nt_services[i].ServiceName + "-" +nt_services[i].ServiceCode + " - " + nt_services[i].actualPrice
+                nt_services[i].memberDiscount = 0
+                nt_services[i].qty = 1
+                nt_services[i].sgstpercent = 9
+                nt_services[i].taxid = "1"
+                nt_services[i].taxname = "18 %"
+                nt_services[i].value = nt_services[i].ServiceCode
+            }
+            callback(nt_services)
+        }
+    })
+}
 console.log("RESTDB JS Loaded")
