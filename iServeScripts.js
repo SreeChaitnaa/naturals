@@ -804,4 +804,157 @@ function BindAutoCompleList_ProductNew() {
 }
 BindAutoCompleList_ProductNew()
 
+function CallAutoCompleList_Service() {
+    // debugger;
+    $(".servicename").live("keyup", function () {
+
+        $(this).autocomplete({
+            minLength: 0,
+            source: function (request, response) {
+                var servicename = request.term;
+                var customerId = $('#CustomerID').val();
+                if (servicename == '')
+                    return;
+                if (customerId == '0' || customerId == '') {
+                    toastr.error("Please select the customer", "Error");
+                    return;
+
+                }
+                $.ajax({
+                    url: '/iNaturals/WalkinInvoice/SearchService',
+                    type: "POST",
+                    dataType: "json",
+                    async: false,
+                    data: { Name: servicename, CustomerId: customerId },
+                    success: function (data) {
+                        //console.log(data);
+
+                        // MMD Call - comment the direct assign and called add_sca_services
+                        // ServiceList = data;
+                        ServiceList = add_sca_services(data, servicename);
+                        response(ServiceList);
+                        
+                    }
+                });
+            },
+
+            select: function (event, ui) {
+                //debugger;
+                var row = $(this).closest('tr');
+
+                $(this).val(ui.item.label);
+                row.find('input[name$=ServiceID][type=hidden]').val(ui.item.value);
+
+                row.find('input[name$=Qty][type=text]').val(ui.item.qty);
+                //loga start for
+                //row.find('input[name$=ServicePrice][type=text]').val(ui.item.actualPrice);
+                var isApp = $('#isAppointment').val();
+                var isTaxForService = $('#InclusiveOfTaxForService').val();
+                var isSMSM = $('#IsSMSM').val();
+                isApp = (isApp != null && isApp != '' ? isApp : 0);
+                isSMSM = (isSMSM != null && isSMSM != '' ? isSMSM : 0);
+                isTaxForService = (isApp != null && isTaxForService != '' ? isTaxForService : 0);
+                //alert(parseFloat(ui.item.kfcpercent));
+                if (isSMSM == "0") {
+                    if (isTaxForService == 1 && isApp == 0) {
+                        var cgstAmt = (parseFloat(ui.item.actualPrice) * (parseFloat(ui.item.cgstpercent) / (100 + ui.item.cgstpercent + ui.item.sgstpercent))).toFixed(2);
+                        var sgstAmt = (parseFloat(ui.item.actualPrice) * (parseFloat(ui.item.sgstpercent) / (100 + ui.item.cgstpercent + ui.item.sgstpercent))).toFixed(2);
+                        var kfcAmt = (parseFloat(ui.item.actualPrice) * (parseFloat(ui.item.kfcpercent) / (100 + ui.item.kfcpercent))).toFixed(2);
+                        if (parseFloat(ui.item.kfcpercent) == 0)
+                            kfcAmt = 0;
+                        var actualPriceMT = ui.item.actualPrice - cgstAmt - sgstAmt - kfcAmt;
+                        row.find('input[name$=ServicePrice][type=text]').val(actualPriceMT);
+                    }
+                    else if (isTaxForService == 1 && isApp == 1) {
+                        var cgstAmt = (parseFloat(ui.item.actualPrice) * (parseFloat(ui.item.cgstpercent) / (100 + ui.item.cgstpercent + ui.item.sgstpercent))).toFixed(2);
+                        var sgstAmt = (parseFloat(ui.item.actualPrice) * (parseFloat(ui.item.sgstpercent) / (100 + ui.item.cgstpercent + ui.item.sgstpercent))).toFixed(2);
+                        var kfcAmt = (parseFloat(ui.item.actualPrice) * (parseFloat(ui.item.kfcpercent) / (100 + ui.item.kfcpercent))).toFixed(2);
+                        if (parseFloat(ui.item.kfcpercent) == 0)
+                            kfcAmt = 0;
+                        var actualPriceMT = ui.item.actualPrice - cgstAmt - sgstAmt - kfcAmt;
+                        row.find('input[name$=ServicePrice][type=text]').val(actualPriceMT);
+                    }
+                    else {
+                        row.find('input[name$=ServicePrice][type=text]').val(ui.item.actualPrice);
+                    }
+                }
+                else {
+                    var actualPriceMT = ui.item.actualPrice;
+                    row.find('input[name$=ServicePrice][type=text]').val(actualPriceMT);
+                }
+                //end
+                if (isSMSM == "0") {
+                    row.find('input[name$=MemberDiscount][type=text]').val(ui.item.memberDiscount);
+                    row.find('input[name$=MemberDiscount][type=hidden]').val(ui.item.memberDiscount);
+                    row.find('input[name$=TaxID][type=hidden]').val(ui.item.taxid);
+                    row.find('input[name$=TaxName][type=text]').val(ui.item.taxname);
+                    row.find('input[name$=TaxPercentage][type=hidden]').val('');
+                    row.find('input[name$=CGSTPercentage][type=hidden]').val(ui.item.cgstpercent);
+                    row.find('input[name$=SGSTPercentage][type=hidden]').val(ui.item.sgstpercent);
+                    row.find('input[name$=KFCTPercentage][type=hidden]').val(ui.item.kfcpercent);
+                } else {
+                    row.find('input[name$=MemberDiscount][type=text]').val(0);
+                    row.find('input[name$=MemberDiscount][type=hidden]').val(0);
+                    row.find('input[name$=TaxID][type=hidden]').val(0);
+                    row.find('input[name$=TaxName][type=text]').val('');
+                    row.find('input[name$=TaxPercentage][type=hidden]').val('');
+                    row.find('input[name$=CGSTPercentage][type=hidden]').val(0);
+                    row.find('input[name$=SGSTPercentage][type=hidden]').val(0);
+                    row.find('input[name$=KFCTPercentage][type=hidden]').val(0);
+                }
+                Service_CalculateAmount(row);
+
+                var element = $("a.addNewService", $(row));
+                element.click();
+                var prevrow = $(this).closest('tr').prev();
+
+                row.find('input[name$=EmployeeName][type=text]').val(prevrow.find('input[name$=EmployeeName][type=text]').val());
+                row.find('input[name$=EmployeeID][type=hidden]').val(prevrow.find('input[name$=EmployeeID][type=hidden]').val());
+
+                row.find('input[name$=SecondCustomerName][type=text]').val(prevrow.find('input[name$=SecondCustomerName][type=text]').val());
+                row.find('input[name$=SecondCustomerID][type=hidden]').val(prevrow.find('input[name$=SecondCustomerID][type=hidden]').val());
+
+                if (!prevrow.find('input[name$=EmployeeID][type=hidden]').val())
+                    row.find('input[name$=EmployeeName][type=text]').focus();
+                else if (!prevrow.find('input[name$=SecondCustomerID][type=hidden]').val())
+                    row.find('input[name$=SecondCustomerName][type=text]').focus();
+
+                return false;
+            },
+            change: function (event, ui) {
+                val = $(this).val();
+                var row = $(this).closest('tr');
+
+                var name = $(this).val();
+                var id = row.find('input[name$=ServiceID][type=hidden]').val();
+
+                //var isexists = compare_stringToarrystring("value", id, "label", name, ServiceList);
+                //if (!exists) {
+                //    row.find('input[name$=ServiceID][type=hidden]').val('');
+
+                //    row.find('input[name$=Qty][type=text]').val('');
+                //    row.find('input[name$=ServicePrice][type=text]').val('');
+                //    row.find('input[name$=MemberDiscount][type=text]').val('');
+                //    row.find('input[name$=MemberDiscount][type=hidden]').val('');
+                //    row.find('input[name$=TaxID][type=hidden]').val('');
+                //    row.find('input[name$=TaxName][type=text]').val('');
+                //    row.find('input[name$=TaxPercentage][type=hidden]').val('');
+                //    row.find('input[name$=CGSTPercentage][type=hidden]').val('');
+                //    row.find('input[name$=SGSTPercentage][type=hidden]').val('');
+                //}
+                var exists = ValidateServiceSelection(val);
+                if (!exists) {
+                    $(this).val("");
+                    $("#ServiceID").val('');
+                    toastr.error("Please select the service from list", "Error");
+                    $(this).focus();
+                    Service_CalculateAmount(row);
+                    return false;
+                }
+            }
+        });
+    });
+}
+CallAutoCompleList_Service()
+
 console.log("iServeScripts JS Loaded")
