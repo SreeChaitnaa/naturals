@@ -1,9 +1,9 @@
-function saveInvoice(elem, alive_check){
+function saveInvoice(elem) {
     debugger;
-
+    
     //MMD call
     update_services_and_products()
-
+    
     $('#btnGenerateInvoice').prop('disabled', true);
     var invoiceModel = new Object();
     var invoiceServiceArray = [];
@@ -186,7 +186,7 @@ function saveInvoice(elem, alive_check){
     if (parseInt(comCGSTAmount) >= 0 || parseInt(comSGSTAmount) >= 0) {
         invoiceTaxArray.push({
             TaxID: null, TaxName: '', TaxPercentage: '0', TaxAmount: comTaxAmount.toFixed(2), CGSTAmount: comCGSTAmount, SGSTAmount: comSGSTAmount, KFCTaxAmount: comCESSAmount
-            });
+        });
     }
 
     //if ($('#isAppointment').val() == '0') {
@@ -359,8 +359,7 @@ function saveInvoice(elem, alive_check){
     var phonepeNumber = $('#PhonePeNumber').val();
     var phonepeAmount = ($('#isPhonePeAmount').is(":checked")) ? $('#PhonePeAmount').val() : "0";
     var Willing = $('#Accept').val();
-    if (Willing == 3 || Willing == "3" || Willing == null || Willing == "")
-    {
+    if (Willing == 3 || Willing == "3" || Willing == null || Willing == "") {
         Willing = 2;
 
     }
@@ -377,6 +376,17 @@ function saveInvoice(elem, alive_check){
     var apiRefNo = $('#commonApiReferenceNo').val();
     var apiCustId = $('#commonApiCustId').val();
     var mobileno = $('#CustMobileNo').val();
+
+    //Added by bala on 01122021
+    var newofferid = $('#hdnbnewofferid').val();
+    var isoffercomplted = $('#hdnbisoffercompleted').val();
+    var newofferinvoiceid = $('#hdnboldINvoiceIDafter').val() || 0;
+    //Bala code ends....///////////
+
+    //Added by bala on 15122021
+    var LorealOfferAmount = $('#hdnblorealOfferAmount').val() ;
+    var Lorealofferinvoiceid = $('#hdnblorealoldInvoiceIDafter').val() || 0;
+    //...Bala code ends....///////////
 
     custID = (custID != null && custID != '' ? custID : '');
     grossTot = (grossTot != null && grossTot != '' ? grossTot : 0);
@@ -464,12 +474,27 @@ function saveInvoice(elem, alive_check){
     invoiceDetails.phonepeAmount = phonepeAmount;
     invoiceDetails.Willing = Willing;
 
+    //added by bala on 01122021
+    invoiceDetails.newofferid = newofferid;
+    invoiceDetails.isoffercomplted = isoffercomplted;
+    invoiceDetails.newofferInvoiceID = newofferinvoiceid;
+    //--------------------------//
+
+    //added by bala on 15122021
+    invoiceDetails.LorealOfferAmount = LorealOfferAmount;
+    invoiceDetails.Lorealofferinvoiceid = Lorealofferinvoiceid;
+
+    //--------------------------//
+
     var InvoiceModels = {
         InvoiceDetails: invoiceDetails,
         Services: invoiceServiceArray,
         Products: invoiceProductArray,
         CommonDiscount: invoiceDiscountArray,
-        CommonTax: invoiceTaxArray
+        CommonTax: invoiceTaxArray,
+        //newofferid: newofferid,
+        //isoffercomplted: isoffercomplted,
+
     }
 
     //var jsonTax = JSON.stringify(InvoiceModels, null, '\t');
@@ -550,7 +575,7 @@ function saveInvoice(elem, alive_check){
                                 }
                             }
                         }
-                        window.location.href = '/iNaturals/Invoice/PrintBilling?invoiceID=' + result.responseText + '&VoucherPrint=' + VOUCHERPRINT ;
+                        window.location.href = '/iNaturals/Invoice/PrintBilling?invoiceID=' + result.responseText + '&VoucherPrint=' + VOUCHERPRINT;
                     }
                 }
 
