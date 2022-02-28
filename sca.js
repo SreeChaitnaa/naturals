@@ -1621,6 +1621,7 @@ function update_reports(pmdata, sca_report){
         }
         else{
             if(window.location.href.indexOf('dayClose') > 0 && pmdata.ReportOption == ReportOps.SalonWiseSales){
+                lastrow_index=1
                 day_close_part2(pmdata)
             }
         }
