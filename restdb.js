@@ -152,7 +152,7 @@ function add_appointment(phone_number, cust_name, apt_date_time, services, smile
             break
         }
     }
-    
+
     app_data = JSON.stringify({ 'phone_number': phone_number, 
                                 'cust_name': cust_name, 
                                 'apt_date_time': apt_date_time,
@@ -161,7 +161,9 @@ function add_appointment(phone_number, cust_name, apt_date_time, services, smile
                                 'duration': duration, 
                                 'notes': notes
                 })
-    new_item = new db.appointments({Date:apt_date_time.split(' ')[0], apt_data:app_data})
+    date_numbers = apt_date_time.split(' ')[0].split("-")
+    date_number = Number(date_numbers[2]+date_numbers[1]+date_numbers[0])
+    new_item = new db.appointments({Date:date_number, apt_data:app_data})
     new_item.save()
 }
 
