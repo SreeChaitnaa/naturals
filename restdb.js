@@ -130,6 +130,20 @@ function add_inventory(prod_id, prod_name, prod_count){
     })
 }
 
+function add_appointment(phone_number, cust_name, apt_date_time, services, smile_provider, duration, notes){
+    initiate_db()
+    app_data = JSON.stringify({ 'phone_number': phone_number, 
+                                'cust_name': cust_name, 
+                                'apt_date_time': apt_date_time,
+                                'services': services, 
+                                'smile_provider': smile_provider, 
+                                'duration': duration, 
+                                'notes': notes
+                })
+    new_item = new db.appointments({Date:apt_date_time.split(' ')[0], apt_data:app_data})
+    new_item.save()
+}
+
 function get_nt_services(callback){
     initiate_db()
     db.ntservices.find({},[], function(err, nt_services){
