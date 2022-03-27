@@ -499,7 +499,7 @@ function SaveAppointmentDetailsSCA(isClose) {
     }
     send_whatsapp(Customer.MobileNo, msg)
     add_appointment(Customer.MobileNo, Customer.CustomerName, AppointmentList[0].AppTime, ser_name, 
-                    $x('NaProviderId').value.split(' ')[0], $x('durationID').value, $x('noteID').value)
+                    xpath('//*[@id="NaProviderId"]').value.split(' ')[0], xpath('//*[@id="durationID"]').value, xpath('//*[@id="noteID"]').value)
 }
 
 function send_whatsapp(mobile, wa_message){
