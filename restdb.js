@@ -144,7 +144,7 @@ function add_appointment(phone_number, cust_name, apt_date_time, services, smile
         "sep" : '09',
         "oct" : '10',
         "nov" : '11',
-        "dec" : '12',
+        "dec" : '12'
     }
     for (var month in months) {
         if(apt_date_time.toLowerCase().indexOf(month) > 0){
