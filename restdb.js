@@ -132,6 +132,27 @@ function add_inventory(prod_id, prod_name, prod_count){
 
 function add_appointment(phone_number, cust_name, apt_date_time, services, smile_provider, duration, notes){
     initiate_db()
+    months = {
+        "jan" : '01',
+        "feb" : '02',
+        "mar" : '03',
+        "apr" : '04',
+        "may" : '05',
+        "jun" : '06',
+        "jul" : '07',
+        "aug" : '08',
+        "sep" : '09',
+        "oct" : '10',
+        "nov" : '11',
+        "dec" : '12',
+    }
+    for (var month in months) {
+        if(apt_date_time.toLowerCase().indexOf(month) > 0){
+            apt_date_time = apt_date_time.toLowerCase().replace(month, months[month]).toUpperCase()
+            break
+        }
+    }
+    
     app_data = JSON.stringify({ 'phone_number': phone_number, 
                                 'cust_name': cust_name, 
                                 'apt_date_time': apt_date_time,
