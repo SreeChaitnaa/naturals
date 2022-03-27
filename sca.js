@@ -416,7 +416,42 @@ function NewAppointment() {
         inputs[inputs.length - 3].onclick = function () { SaveAppointmentDetailsSCA(0) }
         inputs[inputs.length - 2].onclick = function () { SaveAppointmentDetailsSCA(1) }
         $("#AppointMethod")[0].options.selectedIndex = 1
+        show_sca_apt_details()
     }, 2000);
+}
+
+function show_sca_apt_details(){
+    appt_method = xpath('//*[@id="result"]/div/div[1]/div[1]/div[1]/section/div/div[3]')
+    app_div = appt_method.parentElement
+    apt_duration = document.createElement("div")
+    apt_duration.innerHTML = appt_method.innerHTML
+    apt_duration.children[0].innerText = "Duration"
+    appt_duration_options = apt_duration.children[1]
+    appt_duration_options.id = "durationID"
+    appt_duration_options.name = "Appointment.Duration"
+    appt_duration_options.removeChild(appt_duration_options.children[0])
+    durations_arr = ["30min", "45min", "1Hr", "1.5hrs", "2Hrs", "3Hrs", "4Hrs"]
+    for(i=0; i< durations_arr.length; i++){
+        opt1 = document.createElement("option")
+        opt1.innerText = durations_arr[i]
+        opt1.value = durations_arr[i]
+        appt_duration_options.append(opt1)
+    } 
+    app_div.append(apt_duration)
+
+    
+    appt_note = document.createElement("div")
+    appt_note.innerHTML = xpath('//*[@id="result"]/div/div[1]/div[1]/div[1]/section/div/div[4]').innerHTML
+    appt_note.children[0].innerText = "Note"
+    appt_note_ip = appt_note.children[1]
+    appt_note_ip.id = "noteID"
+    appt_note_ip.name = "noteName"
+    appt_note.removeChild(appt_note.children[2])
+    appt_note.removeChild(appt_note.children[2])
+    app_div.append(appt_note)
+
+    app_div.children[1].hidden = true
+    app_div.children[2].hidden = true
 }
 
 function SaveAppointmentDetailsSCA(isClose) {
@@ -456,12 +491,15 @@ function SaveAppointmentDetailsSCA(isClose) {
     var Customer = CustomerList.filter(function (x) { return x.value == Customerid; })[0]
     msg = AppointmentMessage.replace("{CustomerName}", Customer.CustomerName)
     msg = msg.replace("{DateTime}", AppointmentList[0].AppTime)
-    msg = msg.replace("{ServiceName}", ServiceList.filter(function (x) { return x.value == AppointmentList[0].ServiceId; })[0].ServiceName.replace('&', '%26'))
+    ser_name = ServiceList.filter(function (x) { return x.value == AppointmentList[0].ServiceId; })[0].ServiceName
+    msg = msg.replace("{ServiceName}", ser_name.replace('&', '%26'))
 
     if (isClose == 1){
         ClosemyModalCreateAppointment();
     }
     send_whatsapp(Customer.MobileNo, msg)
+    add_appointment(Customer.MobileNo, Customer.CustomerName, AppointmentList[0].AppTime, ser_name, 
+                    $x('NaProviderId').value.split(' ')[0], $x('durationID').value, $x('noteID').value)
 }
 
 function send_whatsapp(mobile, wa_message){
