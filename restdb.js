@@ -32,7 +32,23 @@ var db = null
 function initiate_db(){
     if(db == null){
         db = new restdb(restdb_key)
+        setTimeout(delete_old_appointments, 30);
     }
+}
+
+function delete_old_appointments(){
+    date_value = new Date()
+    date_number = Number(date_value.dateFormat('Ymd'))
+    db.appointments.find({'Date':{"$lt": date_number}}, [], function(err, old_appointments){
+        if(err){
+            throw err
+        }
+        if(old_appointments.length > 0){
+            for(i in old_appointments){
+                old_appointments[i].delete()
+            }
+        }
+    })
 }
 
 function add_invoice(invoice, callback){
