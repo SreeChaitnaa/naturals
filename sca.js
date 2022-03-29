@@ -110,7 +110,8 @@ ReportOps = {
     FamilyCardReports : '46',
     CheckListReport : '53',
     UnlimitedOffer : '54',
-    SCAProductInventory: "SCA3"
+    SCAProductInventory: "SCA3",
+    SCAAppointments: "SCA4"
     }
 AdminReportOps = {
     SCAInvoices: "SCA1",
@@ -277,6 +278,7 @@ function LoadSCA(){
                 }
                 else if(window.location.href.indexOf('Reports') > 0){
                     add_sca_report("Product Inventory", ReportOps.SCAProductInventory)
+                    add_sca_report("Appointments", ReportOps.SCAAppointments)
                     if(is_admin){
                         add_sca_report("SCA Invoices", AdminReportOps.SCAInvoices)
                         add_sca_report("SCA DayWise Sales", AdminReportOps.SCADayWiseSales)
@@ -1083,6 +1085,17 @@ function get_table_structure(reportOp){
                 "MRP"
             ]
             break
+        case ReportOps.SCAAppointments:
+            columns = [
+                "Date Time",
+                "Mobile",
+                "Customer Name",
+                "Services",
+                "Smile Provider",
+                "Duration",
+                "Notes"
+            ]
+            break
     }
     for(i in columns){
         table_struct += '<th>' + columns[i] + '</th>'
@@ -1122,13 +1135,18 @@ function get_row_structure(reportOp){
         
         case ReportOps.SalonWiseSales:
             row_struct += "<td>1</td><td>KA0020</td><td>NT-KAR-FOFO-THANISANDRA</td>"
-            for(i=2; i<17;i++){
+            for(i=2; i<17; i++){
                 row_struct += "<td></td>"
             }
             row_struct += "<td>Allwyn Francis</td><td>ABHISHEK KUMAR</td>"
             break
         case ReportOps.SCAProductInventory:
-            for(i=0; i<5;i++){
+            for(i=0; i<5; i++){
+                row_struct += "<td></td>"
+            }
+            break
+        case ReportOps.SCAAppointments:
+            for(i=0; i<7; i++){
                 row_struct += "<td></td>"
             }
             break
@@ -1152,6 +1170,10 @@ function check_allowed_report(pmdata){
             if(pmdata.ReportOption == ReportOps.SCAProductInventory){
                 pmdata.invTo = "0"
                 pmdata.invfrom = "0"
+            }
+            if(pmdata.ReportOption == ReportOps.SCAAppointments){
+                pmdata.invTo = "-1"
+                pmdata.invfrom = "-1"
             }
             $('#divloadingscreen').show()
             update_reports(pmdata, true)
@@ -1252,6 +1274,21 @@ function update_reports(pmdata, sca_report){
                 get_table_cell(tbl, 0, 'tbody', row_counter).innerHTML = row_structure
                 set_table_cell_string(tbl, row_counter, 2, "Total")
                 set_table_cell_string(tbl, row_counter, 3, total_prod_count)
+            }
+            else if(pmdata.ReportOption == ReportOps.SCAAppointments){
+                for(row_counter in invoices){
+                    get_table_cell(tbl, 0, 'tbody').insertRow(row_counter)
+                    get_table_cell(tbl, 0, 'tbody', row_counter).innerHTML = row_structure
+
+                    appt = JSON.parse(invoices[row_counter])
+                    set_table_cell_string(tbl, row_counter, 0, appt.apt_date_time)
+                    set_table_cell_string(tbl, row_counter, 1, appt.phone_number)
+                    set_table_cell_string(tbl, row_counter, 2, appt.cust_name)
+                    set_table_cell_string(tbl, row_counter, 3, appt.services)
+                    set_table_cell_string(tbl, row_counter, 4, appt.smile_provider)
+                    set_table_cell_string(tbl, row_counter, 5, appt.duration)
+                    set_table_cell_string(tbl, row_counter, 6, appt.notes)
+                }
             }
             else{
                 for(i in invoices){
