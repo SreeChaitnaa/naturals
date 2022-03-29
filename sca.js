@@ -1277,10 +1277,16 @@ function update_reports(pmdata, sca_report){
             }
             else if(pmdata.ReportOption == ReportOps.SCAAppointments){
                 for(row_counter in invoices){
+                    invoices[row_counter].apt_data = JSON.parse(invoices[row_counter].apt_data)
+                    parts = invoices[row_counter].apt_data.apt_date_time.split(" ")
+                    invoices[row_counter].date_obj = new Date(parts[0].split("-").reverse().join("-") + " " + parts[1] + ":00")
+                }
+                invoices.sort(function(a,b){return (a.date_obj > b.date_obj) ? 1 : ((a.date_obj < b.date_obj) ? -1 : 0)})
+                for(row_counter in invoices){
                     get_table_cell(tbl, 0, 'tbody').insertRow(row_counter)
                     get_table_cell(tbl, 0, 'tbody', row_counter).innerHTML = row_structure
 
-                    appt = JSON.parse(invoices[row_counter].apt_data)
+                    appt = invoices[row_counter].apt_data
                     set_table_cell_string(tbl, row_counter, 0, appt.apt_date_time)
                     set_table_cell_string(tbl, row_counter, 1, appt.phone_number)
                     set_table_cell_string(tbl, row_counter, 2, appt.cust_name)
