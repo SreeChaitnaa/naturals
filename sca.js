@@ -186,6 +186,7 @@ function LoadSCA(){
                     else{
                         xpath('//*[@id="stacked-menu"]/li[3]/a').onclick = NewAppointment
                         xpath('//*[@id="stacked-menu"]/li[5]/ul/li[4]/a').href = 'https://iservenaturals.in/iNaturals/Reports/Index?dayClose'
+                        xpath('//*[@id="stacked-menu"]/li[2]/ul/li[1]/a').href = 'https://iservenaturals.in/iNaturals/Reports/Index?appointments'
                     }
                     if(is_admin){
                         p = xpath('//*[@id="stacked-menu"]').children[5]
@@ -285,6 +286,9 @@ function LoadSCA(){
                     }
                     if(window.location.href.indexOf('dayClose') > 0){
                         setTimeout(day_close, 1000)
+                    }
+                    else if(window.location.href.indexOf('appointments') > 0){
+                        setTimeout(show_appointments, 1000)
                     }
                     else{
                         $('#divloadingscreen').hide()
@@ -723,6 +727,11 @@ function day_close(){
     else{
         $('#ReportOption')[0].selectedIndex = 1
     }
+    Openresport();
+}
+
+function show_appointments(){
+    $('#ReportOption')[0].selectedIndex = 25
     Openresport();
 }
 
