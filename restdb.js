@@ -88,6 +88,9 @@ function get_invoice_by_date(max_date, min_date, callback){
     if(max_date == "0"){
         db.inventory.find({}, [], callback)
     }
+    else if(max_date == "-1"){
+        db.appointments.find({}, [], callback)
+    }
     else{
         db.invoices.find({'date_number':{"$bt": [max_date, min_date]}},[],function(err, res){
             if(err != null){
