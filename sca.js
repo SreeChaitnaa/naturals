@@ -1280,7 +1280,7 @@ function update_reports(pmdata, sca_report){
                     get_table_cell(tbl, 0, 'tbody').insertRow(row_counter)
                     get_table_cell(tbl, 0, 'tbody', row_counter).innerHTML = row_structure
 
-                    appt = JSON.parse(invoices[row_counter])
+                    appt = JSON.parse(invoices[row_counter].apt_data)
                     set_table_cell_string(tbl, row_counter, 0, appt.apt_date_time)
                     set_table_cell_string(tbl, row_counter, 1, appt.phone_number)
                     set_table_cell_string(tbl, row_counter, 2, appt.cust_name)
