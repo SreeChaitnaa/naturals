@@ -744,7 +744,8 @@ function day_close_part2(pmdata){
     mem_count = +get_table_cell(tbl, 0, 'tbody', lastrow_index, 6).innerText
     mem_total = +get_table_cell(tbl, 0, 'tbody', lastrow_index, 7).innerText
     services_total = +get_table_cell(tbl, 0, 'tbody', lastrow_index, 10).innerText
-    products_total = +get_table_cell(tbl, 0, 'tbody', lastrow_index, 11).innerText
+    //products_total = +get_table_cell(tbl, 0, 'tbody', lastrow_index, 11).innerText
+    products_total = services_total + mem_total
     total = +get_table_cell(tbl, 0, 'tbody', lastrow_index, 12).innerText
     abv = +get_table_cell(tbl, 0, 'tbody', lastrow_index, 17).innerText
     
