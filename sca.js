@@ -127,12 +127,12 @@ AppointmentMessage = "Thanks for contacting Naturals Thanisandra!%0a%0a*Appointm
 
 
 SalesMessage = "Thank you for using our services @ Naturals Thanisandra!%0a" +
-               "Please share your review here https://g.page/r/CcW7iQ6mjak6EAg/review %0a%0a" +
+               "Please share your review here https://bit.ly/rate-naturals %0a%0a" +
                "*Appointments:* +91 8861 567 550 %0a" +
                "*Feedback:* naturals.thanisandra@gmail.com %0a%0a" +
                "Follow us- %0a" +
-               "*Instagram:* https://www.instagram.com/naturals.thanisandra/ %0a" +
-               "*Facebook:* https://www.facebook.com/naturals.thanisandra/ %0a%0a" +
+               "*Instagram:* https://bit.ly/insta-naturals/ %0a" +
+               "*Facebook:* https://bit.ly/fb-naturals/ %0a%0a" +
                "We look forward to serving you again soon!!!"
 
 SCAProducts = []
