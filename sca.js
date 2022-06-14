@@ -123,7 +123,7 @@ AppointmentMessage = "Thanks for contacting Naturals Thanisandra!%0a%0a*Appointm
                      "Date %26 Time: {DateTime}%0a" +
                      "Service: {ServiceName}%0a%0a" +
                      "*Landmark: Above Adishwar Thanisandra.*%0a" + 
-                     "Location: https://goo.gl/maps/vAVWytpzvqBohhRk9"
+                     "Location: https://bit.ly/naturals-blr"
 
 
 SalesMessage = "Thank you for using our services @ Naturals Thanisandra!%0a" +
