@@ -170,11 +170,11 @@ function add_sca_report(report_name, report_value){
 
 function LoadSCA(){
     if (window.location.href.startsWith("https://iservenaturals.in")) {
-        if ($("button")[0].innerText == "Login") {
+        if ($("button")[1].innerText == "Login") {
             // CSharpTask("Logging in...", 0, 0, 3);
             $("#username")[0].value = "KA0020";
             $("#password")[0].value = "JaiSriRam2";
-            $("button")[0].click();
+            $("button")[1].click();
         }
         else{
             setTimeout(function () {
