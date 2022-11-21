@@ -126,7 +126,7 @@ AppointmentMessage = "Thanks for contacting Naturals Thanisandra!%0a%0a*Appointm
                      "Location: https://bit.ly/naturals-blr"
 
 
-SalesMessage = "*NEVER MISS OUR OFFER, Save this mobile number* %0a%0a" +
+SalesMessage = "*Save this number to NEVER MISS A DEAL...* %0a%0a" +
                "Thank you for using our services @ Naturals Thanisandra!%0a" +
                "Please share your review here https://bit.ly/rate-naturals %0a%0a" +
                "*Appointments:* +91 8861 567 550 %0a" +
