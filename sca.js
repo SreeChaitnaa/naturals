@@ -90,6 +90,7 @@ restdb_key = "612f97f843cedb6d1f97eba5"
 ReportOps = {
     SalonWiseSales: '2',
     DayWiseSales: '3',
+    GenderReport: '4',
     ADProductSalesReport: '5',
     ADSmileProviderSales: '7',
     InvoiceCancellations : '8',
@@ -1088,6 +1089,30 @@ function get_table_structure(reportOp){
                 "PhonePe"
             ]
             break
+        case ReportOps.GenderReport:
+            columns = [
+                "S.No",
+                "Oulet Name",
+                "Date",
+                "Walk In",
+                "phone",
+                "Male",
+                "Female",
+                "Kids",
+                "Male Value",
+                "ABV (Male)",
+                "Female Value",
+                "ABV (Female)",
+                "Male Value Without Tax",
+                "ABV Without Tax (Male)",
+                "Female Value Without Tax",
+                "ABV Without Tax (Female)",
+                "Kids Value",
+                "ABV (Kids)",
+                "ABV Without Tax (Kids)",
+                "Kids Value Without Tax"
+            ]
+            break
         case ReportOps.SCAProductInventory:
             columns = [
                 "S.No",
@@ -1142,6 +1167,16 @@ function get_row_structure(reportOp){
             }
             for(i=0; i<8;i++){
                 row_struct += "<td>0.0</td>"
+            }
+            break
+        
+        case ReportOps.GenderReport:
+            row_struct += "<td></td><td>NT-KAR-FOFO-THANISANDRA</td><td></td>"
+            for(i=0; i<5;i++){
+                row_struct += "<td>0</td>"
+            }
+            for(i=0; i<3;i++){
+                row_struct += "<td>0.00</td>"
             }
             break
         
@@ -1434,6 +1469,45 @@ function update_reports(pmdata, sca_report){
 
                         for(i=0; i< lastrow_index; i++){
                             get_table_cell(tbl, 0, 'tbody', i, 0).innerText = i+1
+                        }
+                        break
+                    
+                    case ReportOps.GenderReport:
+                        row_counter = 0
+                        for(var i in invoices) {
+                            try{
+                                while(dateNumber_from_datestr(get_table_cell(tbl, 0, 'tbody', row_counter, 2).innerText, "-") < invoices[i].date_number){row_counter++}
+                            }catch{}
+
+                            // || dateNumber_from_datestr(get_table_cell(tbl, 0, 'tbody', row_counter, 2).innerText, "-") > invoices[i].date_number
+                            if(get_table_cell(tbl, 0, 'tbody', row_counter) == undefined){
+                                get_table_cell(tbl, 0, 'tbody').insertRow(row_counter)
+                                get_table_cell(tbl, 0, 'tbody', row_counter).innerHTML = get_row_structure(pmdata.ReportOption)
+                                get_table_cell(tbl, 0, 'tbody', row_counter, 2).innerText = invoices[i].date.dateFormat("d-m-Y")
+                            }
+
+                            invoice = JSON.parse(invoices[i].invoice_json)
+                            increase_table_cell_number(tbl, row_counter, 3, 1, 0, true)
+                            if(invoice.Customer.Gender == "MALE") {
+                                increase_table_cell_number(tbl, row_counter, 5, 1, 0, true)
+                                increase_table_cell_number(tbl, row_counter, 8, invoice.InvoiceDetails.ServiceNetSales, 2, true)
+                                increase_table_cell_number(tbl, row_counter, 12, invoice.InvoiceDetails.ServiceBasicSales, 2, true)
+                            }
+                            else{
+                                increase_table_cell_number(tbl, row_counter, 6, 1, 0, true)
+                                increase_table_cell_number(tbl, row_counter, 10, invoice.InvoiceDetails.ServiceNetSales, 2, true)
+                                increase_table_cell_number(tbl, row_counter, 14, invoice.InvoiceDetails.ServiceBasicSales, 2, true)
+                            }
+                        }
+
+                        for(i=0; i<= row_counter; i++){
+                            get_table_cell(tbl, 0, 'tbody', i, 0).innerText = i+1
+                            menCount = Number(get_table_cell(tbl, 0, 'tbody', i, 5).innerText)
+                            womenCount = Number(get_table_cell(tbl, 0, 'tbody', i, 6).innerText)
+                            set_table_cell_number(tbl, 0, 9, Number(get_table_cell(tbl, 0, 'tbody', i, 8).innerText)/menCount, 2)
+                            set_table_cell_number(tbl, 0, 11, Number(get_table_cell(tbl, 0, 'tbody', i, 10).innerText)/womenCount, 2)
+                            set_table_cell_number(tbl, 0, 13, Number(get_table_cell(tbl, 0, 'tbody', i, 12).innerText)/menCount, 2)
+                            set_table_cell_number(tbl, 0, 15, Number(get_table_cell(tbl, 0, 'tbody', i, 14).innerText)/womenCount, 2)
                         }
                         break
                     case ReportOps.SmileProviderSales:
