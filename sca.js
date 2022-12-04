@@ -1269,6 +1269,7 @@ function update_reports(pmdata, sca_report){
         sca_report = false
     }
     console.log(pmdata)
+    update_services_and_products()
     get_invoice_by_date(dateNumber_from_datestr(pmdata.invTo, "/"),
     dateNumber_from_datestr(pmdata.invfrom, "/"), 
     function(err, invoices){ 
@@ -1349,12 +1350,14 @@ function update_reports(pmdata, sca_report){
                 }
                 invoices.sort(function(x,y){return x.date-y.date})
                 sca_invoices = invoices
+                ilen = invoices.length
                 switch(pmdata.ReportOption){
                     case ReportOps.Invoices:
                     case ReportOps.ADInvoices:
                     case AdminReportOps.SCAInvoices:
                         row_counter = 0
                         for(i in invoices){
+                            console.log("Processing " + (Number(i)+1) + " of " + ilen + " invoices" )
                             try{
                                 while(dateFromString(get_table_cell(tbl, 0, 'tbody', row_counter, 2).innerText) < invoices[i].date){row_counter++}
                             }catch{}
@@ -1423,6 +1426,7 @@ function update_reports(pmdata, sca_report){
                             total_tr.innerHTML = total_tr_innerHTML
                         }
                         for(var i in invoices) {
+                            console.log("Processing " + (Number(i)+1) + " of " + ilen + " invoices" )
                             try{
                                 while(dateNumber_from_datestr(get_table_cell(tbl, 0, 'tbody', row_counter, 1).innerText, "-") < invoices[i].date_number){row_counter++}
                             }catch{}
@@ -1475,6 +1479,7 @@ function update_reports(pmdata, sca_report){
                     case ReportOps.GenderReport:
                         row_counter = 0
                         for(var i in invoices) {
+                            console.log("Processing " + (Number(i)+1) + " of " + ilen + " invoices" )
                             try{
                                 while(dateNumber_from_datestr(get_table_cell(tbl, 0, 'tbody', row_counter, 2).innerText, "-") < invoices[i].date_number){row_counter++}
                             }catch{}
@@ -1514,6 +1519,7 @@ function update_reports(pmdata, sca_report){
                     case ReportOps.ADSmileProviderSales:
                         rows = get_table_cell(tbl, 0, 'tbody').getElementsByTagName('tr')
                         for(var i in invoices){
+                            console.log("Processing " + (Number(i)+1) + " of " + ilen + " invoices" )
                             invoice = JSON.parse(invoices[i].invoice_json)
                             sps = []
                             for(var si in invoice.Services){
@@ -1577,7 +1583,7 @@ function update_reports(pmdata, sca_report){
                             }
                         }
                         for(var i in invoices) {
-
+                            console.log("Processing " + (Number(i)+1) + " of " + ilen + " invoices" )
                             invoice = JSON.parse(invoices[i].invoice_json)
                             increase_table_cell_number(tbl, row_counter, 3, 1, 0)
                             increase_table_cell_number(tbl, row_counter, 4, invoice.Services.length, 0)
@@ -1613,6 +1619,7 @@ function update_reports(pmdata, sca_report){
                     case ReportOps.ADServiceClassReportNew:
                         row_counter = 0
                         for(i in invoices){
+                            console.log("Processing " + (Number(i)+1) + " of " + ilen + " invoices" )
                             try{
                                 while(dateFromString(get_table_cell(tbl, 0, 'tbody', row_counter, 2).innerText) < invoices[i].date){row_counter++}
                             }catch{}
@@ -1633,7 +1640,13 @@ function update_reports(pmdata, sca_report){
                                 set_table_cell_string(tbl, row_counter, 3, 'NT-KAR-FOFO-THANISANDRA')
                                 service = invoice.Services[j]
                                 set_table_cell_string(tbl, row_counter, 4, service.ServiceName)
+                                try{
+                                    service_code = SCAServiceList.filter(function(x){return x.ServiceName == service.ServiceName})[0].ServiceCode
+                                    set_table_cell_string(tbl, row_counter, 5, service_code)
+                                }
+                                catch{
                                 set_table_cell_string(tbl, row_counter, 5, '')
+                                }
                                 set_table_cell_string(tbl, row_counter, 6, invoice.Customer.ProductName)
                                 if(is_admin){
                                     set_table_cell_string(tbl, row_counter, 7, invoice.Customer.MobileNo)
@@ -1672,14 +1685,14 @@ function update_reports(pmdata, sca_report){
                             get_table_cell(tbl, 0, 'tbody', i, 0).innerText = i+1
                             if(!is_admin){
                                 get_table_cell(tbl, 0, 'tbody', i).deleteCell(1)
-                                get_table_cell(tbl, 0, 'tbody', i).deleteCell(4)
-                                get_table_cell(tbl, 0, 'tbody', i).deleteCell(6)
+                                get_table_cell(tbl, 0, 'tbody', i).deleteCell(7)
                             }
                         }
                         break
                     case ReportOps.ProductSalesReport:
                         row_counter = 0
                         for(i in invoices){
+                            console.log("Processing " + (Number(i)+1) + " of " + ilen + " invoices" )
                             try{
                                 while(dateFromString(get_table_cell(tbl, 0, 'tbody', row_counter, 2).innerText) < invoices[i].date){row_counter++}
                             }catch{}
@@ -1736,6 +1749,7 @@ function update_reports(pmdata, sca_report){
                     case ReportOps.ADProductSalesReport:
                         row_counter = 0
                         for(i in invoices){
+                            console.log("Processing " + (Number(i)+1) + " of " + ilen + " invoices" )
                             try{
                                 while(dateFromString(get_table_cell(tbl, 0, 'tbody', row_counter, 2).innerText) < invoices[i].date){row_counter++}
                             }catch{}
