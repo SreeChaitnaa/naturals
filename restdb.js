@@ -131,7 +131,7 @@ function update_setting(key, value, callback){
     })
 }
 
-function add_inventory(prod_id, prod_name, prod_count){
+function add_inventory(prod_id, prod_name, prod_count, mrp=0){
     initiate_db()
     db.inventory.find({'prod_id':prod_id},[], function(err, res){
         if(err){
@@ -143,7 +143,7 @@ function add_inventory(prod_id, prod_name, prod_count){
             new_item.count += prod_count
         }
         else{
-            new_item = new db.inventory({prod_name:prod_name, prod_id:prod_id, count :0+prod_count})
+            new_item = new db.inventory({prod_name:prod_name, prod_id:prod_id, count :0+prod_count, mrp: 0+mrp})
         }
         new_item.save()
     })
