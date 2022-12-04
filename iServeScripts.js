@@ -731,22 +731,30 @@ function BindAutoCompleList_ProductNew() {
 
                 if (productname.length < 3)
                     return false;
-                $.ajax({
-                    url: '/iNaturals/Invoice/SearchProduct',
-                    type: "POST",
-                    dataType: "json",
-                    async: false,
-                    data: { Name: productname },
-                    success: function (data) {
-                        //ProductList.length = 0;
 
-                        // MMD Call - comment the direct assign and called filter_sca_products
-                        // ProductList = data;
-                        ProductList = filter_sca_products(data);
-                        response(ProductList);
+                ProductList = filter_sca_products(productname)
+                if (ProductList.length > 0){
+                    response(ProductList)
+                }
+                else{
+                    return false
+                }
+                // $.ajax({
+                //     url: '/iNaturals/Invoice/SearchProduct',
+                //     type: "POST",
+                //     dataType: "json",
+                //     async: false,
+                //     data: { Name: productname },
+                //     success: function (data) {
+                //         //ProductList.length = 0;
 
-                    }
-                })
+                //         // MMD Call - comment the direct assign and called filter_sca_products
+                //         // ProductList = data;
+                //         ProductList = filter_sca_products(data);
+                //         response(ProductList);
+
+                //     }
+                // })
             },
             select: function (event, ui) {
                 // Get the current row
