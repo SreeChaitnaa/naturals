@@ -362,7 +362,8 @@ function add_products_page_setup(){
             }
             product_qty = document.getElementsByName('Products[' + counter +'].Qty')[0].value
             product_name = document.getElementsByName('Products[' + counter +'].ProductName')[0].value
-            add_inventory(+product_id, product_name, +product_qty)
+            mrp = document.getElementsByName('Products[' + counter +'].NetPrice')[0].value
+            add_inventory(+product_id, product_name, +product_qty, +mrp)
             counter++
         }
     }
