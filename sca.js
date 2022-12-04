@@ -254,7 +254,22 @@ function LoadSCA(){
                         add_products_page_setup()
                     }
                     else{
-                        get_invoice_by_date("0", "0", function(err, res){SCAProducts = res})
+                        get_invoice_by_date("0", "0", function(err, res){
+                            for(i in res){
+                                res[i].value = res[i].prod_id
+                                res[i].taxpercent = "18.00"
+                                res[i].taxname = "GST 18%"
+                                res[i].taxid = "1"
+                                res[i].sgstpercent = "9.00"
+                                res[i].price = Number(res[i].mrp) / 1.18
+                                res[i].label = res[i].prod_name
+                                res[i].cgstpercent = "9.00"
+                                res[i].cesspercent = "0.00"
+                                res[i].ProductName = res[i].prod_name
+                                res[i].ProductCode = "MMD-" + res[i].prod_id
+                                res[i].BrandID = "MMD"
+                            }
+                            SCAProducts = res})
                         get_nt_services(function(nt_services){SCAServices = nt_services})
                         setInterval(function (){
                             if($('#commonGrandTotal').val() != ''){
@@ -880,7 +895,6 @@ function update_dashboard(){
 SCAInvoice = "";
 FirstInvoice = ""
 sca_invoices = ""
-SCAProductList = undefined
 SCAServiceList = []
 
 function update_services_and_products(){
@@ -902,18 +916,17 @@ function update_services_and_products(){
     //     SCAServiceList = SCAServiceList.concat(nt_services);
     // })
 
-    SCAProductList = undefined
-    $.ajax({
-        url: '/iNaturals/Invoice/SearchProduct',
-        type: "POST",
-        dataType: "json",
-        async: false,
-        data: { Name: "" },
-        success: function (data) {
-            //ProductList.length = 0;
-            SCAProductList = data;
-        }
-    })
+    // $.ajax({
+    //     url: '/iNaturals/Invoice/SearchProduct',
+    //     type: "POST",
+    //     dataType: "json",
+    //     async: false,
+    //     data: { Name: "" },
+    //     success: function (data) {
+    //         //ProductList.length = 0;
+    //         SCAProductList = data;
+    //     }
+    // })
 }
 
 function doMMDBill(InvoiceModels){
@@ -951,14 +964,16 @@ function doMMDBill(InvoiceModels){
         //     return
         // }
         NewMember = false
+        CustomServices = false
         for(i in InvoiceModels.Products){
             if(Number(InvoiceModels.Products[i].hdnIsMembershipSales) > 0){
                 NewMember = true
-                break
+            }
+            if(Number(InvoiceModels.Products[i].ProductID) > 1110000){
+                CustomServices = true
             }
         }
 
-        CustomServices = false
         debugger
         for(i in InvoiceModels.Services){
             if(Number(InvoiceModels.Services[i].ServiceID) > 100000){
@@ -969,7 +984,7 @@ function doMMDBill(InvoiceModels){
 
         if(NewMember || (InvoiceModels.InvoiceDetails.RemarksRating.toLowerCase().indexOf("good") > -1)){
             if(CustomServices){
-                toastr.error("Failure - New user can not have Custom Packages", "Error");
+                toastr.error("Failure - New user can not have Custom Packages or Products", "Error");
                 throw StopMessage
             }
             return
@@ -987,12 +1002,12 @@ function doMMDBill(InvoiceModels){
                 InvoiceModels.Services[i].EmployeeName = EmployeeList.filter(function (x) { return x.value == InvoiceModels.Services[i].EmployeeID; })[0].EMPName
             }
             if (InvoiceModels.Products.length > 0) {
-                while (SCAProductList == undefined) {
+                while (SCAProducts == undefined) {
                     console.log("Waiting for Prod List")
                 }
             }
             for (i = 0; i < InvoiceModels.Products.length; i++) {
-                InvoiceModels.Products[i].ProductName = SCAProductList.filter(function (x) { return x.value == InvoiceModels.Products[i].ProductID; })[0].ProductName
+                InvoiceModels.Products[i].ProductName = SCAProducts.filter(function (x) { return x.value == InvoiceModels.Products[i].ProductID; })[0].ProductName
                 InvoiceModels.Products[i].EmployeeName = EmployeeList.filter(function (x) { return x.value == InvoiceModels.Products[i].EmployeeID; })[0].EMPName
             }
             while (InvoiceModels.Customer == undefined) {
@@ -1832,14 +1847,16 @@ function update_incentives(fromDate, toDate){
     })
 }
 
-function filter_sca_products(products){
+function filter_sca_products(productname){
+    sca_selected_prods = []
     if(SCAProducts.length > 0){
-        products = products.filter(function(o1){
-                                    return SCAProducts.some(function(o2){
-                                        return o1.value == o2.prod_id && o2.count > 0;
-                                    })})
+        // products = products.filter(function(o1){
+        //                             return SCAProducts.some(function(o2){
+        //                                 return o1.value == o2.prod_id && o2.count > 0;
+        //                             })})
+        sca_selected_prods = SCAProducts.filter(function(p){return p.prod_name.toLowerCase().indexOf(productname) > -1 && p.count > 0})
     }
-    return products
+    return sca_selected_prods
 }
 
 function add_sca_services(services, search_key){
