@@ -749,7 +749,6 @@ function BindAutoCompleList_ProductNew() {
                         async: false,
                         data: { Name: productname },
                         success: function (data) { 
-                            ProductList.length = 0;
                             ProductList = data;
                             response(data)
                             //ProductList.length = 0;
