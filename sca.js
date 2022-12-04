@@ -969,7 +969,7 @@ function doMMDBill(InvoiceModels){
             if(Number(InvoiceModels.Products[i].hdnIsMembershipSales) > 0){
                 NewMember = true
             }
-            if(Number(InvoiceModels.Products[i].ProductID) > 1110000){
+            if(Number(InvoiceModels.Products[i].ProductID) > 100000){
                 CustomServices = true
             }
         }
