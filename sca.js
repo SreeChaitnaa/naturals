@@ -1229,6 +1229,13 @@ function check_allowed_report(pmdata){
     }
     if(allowed_ops.includes(pmdata.ReportOption)){
         console.log("Allowed Report")
+        if(pmdata.ReportOption == ReportOps.SmileProviderSales && !is_admin){
+            today_date = new Date()
+            $("#invfrom")[0].value = today_date.dateFormat('d/m/Y')
+            $("#invTo")[0].value = today_date.dateFormat('d/m/Y')
+            pmdata.invTo = today_date.dateFormat('d/m/Y')
+            pmdata.invfrom = pmdata.invTo
+        }
         if(pmdata.ReportOption.startsWith("SCA")){
             if(pmdata.ReportOption == ReportOps.SCAProductInventory){
                 pmdata.invTo = "0"
@@ -1242,6 +1249,7 @@ function check_allowed_report(pmdata){
             update_reports(pmdata, true)
             throw "Handled by SCA"
         }
+        return pmdata
     }
     else{
         toastr.error("This report is not available for current user", "Error")
