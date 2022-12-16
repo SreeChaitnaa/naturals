@@ -1236,8 +1236,8 @@ function check_allowed_report(pmdata){
             pmdata.invTo = today_date.dateFormat('d/m/Y')
             pmdata.invfrom = pmdata.invTo
         }
-        if(pmdata.ReportOption == '54'){
-            pmdata.ReportOption == ReportOps.SmileProviderSales
+        if(pmdata.ReportOption == ReportOps.UnlimitedOffer && !is_admin){
+            pmdata.ReportOption = ReportOps.SmileProviderSales
         }
         if(pmdata.ReportOption.startsWith("SCA")){
             if(pmdata.ReportOption == ReportOps.SCAProductInventory){
