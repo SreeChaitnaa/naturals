@@ -1237,7 +1237,7 @@ function check_allowed_report(pmdata){
             pmdata.invfrom = pmdata.invTo
         }
         if(pmdata.ReportOption == ReportOps.UnlimitedOffer && !is_admin){
-            pmdata.ReportOption = ReportOps.SmileProviderSales
+            pmdata.ReportOption = ReportOps.UnlimitedOffer
         }
         if(pmdata.ReportOption.startsWith("SCA")){
             if(pmdata.ReportOption == ReportOps.SCAProductInventory){
