@@ -51,18 +51,27 @@ function get_random_oximeter(){
 console.log("Test JS Loaded")
 
 if (window.location.href.startsWith("https://iservenaturals.in")) {
-    if($('#divloadingscreen')[0] == undefined)
-    {
+    if($('#divloadingscreen')[0] == undefined) {
         loadCSS('https://sreechaitnaa.github.io/naturals/sca.css')
         loadingDiv = document.createElement('div')
         document.body.appendChild(loadingDiv)
         loadingDiv.outerHTML = '<div id="divloadingscreen" class="divLoading" style="display:none"><div class="Panel-Loading-BG"></div><div id="Panel-Loading"><div></div></div></div>'
     }
     $('#divloadingscreen').show()
+
     wa_msg = document.createElement("div")
     document.body.appendChild(wa_msg)
     wa_msg.id = "sca_wa_url"
     $('#sca_wa_url')[0].style.display = 'none'
+
+    if($('#div_pwd')[0] == undefined) {
+        pwd_div = document.createElement("div");
+        document.body.appendChild(pwd_div);
+        pwd_div.outerHTML = '<div id="div_pwd" class="divLoading" style="display:none"><div class="Panel-Loading-BG"></div>' +
+                            '<div style="position:fixed; top:50%; left:50%; background-color:lightgrey; padding:1em; z-index:9010"> ' +
+                            'Enter PIN: </br></br> <input id="mmd_pwd" type="password" /> </br></br> ' +
+                            '<input id="btn_pwd" type="button" value="OK" style="float:right" onclick=verify_pwd() /> </div></div>'
+    }
 }
 
 $.ajax({url: 'https://naturals-d1c4.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){
@@ -309,6 +318,7 @@ function LoadSCA(){
                     }
                     else{
                         $('#divloadingscreen').hide()
+                        $('#div_pwd').show()
                     }
                 }
                 else{
@@ -330,6 +340,15 @@ function LoadSCA(){
             //     });
             // }, 30000);
         }
+    }
+}
+
+function verify_pwd(){
+    pwd = $('#mmd_pwd')[0].value
+    $('#mmd_pwd')[0].value = ""
+    $('#div_pwd').hide()
+    if(pwd != "727476"){
+        window.location.href = default_url
     }
 }
 
@@ -1229,16 +1248,16 @@ function check_allowed_report(pmdata){
     }
     if(allowed_ops.includes(pmdata.ReportOption)){
         console.log("Allowed Report")
-        if(pmdata.ReportOption == ReportOps.SmileProviderSales && !is_admin){
-            today_date = new Date()
-            $("#invfrom")[0].value = today_date.dateFormat('d/m/Y')
-            $("#invTo")[0].value = today_date.dateFormat('d/m/Y')
-            pmdata.invTo = today_date.dateFormat('d/m/Y')
-            pmdata.invfrom = pmdata.invTo
-        }
-        if(pmdata.ReportOption == ReportOps.UnlimitedOffer && !is_admin){
-            pmdata.ReportOption = ReportOps.UnlimitedOffer
-        }
+        // if(pmdata.ReportOption == ReportOps.SmileProviderSales && !is_admin){
+        //     today_date = new Date()
+        //     $("#invfrom")[0].value = today_date.dateFormat('d/m/Y')
+        //     $("#invTo")[0].value = today_date.dateFormat('d/m/Y')
+        //     pmdata.invTo = today_date.dateFormat('d/m/Y')
+        //     pmdata.invfrom = pmdata.invTo
+        // }
+        // if(pmdata.ReportOption == ReportOps.UnlimitedOffer && !is_admin){
+        //     pmdata.ReportOption = ReportOps.UnlimitedOffer
+        // }
         if(pmdata.ReportOption.startsWith("SCA")){
             if(pmdata.ReportOption == ReportOps.SCAProductInventory){
                 pmdata.invTo = "0"
