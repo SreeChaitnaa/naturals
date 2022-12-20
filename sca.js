@@ -310,7 +310,12 @@ function LoadSCA(){
                         add_sca_report("SCA Invoices", AdminReportOps.SCAInvoices)
                         add_sca_report("SCA DayWise Sales", AdminReportOps.SCADayWiseSales)
                     }
-                    else { $('#div_pwd').show() }
+                    else { 
+                        $('#div_pwd').show() 
+                        setTimeout(function(){
+                            $('#txt_Search')[0].value = ''
+                        }, 2000)
+                    }
                     if(window.location.href.indexOf('dayClose') > 0){
                         setTimeout(day_close, 1000)
                     }
