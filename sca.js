@@ -318,7 +318,7 @@ function LoadSCA(){
                     }
                     else{
                         $('#divloadingscreen').hide()
-                        $('#div_pwd').show()
+                        if(!is_admin){ $('#div_pwd').show() }
                     }
                 }
                 else{
