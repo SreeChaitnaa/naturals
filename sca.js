@@ -128,7 +128,8 @@ AdminReportOps = {
     SCADayWiseSales: "SCA2"
 }
 
-AppointmentMessage = "Thanks for contacting Naturals Thanisandra!%0a%0a*Appointment Details:*%0a" +
+AppointmentMessage = "*Save this number to NEVER MISS A DEAL...* %0a%0a" +
+                     "Thanks for contacting Naturals Thanisandra!%0a%0a*Appointment Details:*%0a" +
                      "Name: {CustomerName}%0a" +
                      "Date %26 Time: {DateTime}%0a" +
                      "Service: {ServiceName}%0a%0a" +
