@@ -365,7 +365,7 @@ function verify_pwd(){
     pwd = $('#mmd_pwd')[0].value
     $('#mmd_pwd')[0].value = ""
     $('#div_pwd').hide()
-    if(pwd != "727476" || pwd != "mmd" ){
+    if(pwd != "727476" && pwd != "mmd" ){
         window.location.href = default_url
     }
 }
