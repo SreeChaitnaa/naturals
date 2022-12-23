@@ -2,6 +2,10 @@ function xpath(path) {
     return document.evaluate(path, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
 }
 
+function xpath_all(path) {
+    return document.evaluate(path, document, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
+}
+
 try{
     x= xpath('//*[@id="stacked-menu"]/li[2]')
     if(x.innerText == 'Outlet Performance'){
@@ -29,17 +33,6 @@ if (!String.prototype.startsWith) {
     };
 }
 
-function CSharpTask(message, pre_task_id, post_task_id, sleep_time_in_sec) {
-    //alert(window.location.href + "trying..." + window.external)
-    try {
-        window.external.DoTask(message, pre_task_id, post_task_id, sleep_time_in_sec)
-    }
-    catch(e) {
-        console.log(e);
-        //alert(e);
-    }
-}
-
 function get_random_temp(){
     return Number(35.9 + Math.random()).toFixed(1)
 }
@@ -50,6 +43,11 @@ function get_random_oximeter(){
 
 console.log("Test JS Loaded")
 
+wa_msg = document.createElement("div")
+document.body.appendChild(wa_msg)
+wa_msg.id = "sca_wa_url"
+document.getElementById('sca_wa_url').style.display = 'none'
+
 if (window.location.href.startsWith("https://iservenaturals.in")) {
     if($('#divloadingscreen')[0] == undefined) {
         loadCSS('https://sreechaitnaa.github.io/naturals/sca.css')
@@ -58,12 +56,7 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
         loadingDiv.outerHTML = '<div id="divloadingscreen" class="divLoading" style="display:none"><div class="Panel-Loading-BG"></div><div id="Panel-Loading"><div></div></div></div>'
     }
     $('#divloadingscreen').show()
-
-    wa_msg = document.createElement("div")
-    document.body.appendChild(wa_msg)
-    wa_msg.id = "sca_wa_url"
-    $('#sca_wa_url')[0].style.display = 'none'
-
+    
     if($('#div_pwd')[0] == undefined) {
         pwd_div = document.createElement("div");
         document.body.appendChild(pwd_div);
@@ -72,13 +65,14 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
                             'Enter PIN: </br></br> <input id="mmd_pwd" type="password" /> </br></br> ' +
                             '<input id="btn_pwd" type="button" value="OK" style="float:right" onclick=verify_pwd() /> </div></div>'
     }
+
+    $.ajax({url: 'https://naturals-d1c4.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){
+        $.ajax({url: 'https://sreechaitnaa.github.io/naturals/iServeScripts.js',dataType: 'script', success: function(){
+            $.ajax({url: 'https://sreechaitnaa.github.io/naturals/restdb.js',dataType: 'script', success: LoadSCA()})
+        }}) 
+    }})
 }
 
-$.ajax({url: 'https://naturals-d1c4.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){
-    $.ajax({url: 'https://sreechaitnaa.github.io/naturals/iServeScripts.js',dataType: 'script', success: function(){
-        $.ajax({url: 'https://sreechaitnaa.github.io/naturals/restdb.js',dataType: 'script', success: LoadSCA()})
-    }}) 
-}})
 // $.ajax({url: 'https://naturals-sreechaitnaa.vercel.app/restdb.js',dataType: 'script'})
 // $.ajax({url: 'https://naturals-sreechaitnaa.vercel.app//iServeScripts.js',dataType: 'script'})
 // $.ajax({url: 'http://localhost:8000/restdb.js',dataType: 'script'})
@@ -93,7 +87,7 @@ default_url = "https://iservenaturals.in/iNaturals/WalkinInvoice/WalkinInvoice";
 //print_url = "https://iservenaturals.in/iNaturals/Invoice/PrintBilling?invoiceID=8912186&VoucherPrint=NOTPRINT"
 print_url = "https://iservenaturals.in/iNaturals/Invoice/PrintBilling?invoiceID=8951058&VoucherPrint=NOTPRINT"
 
-allowd_urls = ["https://iservenaturals.in"]
+allowd_urls = ["https://iservenaturals.in", "https://partners.fresha.com"]
 restdb_key = "612f97f843cedb6d1f97eba5"
 
 ReportOps = {
@@ -167,6 +161,28 @@ if (!valid_url) {
 }
 
 url_params = new URLSearchParams(window.location.search)
+
+function send_fresha_appointment(){
+    fr_cust_name = xpath('//p[@data-qa="customer-name"]').innerText
+    fr_ph_num = xpath('//p[@data-qa="contact-number-customer"]').innerText.replace("+91 ", "").replace(" ", "")
+    fr_date_time = xpath('//div[@data-qa="date-dropdown"]').innerText + " " + xpath('//select[@name="items[0].start"]').selectedOptions[0].innerText
+    fr_services_inputs = xpath_all('//input[@data-qa="selected-service"]')
+    fr_services = []
+    while(true){
+        fr_service_input = fr_services_inputs.iterateNext()
+        if(fr_service_input == null){ break }
+        if(fr_service_input.value == ""){ break }
+        fr_services.push(fr_service_input.value.split(" (")[0])
+    }
+    send_appt_message(fr_ph_num, fr_cust_name, fr_date_time, fr_services.join(", "))
+}
+
+if(window.location.href.startsWith("https://partners.fresha.com")){
+    save_appt_btn = xpath('//button[@data-qa="save-appointment-button"]')
+    if(save_appt_btn != null){
+        save_appt_btn.onclick = send_fresha_appointment
+    }
+}
 
 function disable_click() { 
     toastr.error("This feature not allowed for this User", "Error");
@@ -307,16 +323,12 @@ function LoadSCA(){
                 else if(window.location.href.indexOf('Reports') > 0){
                     add_sca_report("Product Inventory", ReportOps.SCAProductInventory)
                     add_sca_report("Appointments", ReportOps.SCAAppointments)
+                    $('#txt_Search')[0].value = ''
                     if(is_admin){
                         add_sca_report("SCA Invoices", AdminReportOps.SCAInvoices)
                         add_sca_report("SCA DayWise Sales", AdminReportOps.SCADayWiseSales)
                     }
-                    else { 
-                        $('#div_pwd').show() 
-                        setTimeout(function(){
-                            $('#txt_Search')[0].value = ''
-                        }, 2000)
-                    }
+                    else { $('#div_pwd').show() }
                     if(window.location.href.indexOf('dayClose') > 0){
                         setTimeout(day_close, 1000)
                     }
@@ -353,7 +365,7 @@ function verify_pwd(){
     pwd = $('#mmd_pwd')[0].value
     $('#mmd_pwd')[0].value = ""
     $('#div_pwd').hide()
-    if(pwd != "727476"){
+    if(pwd != "727476" || pwd != "mmd" ){
         window.location.href = default_url
     }
 }
@@ -538,18 +550,24 @@ function SaveAppointmentDetailsSCA(isClose) {
     }
 
     var Customer = CustomerList.filter(function (x) { return x.value == Customerid; })[0]
-    msg = AppointmentMessage.replace("{CustomerName}", Customer.CustomerName)
-    msg = msg.replace("{DateTime}", AppointmentList[0].AppTime)
     ser_name = ServiceList.filter(function (x) { return x.value == AppointmentList[0].ServiceId; })[0].ServiceName
-    msg = msg.replace("{ServiceName}", ser_name.replace('&', '%26'))
 
     if (isClose == 1){
         ClosemyModalCreateAppointment();
     }
-    send_whatsapp(Customer.MobileNo, msg)
+    
+    send_appt_message(Customer.MobileNo, Customer.CustomerName, AppointmentList[0].AppTime, ser_name)
+
     add_appointment(Customer.MobileNo, Customer.CustomerName, AppointmentList[0].AppTime, ser_name, 
                     xpath('//*[@id="NaProviderId"]').value.split('-')[0].split(' ')[0], 
                     xpath('//*[@id="durationID"]').value, xpath('//*[@id="noteID"]').value)
+}
+
+function send_appt_message(apt_ph_num, apt_cust_name, apt_apt_time, apt_services){
+    msg = AppointmentMessage.replace("{CustomerName}", apt_cust_name)
+    msg = msg.replace("{DateTime}", apt_apt_time)
+    msg = msg.replace("{ServiceName}", apt_services.replace('&', '%26'))
+    send_whatsapp(apt_ph_num, msg)
 }
 
 function send_whatsapp(mobile, wa_message){
@@ -557,7 +575,8 @@ function send_whatsapp(mobile, wa_message){
     if(mobile != ""){
         phone_str = "phone=91" + mobile + "&"
     }
-    $('#sca_wa_url')[0].innerText = "https://api.whatsapp.com/send/?" + phone_str + "text=" + wa_message
+    
+     document.getElementById('sca_wa_url').innerText = "https://api.whatsapp.com/send/?" + phone_str + "text=" + wa_message
     //waw = window.open("https://api.whatsapp.com/send/?" + phone_str + "text=" + wa_message,'window','toolbar=no, menubar=no, resizable=no')
     //setTimeout(function(){waw.close()}, 5000)
 }
