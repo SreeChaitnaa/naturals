@@ -6,16 +6,6 @@ function xpath_all(path) {
     return document.evaluate(path, document, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
 }
 
-try{
-    x= xpath('//*[@id="stacked-menu"]/li[2]')
-    if(x.innerText == 'Outlet Performance'){
-        x.parentElement.removeChild(x)
-    }
-}
-catch(e){
-    console.log(e)
-}
-
 function loadCSS(href) {
   var cssLink = $("<link>");
   $("head").append(cssLink); //IE hack: append before setting href
@@ -49,6 +39,17 @@ wa_msg.id = "sca_wa_url"
 document.getElementById('sca_wa_url').style.display = 'none'
 
 if (window.location.href.startsWith("https://iservenaturals.in")) {
+    
+    try{
+        x= xpath('//*[@id="stacked-menu"]/li[2]')
+        if(x.innerText == 'Outlet Performance'){
+            x.parentElement.removeChild(x)
+        }
+    }
+    catch(e){
+        console.log(e)
+    }
+
     if($('#divloadingscreen')[0] == undefined) {
         loadCSS('https://sreechaitnaa.github.io/naturals/sca.css')
         loadingDiv = document.createElement('div')
