@@ -373,6 +373,10 @@ function verify_pwd(){
         smile_provider_report_allowed = true
         Openresport();
     }
+    else{
+        toastr.error("This report is not available for current user", "Error");
+        return -1
+    }
 }
 
 function add_products_page_setup(){
