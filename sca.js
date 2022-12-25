@@ -191,7 +191,7 @@ setTimeout(function(){
             save_appt_btn.onclick = send_fresha_appointment
         }
     }
-}, 5000)
+}, 10000)
 
 function disable_click() { 
     toastr.error("This feature not allowed for this User", "Error");
