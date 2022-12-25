@@ -33,10 +33,12 @@ function get_random_oximeter(){
 
 console.log("Test JS Loaded")
 
-wa_msg = document.createElement("div")
-document.body.appendChild(wa_msg)
-wa_msg.id = "sca_wa_url"
-document.getElementById('sca_wa_url').style.display = 'none'
+if(document.getElementById('sca_wa_url') == null){
+    wa_msg = document.createElement("div")
+    document.body.appendChild(wa_msg)
+    wa_msg.id = "sca_wa_url"
+    document.getElementById('sca_wa_url').style.display = 'none'
+}
 
 if (window.location.href.startsWith("https://iservenaturals.in")) {
     
@@ -165,6 +167,7 @@ if (!valid_url) {
 url_params = new URLSearchParams(window.location.search)
 
 function send_fresha_appointment(){
+    console.log("SCA Appt got called")
     fr_cust_name = xpath('//p[@data-qa="customer-name"]').innerText
     fr_ph_num = xpath('//p[@data-qa="contact-number-customer"]').innerText.replace("+91 ", "").replace(" ", "")
     fr_date_time = xpath('//div[@data-qa="date-dropdown"]').innerText + " " + xpath('//select[@name="items[0].start"]').selectedOptions[0].innerText
@@ -176,6 +179,7 @@ function send_fresha_appointment(){
         if(fr_service_input.value == ""){ break }
         fr_services.push(fr_service_input.value.split(" (")[0])
     }
+    console.log("Setting Whatsapp Message")
     send_appt_message(fr_ph_num, fr_cust_name, fr_date_time, fr_services.join(", "))
 }
 
@@ -584,8 +588,8 @@ function send_whatsapp(mobile, wa_message){
     if(mobile != ""){
         phone_str = "phone=91" + mobile + "&"
     }
-    
-     document.getElementById('sca_wa_url').innerText = "https://api.whatsapp.com/send/?" + phone_str + "text=" + wa_message
+    console.log("Message - " + "https://api.whatsapp.com/send/?" + phone_str + "text=" + wa_message)
+    document.getElementById('sca_wa_url').innerText = "https://api.whatsapp.com/send/?" + phone_str + "text=" + wa_message
     //waw = window.open("https://api.whatsapp.com/send/?" + phone_str + "text=" + wa_message,'window','toolbar=no, menubar=no, resizable=no')
     //setTimeout(function(){waw.close()}, 5000)
 }
