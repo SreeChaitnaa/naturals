@@ -147,7 +147,8 @@ SCAServices = []
 
 
 valid_url = false;
-is_admin = false
+is_admin = false;
+smile_provider_report_allowed = false;
 for (i = 0; i < allowd_urls.length; i++) {
     if (window.location.href.startsWith(allowd_urls[i])) {
         valid_url = true
@@ -332,7 +333,6 @@ function LoadSCA(){
                         add_sca_report("SCA Invoices", AdminReportOps.SCAInvoices)
                         add_sca_report("SCA DayWise Sales", AdminReportOps.SCADayWiseSales)
                     }
-                    else { $('#div_pwd').show() }
                     if(window.location.href.indexOf('dayClose') > 0){
                         setTimeout(day_close, 1000)
                     }
@@ -369,8 +369,9 @@ function verify_pwd(){
     pwd = $('#mmd_pwd')[0].value
     $('#mmd_pwd')[0].value = ""
     $('#div_pwd').hide()
-    if(pwd != "727476" && pwd != "mmd" ){
-        window.location.href = default_url
+    if(pwd == "727476" || pwd == "mmd" ){
+        smile_provider_report_allowed = true
+        Openresport();
     }
 }
 
@@ -1277,13 +1278,22 @@ function check_allowed_report(pmdata){
     }
     if(allowed_ops.includes(pmdata.ReportOption)){
         console.log("Allowed Report")
-        // if(pmdata.ReportOption == ReportOps.SmileProviderSales && !is_admin){
-        //     today_date = new Date()
-        //     $("#invfrom")[0].value = today_date.dateFormat('d/m/Y')
-        //     $("#invTo")[0].value = today_date.dateFormat('d/m/Y')
-        //     pmdata.invTo = today_date.dateFormat('d/m/Y')
-        //     pmdata.invfrom = pmdata.invTo
-        // }
+        if(pmdata.ReportOption == ReportOps.SmileProviderSales && !is_admin){
+            today_date = new Date()
+            if(pmdata.invfrom == today_date.dateFormat('d/m/Y')){ return pmdata }
+            if(smile_provider_report_allowed){
+                smile_provider_report_allowed = false
+                return pmdata
+            }
+            else{
+                $('#div_pwd').show()
+                throw "Need PIN Verification"
+            }
+            // $("#invfrom")[0].value = today_date.dateFormat('d/m/Y')
+            // $("#invTo")[0].value = today_date.dateFormat('d/m/Y')
+            // pmdata.invTo = today_date.dateFormat('d/m/Y')
+            // pmdata.invfrom = pmdata.invTo
+        }
         // if(pmdata.ReportOption == ReportOps.UnlimitedOffer && !is_admin){
         //     pmdata.ReportOption = ReportOps.UnlimitedOffer
         // }
