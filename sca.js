@@ -1279,13 +1279,13 @@ function check_allowed_report(pmdata){
     if(allowed_ops.includes(pmdata.ReportOption)){
         console.log("Allowed Report")
         if(pmdata.ReportOption == ReportOps.SmileProviderSales && !is_admin){
-            today_date = new Date()
-            if(pmdata.invfrom == today_date.dateFormat('d/m/Y')){ return pmdata }
             if(smile_provider_report_allowed){
                 smile_provider_report_allowed = false
                 return pmdata
             }
             else{
+                today_date = new Date()
+                if(pmdata.invfrom == today_date.dateFormat('d/m/Y')){ return pmdata }
                 $('#div_pwd').show()
                 throw "Need PIN Verification"
             }
