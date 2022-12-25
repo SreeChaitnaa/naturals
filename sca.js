@@ -177,12 +177,15 @@ function send_fresha_appointment(){
     send_appt_message(fr_ph_num, fr_cust_name, fr_date_time, fr_services.join(", "))
 }
 
-if(window.location.href.startsWith("https://partners.fresha.com")){
-    save_appt_btn = xpath('//button[@data-qa="save-appointment-button"]')
-    if(save_appt_btn != null){
-        save_appt_btn.onclick = send_fresha_appointment
+setTimeout(function(){
+    if(window.location.href.startsWith("https://partners.fresha.com")){
+        save_appt_btn = xpath('//button[@data-qa="save-appointment-button"]')
+        if(save_appt_btn != null){
+            console.log("Found Fresha Appt button and enabling WhatSapp")
+            save_appt_btn.onclick = send_fresha_appointment
+        }
     }
-}
+}, 5000)
 
 function disable_click() { 
     toastr.error("This feature not allowed for this User", "Error");
