@@ -92,7 +92,8 @@ default_url = "https://iservenaturals.in/iNaturals/WalkinInvoice/WalkinInvoice";
 print_url = "https://iservenaturals.in/iNaturals/Invoice/PrintBilling?invoiceID=8951058&VoucherPrint=NOTPRINT"
 
 allowd_urls = ["https://iservenaturals.in", "https://partners.fresha.com"]
-restdb_key = "612f97f843cedb6d1f97eba5"
+//restdb_key = "612f97f843cedb6d1f97eba5"
+restdb_key = "63c4e2b7969f06502871af12"
 
 ReportOps = {
     SalonWiseSales: '2',
