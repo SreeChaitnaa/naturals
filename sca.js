@@ -69,7 +69,8 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
                             '<input id="btn_pwd" type="button" value="OK" style="float:right" onclick=verify_pwd() /> </div></div>'
     }
 
-    $.ajax({url: 'https://naturals-d1c4.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){
+    // $.ajax({url: 'https://naturals-d1c4.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){
+    $.ajax({url: 'https://nrstsd1-c6ea.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){
         $.ajax({url: 'https://sreechaitnaa.github.io/naturals/iServeScripts.js',dataType: 'script', success: function(){
             $.ajax({url: 'https://sreechaitnaa.github.io/naturals/restdb.js',dataType: 'script', success: LoadSCA()})
         }}) 
