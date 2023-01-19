@@ -79,19 +79,21 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
         // Other DBs - nrstsd1-c6ea.restdb.io ; scanrstsd1-560a.restdb.io
 
         $.ajax({url: 'https://sreechaitnaa.github.io/naturals/iServeScripts.js',dataType: 'script', success: function(){
-            setLinks();
-            db_page = false
-            for(idx in db_needed_pages){
-                db_needed_page = db_needed_pages[idx]
-                if(window.location.href.indexOf(db_needed_page) > -1){
-                    $.ajax({url: 'https://naturals-d1c4.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){
-                        $.ajax({url: 'https://sreechaitnaa.github.io/naturals/restdb.js',dataType: 'script', success: LoadSCA})
-                    }})
-                    db_page = true
-                    break;
+            $.ajax({url: 'https://sreechaitnaa.github.io/naturals/SCAServices.js',dataType: 'script', success: function(){
+                setLinks();
+                db_page = false
+                for(idx in db_needed_pages){
+                    db_needed_page = db_needed_pages[idx]
+                    if(window.location.href.indexOf(db_needed_page) > -1){
+                        $.ajax({url: 'https://naturals-d1c4.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){
+                            $.ajax({url: 'https://sreechaitnaa.github.io/naturals/restdb.js',dataType: 'script', success: LoadSCA})
+                        }})
+                        db_page = true
+                        break;
+                    }
                 }
-            }
-            if(!db_page){ $('#divloadingscreen').hide() }
+                if(!db_page){ $('#divloadingscreen').hide() }
+            }})
         }})
     }
 }
@@ -165,7 +167,6 @@ SalesMessage = "*Save this number to NEVER MISS A DEAL...* %0a%0a" +
                "We look forward to serving you again soon!!!"
 
 SCAProducts = []
-SCAServices = []
 
 
 valid_url = false;
@@ -327,7 +328,19 @@ function LoadSCA(){
                         res[i].BrandID = "MMD"
                     }
                     SCAProducts = res})
-                get_nt_services(function(nt_services){SCAServices = nt_services})
+
+                for(i in SCAServices){
+                    SCAServices[i].cgstpercent = 9
+                    SCAServices[i].kfcpercent = 0
+                    SCAServices[i].label = SCAServices[i].ServiceName + "-" +SCAServices[i].ServiceCode + " - " + SCAServices[i].actualPrice
+                    SCAServices[i].memberDiscount = 0
+                    SCAServices[i].qty = 1
+                    SCAServices[i].sgstpercent = 9
+                    SCAServices[i].taxid = "1"
+                    SCAServices[i].taxname = "18 %"
+                    SCAServices[i].value = SCAServices[i].ServiceCode
+                }
+
                 setInterval(function (){
                     if($('#commonGrandTotal').val() != ''){
                         if($('#CustomerTEMP').val() == ''){
