@@ -187,6 +187,8 @@ if (!valid_url) {
 
 url_params = new URLSearchParams(window.location.search)
 
+// Comment
+
 function send_fresha_appointment(){
     console.log("SCA Appt got called")
     fr_cust_name = xpath('//p[@data-qa="customer-name"]').innerText
