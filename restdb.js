@@ -104,11 +104,8 @@ function get_invoice_by_date(max_date, min_date, callback){
                         apts.push(res[i])
                     }
                 }
-                callback(null, apts)
             }
-            else{
-                callback(err, null);
-            }
+            callback(null, apts)
         })
     }
     else{
