@@ -81,7 +81,8 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
         $.ajax({url: 'https://sreechaitnaa.github.io/naturals/iServeScripts.js',dataType: 'script', success: function(){
             setLinks();
             db_page = false
-            for(db_needed_page in db_needed_pages){
+            for(idx in db_needed_pages){
+                db_needed_page = db_needed_pages[idx]
                 if(window.location.href.indexOf(db_needed_page) > -1){
                     $.ajax({url: 'https://naturals-d1c4.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){
                         $.ajax({url: 'https://sreechaitnaa.github.io/naturals/restdb.js',dataType: 'script', success: LoadSCA})
