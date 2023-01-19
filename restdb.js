@@ -38,20 +38,20 @@ function initiate_db(){
     }
 }
 
-function delete_old_appointments(){
-    date_value = new Date()
-    date_number = Number(date_value.dateFormat('Ymd'))
-    db.appointments.find({'Date':{"$lt": date_number}}, [], function(err, old_appointments){
-        if(err){
-            throw err
-        }
-        if(old_appointments.length > 0){
-            for(i in old_appointments){
-                old_appointments[i].delete()
-            }
-        }
-    })
-}
+// function delete_old_appointments(){
+//     date_value = new Date()
+//     date_number = Number(date_value.dateFormat('Ymd'))
+//     db.appointments.find({'Date':{"$lt": date_number}}, [], function(err, old_appointments){
+//         if(err){
+//             throw err
+//         }
+//         if(old_appointments.length > 0){
+//             for(i in old_appointments){
+//                 old_appointments[i].delete()
+//             }
+//         }
+//     })
+// }
 
 function add_invoice(invoice, callback){
     initiate_db()
@@ -137,32 +137,32 @@ function get_invoice_by_date(max_date, min_date, callback){
     }
 }
 
-function get_setting(key, callback){
-    initiate_db()
-    db.settings.find({'key':key},[],function(err, res){
-        if(err != null){
-            callback(err, null);
-        }
-        else{
-            console.log(res)
-            callback(null, res[0].value)
-        }
-    })
-}
+// function get_setting(key, callback){
+//     initiate_db()
+//     db.settings.find({'key':key},[],function(err, res){
+//         if(err != null){
+//             callback(err, null);
+//         }
+//         else{
+//             console.log(res)
+//             callback(null, res[0].value)
+//         }
+//     })
+// }
 
-function update_setting(key, value, callback){
-    initiate_db()
-    db.settings.find({'key':key},[],function(err, res){
-        if(err != null && callback){
-            callback(err, null);
-        }
-        else{
-            console.log(res)
-            res[0].value = value
-            res[0].save(callback)
-        }
-    })
-}
+// function update_setting(key, value, callback){
+//     initiate_db()
+//     db.settings.find({'key':key},[],function(err, res){
+//         if(err != null && callback){
+//             callback(err, null);
+//         }
+//         else{
+//             console.log(res)
+//             res[0].value = value
+//             res[0].save(callback)
+//         }
+//     })
+// }
 
 function add_inventory(prod_id, prod_name, prod_count, mrp=0){
     initiate_db()
