@@ -80,14 +80,17 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
 
         $.ajax({url: 'https://sreechaitnaa.github.io/naturals/iServeScripts.js',dataType: 'script', success: function(){
             setLinks();
+            db_page = false
             for(db_needed_page in db_needed_pages){
                 if(window.location.href.indexOf(db_needed_page) > -1){
                     $.ajax({url: 'https://naturals-d1c4.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){
                         $.ajax({url: 'https://sreechaitnaa.github.io/naturals/restdb.js',dataType: 'script', success: LoadSCA})
                     }})
+                    db_page = true
                     break;
                 }
             }
+            if(!db_page){ $('#divloadingscreen').hide() }
         }})
     }
 }
