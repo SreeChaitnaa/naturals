@@ -1,5 +1,8 @@
 var db = null
-
+last_min_date = null
+last_max_date = null
+last_results = []
+last_error = null
 
 // headers = {
 //     "x-apikey": "612f97f843cedb6d1f97eba5",
@@ -82,15 +85,28 @@ function get_invoice(invoice_id, callback){
     })
 }
 
+function set_last_values_and_call_callback(max_date, min_date, err, res, callback){
+    last_max_date = max_date
+    last_min_date = min_date
+    last_error = err
+    last_results = res
+    callback(err, res)
+}
+
 function get_invoice_by_date(max_date, min_date, callback){
+    if(max_date == last_max_date && min_date == last_min_date){
+        callback(last_error, last_results);
+        return
+    }
+
     initiate_db()
     if(max_date == "0"){
-        db.inventory.find({}, [], callback)
+        db.inventory.find({}, [], function(err, res){set_last_values_and_call_callback(max_date, min_date, err, res, callback)})
     }
     else if(max_date == "-1"){
         db.appointments.find({}, [], function(err, res){
             if(err){
-                callback(err, null);
+                set_last_values_and_call_callback(max_date, min_date, err, null, callback)
             }
             date_value = new Date()
             date_number = Number(date_value.dateFormat('Ymd'))
@@ -105,17 +121,17 @@ function get_invoice_by_date(max_date, min_date, callback){
                     }
                 }
             }
-            callback(null, apts)
+            set_last_values_and_call_callback(max_date, min_date, null, apts, callback)
         })
     }
     else{
         db.invoices.find({'date_number':{"$bt": [max_date, min_date]}},[],function(err, res){
             if(err != null){
-                callback(err, null);
+                set_last_values_and_call_callback(max_date, min_date, err, null, callback)
             }
             else{
                 console.log(res)
-                callback(null, res)
+                set_last_values_and_call_callback(max_date, min_date, null, res, callback)
             }
         })
     }
