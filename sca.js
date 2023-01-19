@@ -41,7 +41,6 @@ if(document.getElementById('sca_wa_url') == null){
 }
 
 if (window.location.href.startsWith("https://iservenaturals.in")) {
-    
     try{
         x= xpath('//*[@id="stacked-menu"]/li[2]')
         if(x.innerText == 'Outlet Performance'){
@@ -59,23 +58,38 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
         loadingDiv.outerHTML = '<div id="divloadingscreen" class="divLoading" style="display:none"><div class="Panel-Loading-BG"></div><div id="Panel-Loading"><div></div></div></div>'
     }
     $('#divloadingscreen').show()
-    
-    if($('#div_pwd')[0] == undefined) {
-        pwd_div = document.createElement("div");
-        document.body.appendChild(pwd_div);
-        pwd_div.outerHTML = '<div id="div_pwd" class="divLoading" style="display:none"><div class="Panel-Loading-BG"></div>' +
-                            '<div style="position:fixed; top:50%; left:50%; background-color:lightgrey; padding:1em; z-index:9010"> ' +
-                            'Enter PIN: </br></br> <input id="mmd_pwd" type="password" /> </br></br> ' +
-                            '<input id="btn_pwd" type="button" value="OK" style="float:right" onclick=verify_pwd() /> </div></div>'
-    }
 
-    $.ajax({url: 'https://naturals-d1c4.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){
-    // $.ajax({url: 'https://nrstsd1-c6ea.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){
-    // $.ajax({url: 'https://scanrstsd1-560a.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){
+
+    if ($("button")[1].innerText == "Login") {
+        $("#username")[0].value = "KA0020";
+        $("#password")[0].value = "JaiSriRam2";
+        $("button")[1].click();
+    }
+    else{
+        db_needed_pages = ['invoiceID', 'WalkinInvoice', 'Home', 'Reports']
+        if($('#div_pwd')[0] == undefined) {
+            pwd_div = document.createElement("div");
+            document.body.appendChild(pwd_div);
+            pwd_div.outerHTML = '<div id="div_pwd" class="divLoading" style="display:none"><div class="Panel-Loading-BG"></div>' +
+                                '<div style="position:fixed; top:50%; left:50%; background-color:lightgrey; padding:1em; z-index:9010"> ' +
+                                'Enter PIN: </br></br> <input id="mmd_pwd" type="password" /> </br></br> ' +
+                                '<input id="btn_pwd" type="button" value="OK" style="float:right" onclick=verify_pwd() /> </div></div>'
+        }
+
+        // Other DBs - nrstsd1-c6ea.restdb.io ; scanrstsd1-560a.restdb.io
+
         $.ajax({url: 'https://sreechaitnaa.github.io/naturals/iServeScripts.js',dataType: 'script', success: function(){
-            $.ajax({url: 'https://sreechaitnaa.github.io/naturals/restdb.js',dataType: 'script', success: LoadSCA()})
-        }}) 
-    }})
+            setLinks();
+            for(db_needed_page in db_needed_pages){
+                if(window.location.href.indexOf(db_needed_page) > -1){
+                    $.ajax({url: 'https://naturals-d1c4.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){
+                        $.ajax({url: 'https://sreechaitnaa.github.io/naturals/restdb.js',dataType: 'script', success: LoadSCA})
+                    }})
+                    break;
+                }
+            }
+        }})
+    }
 }
 
 // $.ajax({url: 'http://localhost:8000/restdb.js',dataType: 'script'})
@@ -209,168 +223,152 @@ function add_sca_report(report_name, report_value){
     $('#ReportOption')[0].appendChild(opt)
 }
 
+function setLinks(){
+    setTimeout(function () {
+        try{
+            if(xpath('//*[@id="stacked-menu"]/li[3]/a').innerText == 'Masters'){
+                is_admin = true
+                xpath('//*[@id="stacked-menu"]/li[3]/ul/li[3]/a').href = 'https://iservenaturals.in/iNaturals/Reports/Index?dayClose'
+
+
+                p = xpath('//*[@id="stacked-menu"]').children[5]
+                q = document.createElement('li')
+                xpath('//*[@id="stacked-menu"]').insertBefore(q, p)
+                q.innerHTML = p.innerHTML
+                q.children[0].children[0].setAttribute('class', 'fa fa-fw fa-2x')
+                q.children[0].children[0].innerHTML = '<img width=35 src="/iNaturals/Images/Naturals_icon/psales.png"></img>'
+                q.children[0].children[1].innerText = 'Add Products'
+                q.children[0].href = '/iNaturals/WalkinInvoice/WalkinInvoice?AddProducts'
+            }
+            else{
+                xpath('//*[@id="stacked-menu"]/li[3]/a').onclick = NewAppointment
+                xpath('//*[@id="stacked-menu"]/li[5]/ul/li[4]/a').href = 'https://iservenaturals.in/iNaturals/Reports/Index?dayClose'
+                xpath('//*[@id="stacked-menu"]/li[2]/ul/li[1]/a').href = 'https://iservenaturals.in/iNaturals/Reports/Index?appointments'
+                
+                //xpath('//*[@id="stacked-menu"]/li[1]/a').href = ''
+                //xpath('//*[@id="stacked-menu"]/li[1]/a').onclick = disable_click
+                // xpath('//*[@id="stacked-menu"]/li[2]/ul/li[1]/a').href = ''
+                // xpath('//*[@id="stacked-menu"]/li[2]/ul/li[1]/a').onclick = disable_click
+                // xpath('//*[@id="stacked-menu"]/li[2]/ul/li[2]/a').href = ''
+                // xpath('//*[@id="stacked-menu"]/li[2]/ul/li[2]/a').onclick = disable_click
+
+                // xpath('//*[@id="stacked-menu"]/li[5]/ul/li[3]/a').href = ''
+                // xpath('//*[@id="stacked-menu"]/li[5]/ul/li[3]/a').onclick = disable_click
+                // xpath('//*[@id="stacked-menu"]/li[5]/ul/li[4]/a').onclick = disable_click
+                // xpath('//*[@id="stacked-menu"]/li[7]/a').href = ''
+                // xpath('//*[@id="stacked-menu"]/li[7]/a').onclick = disable_click
+                // xpath('//*[@id="stacked-menu"]/li[8]/a').href = ''
+                // xpath('//*[@id="stacked-menu"]/li[8]/a').onclick = disable_click
+                // xpath('//*[@id="stacked-menu"]/li[9]/a').href = ''
+                // xpath('//*[@id="stacked-menu"]/li[9]/a').onclick = disable_click
+            }
+        }
+        catch(err) {console.log(err)}
+    }, 500)
+}
+
 function LoadSCA(){
-    if (window.location.href.startsWith("https://iservenaturals.in")) {
-        if ($("button")[1].innerText == "Login") {
-            // CSharpTask("Logging in...", 0, 0, 3);
-            $("#username")[0].value = "KA0020";
-            $("#password")[0].value = "JaiSriRam2";
-            $("button")[1].click();
+    setTimeout(function () {
+        try{
+            if($('#navbar-collapse')[0] != undefined){
+                initiate_db()
+                setTimeout(function(){
+                    get_invoice("925", function(err, res){
+                        if(err == null){
+                            xpath('//*[@id="navbar-collapse"]/div/table/tbody/tr/td[1]').innerHTML = xpath('//*[@id="navbar-collapse"]/div/table/tbody/tr/td[1]').innerHTML.replace('I','')
+                        }
+                    })
+                }, 500)
+            }
+        }
+        catch(err) {console.log(err)}
+        if (url_params.has('invoiceID')) {
+            invoice_id = url_params.get('invoice_id')
+            if (invoice_id != null) {
+                get_invoice(invoice_id, function(err, invoice){
+                    if(err){
+                        alert(err)
+                        return
+                    }
+                    setPrintData(invoice_id, JSON.parse(invoice.invoice_json))
+                    $('#divloadingscreen').hide()
+                })
+            }
+            else{
+                mno = get_table_cell(getPrintDiv(), 1, 'tbody', 1, 1).innerText
+                send_whatsapp(mno, SalesMessage)
+                $('#divloadingscreen').hide()
+            }
+            $('#btnSendMail')[0].style.display = 'none'
+            $('#btnsms')[0].style.display = 'none'
+        }
+        else if(window.location.href.indexOf('WalkinInvoice') > 0){
+            if(window.location.href.indexOf('AddProducts') > 0){
+                add_products_page_setup()
+            }
+            else{
+                get_invoice_by_date("0", "0", function(err, res){
+                    for(i in res){
+                        res[i].value = res[i].prod_id
+                        res[i].taxpercent = "18.00"
+                        res[i].taxname = "GST 18%"
+                        res[i].taxid = "1"
+                        res[i].sgstpercent = "9.00"
+                        res[i].price = Number(res[i].mrp) / 1.18
+                        res[i].label = res[i].prod_name
+                        res[i].cgstpercent = "9.00"
+                        res[i].cesspercent = "0.00"
+                        res[i].ProductName = res[i].prod_name
+                        res[i].ProductCode = "MMD-" + res[i].prod_id
+                        res[i].BrandID = "MMD"
+                    }
+                    SCAProducts = res})
+                get_nt_services(function(nt_services){SCAServices = nt_services})
+                setInterval(function (){
+                    if($('#commonGrandTotal').val() != ''){
+                        if($('#CustomerTEMP').val() == ''){
+                            $('#CustomerTEMP')[0].value = get_random_temp()
+                        }
+                        if($('#CustomerOXIM').val() == ''){
+                            $('#CustomerOXIM')[0].value = get_random_oximeter()
+                        }
+                    }
+                }, 500);
+            }
+            $('#divloadingscreen').hide()
+        }
+        else if(window.location.href.indexOf('Home') > 0){
+            update_dashboard()
+            xpath('//*[@id="stacked-menu"]/li[1]/a').href = ''
+            xpath('//*[@id="stacked-menu"]/li[1]/a').onclick = function(){return false}
+        }
+        else if(window.location.href.indexOf('EmpIncentive') > 0){
+            FromDate = $("#fromDate").val()
+            ToDate = $("#toDate").val()
+            update_incentives(FromDate, ToDate)
+        }
+        else if(window.location.href.indexOf('Reports') > 0){
+            add_sca_report("Product Inventory", ReportOps.SCAProductInventory)
+            add_sca_report("Appointments", ReportOps.SCAAppointments)
+            $('#txt_Search')[0].value = ''
+            if(is_admin){
+                add_sca_report("SCA Invoices", AdminReportOps.SCAInvoices)
+                add_sca_report("SCA DayWise Sales", AdminReportOps.SCADayWiseSales)
+            }
+            if(window.location.href.indexOf('dayClose') > 0){
+                setTimeout(day_close, 1000)
+            }
+            else if(window.location.href.indexOf('appointments') > 0){
+                setTimeout(show_appointments, 1000)
+            }
+            else{
+                $('#divloadingscreen').hide()
+            }
         }
         else{
-            setTimeout(function () {
-                try{
-                    if(xpath('//*[@id="stacked-menu"]/li[3]/a').innerText == 'Masters'){
-                        is_admin = true
-                        xpath('//*[@id="stacked-menu"]/li[3]/ul/li[3]/a').href = 'https://iservenaturals.in/iNaturals/Reports/Index?dayClose'
-                    }
-                    else{
-                        xpath('//*[@id="stacked-menu"]/li[3]/a').onclick = NewAppointment
-                        xpath('//*[@id="stacked-menu"]/li[5]/ul/li[4]/a').href = 'https://iservenaturals.in/iNaturals/Reports/Index?dayClose'
-                        xpath('//*[@id="stacked-menu"]/li[2]/ul/li[1]/a').href = 'https://iservenaturals.in/iNaturals/Reports/Index?appointments'
-                    }
-                    if(is_admin){
-                        p = xpath('//*[@id="stacked-menu"]').children[5]
-                        q = document.createElement('li')
-                        xpath('//*[@id="stacked-menu"]').insertBefore(q, p)
-                        q.innerHTML = p.innerHTML
-                        q.children[0].children[0].setAttribute('class', 'fa fa-fw fa-2x')
-                        q.children[0].children[0].innerHTML = '<img width=35 src="/iNaturals/Images/Naturals_icon/psales.png"></img>'
-                        q.children[0].children[1].innerText = 'Add Products'
-                        q.children[0].href = '/iNaturals/WalkinInvoice/WalkinInvoice?AddProducts'
-                    }
-                    //xpath('//*[@id="stacked-menu"]/li[1]/a').href = ''
-                    //xpath('//*[@id="stacked-menu"]/li[1]/a').onclick = disable_click
-                    // xpath('//*[@id="stacked-menu"]/li[2]/ul/li[1]/a').href = ''
-                    // xpath('//*[@id="stacked-menu"]/li[2]/ul/li[1]/a').onclick = disable_click
-                    // xpath('//*[@id="stacked-menu"]/li[2]/ul/li[2]/a').href = ''
-                    // xpath('//*[@id="stacked-menu"]/li[2]/ul/li[2]/a').onclick = disable_click
-
-                    // xpath('//*[@id="stacked-menu"]/li[5]/ul/li[3]/a').href = ''
-                    // xpath('//*[@id="stacked-menu"]/li[5]/ul/li[3]/a').onclick = disable_click
-                    // xpath('//*[@id="stacked-menu"]/li[5]/ul/li[4]/a').onclick = disable_click
-                    // xpath('//*[@id="stacked-menu"]/li[7]/a').href = ''
-                    // xpath('//*[@id="stacked-menu"]/li[7]/a').onclick = disable_click
-                    // xpath('//*[@id="stacked-menu"]/li[8]/a').href = ''
-                    // xpath('//*[@id="stacked-menu"]/li[8]/a').onclick = disable_click
-                    // xpath('//*[@id="stacked-menu"]/li[9]/a').href = ''
-                    // xpath('//*[@id="stacked-menu"]/li[9]/a').onclick = disable_click
-
-                    if($('#navbar-collapse')[0] != undefined){
-                        initiate_db()
-                        setTimeout(function(){
-                            get_invoice("925", function(err, res){
-                                if(err == null){
-                                    xpath('//*[@id="navbar-collapse"]/div/table/tbody/tr/td[1]').innerHTML = xpath('//*[@id="navbar-collapse"]/div/table/tbody/tr/td[1]').innerHTML.replace('I','')
-                                }
-                            })
-                        }, 500)
-                    }
-                }
-                catch(err) {console.log(err)}
-                if (url_params.has('invoiceID')) {
-                    invoice_id = url_params.get('invoice_id')
-                    if (invoice_id != null) {
-                        get_invoice(invoice_id, function(err, invoice){
-                            if(err){
-                                alert(err)
-                                return
-                            }
-                            setPrintData(invoice_id, JSON.parse(invoice.invoice_json))
-                            $('#divloadingscreen').hide()
-                        })
-                    }
-                    else{
-                        mno = get_table_cell(getPrintDiv(), 1, 'tbody', 1, 1).innerText
-                        send_whatsapp(mno, SalesMessage)
-                        $('#divloadingscreen').hide()
-                    }
-                    $('#btnSendMail')[0].style.display = 'none'
-                    $('#btnsms')[0].style.display = 'none'
-                }
-                else if(window.location.href.indexOf('WalkinInvoice') > 0){
-                    if(window.location.href.indexOf('AddProducts') > 0){
-                        add_products_page_setup()
-                    }
-                    else{
-                        get_invoice_by_date("0", "0", function(err, res){
-                            for(i in res){
-                                res[i].value = res[i].prod_id
-                                res[i].taxpercent = "18.00"
-                                res[i].taxname = "GST 18%"
-                                res[i].taxid = "1"
-                                res[i].sgstpercent = "9.00"
-                                res[i].price = Number(res[i].mrp) / 1.18
-                                res[i].label = res[i].prod_name
-                                res[i].cgstpercent = "9.00"
-                                res[i].cesspercent = "0.00"
-                                res[i].ProductName = res[i].prod_name
-                                res[i].ProductCode = "MMD-" + res[i].prod_id
-                                res[i].BrandID = "MMD"
-                            }
-                            SCAProducts = res})
-                        get_nt_services(function(nt_services){SCAServices = nt_services})
-                        setInterval(function (){
-                            if($('#commonGrandTotal').val() != ''){
-                                if($('#CustomerTEMP').val() == ''){
-                                    $('#CustomerTEMP')[0].value = get_random_temp()
-                                }
-                                if($('#CustomerOXIM').val() == ''){
-                                    $('#CustomerOXIM')[0].value = get_random_oximeter()
-                                }
-                            }
-                        }, 500);
-                    }
-                    $('#divloadingscreen').hide()
-                }
-                else if(window.location.href.indexOf('Home') > 0){
-                    update_dashboard()
-                    xpath('//*[@id="stacked-menu"]/li[1]/a').href = ''
-                    xpath('//*[@id="stacked-menu"]/li[1]/a').onclick = function(){return false}
-                }
-                else if(window.location.href.indexOf('EmpIncentive') > 0){
-                    FromDate = $("#fromDate").val()
-                    ToDate = $("#toDate").val()
-                    update_incentives(FromDate, ToDate)
-                }
-                else if(window.location.href.indexOf('Reports') > 0){
-                    add_sca_report("Product Inventory", ReportOps.SCAProductInventory)
-                    add_sca_report("Appointments", ReportOps.SCAAppointments)
-                    $('#txt_Search')[0].value = ''
-                    if(is_admin){
-                        add_sca_report("SCA Invoices", AdminReportOps.SCAInvoices)
-                        add_sca_report("SCA DayWise Sales", AdminReportOps.SCADayWiseSales)
-                    }
-                    if(window.location.href.indexOf('dayClose') > 0){
-                        setTimeout(day_close, 1000)
-                    }
-                    else if(window.location.href.indexOf('appointments') > 0){
-                        setTimeout(show_appointments, 1000)
-                    }
-                    else{
-                        $('#divloadingscreen').hide()
-                    }
-                }
-                else{
-                    $('#divloadingscreen').hide()
-                }
-            }, 500)
-
-            // setInterval(function () {
-            //     $.ajax({
-            //         url: '/iNaturals/Customer/SearchEmployee',
-            //         type: "POST",
-            //         dataType: "json",
-            //         cache: false,
-            //         async: false,
-            //         data: { Name: '' },
-            //         success: function (data) {
-            //             console.log("Keeping request alive")
-            //         }
-            //     });
-            // }, 30000);
+            $('#divloadingscreen').hide()
         }
-    }
+    }, 500)
 }
 
 function verify_pwd(){
