@@ -32,7 +32,23 @@ var db = null
 function initiate_db(){
     if(db == null){
         db = new restdb(restdb_key)
+        setTimeout(delete_old_appointments, 30);
     }
+}
+
+function delete_old_appointments(){
+    date_value = new Date()
+    date_number = Number(date_value.dateFormat('Ymd'))
+    db.appointments.find({'Date':{"$lt": date_number}}, [], function(err, old_appointments){
+        if(err){
+            throw err
+        }
+        if(old_appointments.length > 0){
+            for(i in old_appointments){
+                old_appointments[i].delete()
+            }
+        }
+    })
 }
 
 function add_invoice(invoice, callback){
@@ -71,6 +87,9 @@ function get_invoice_by_date(max_date, min_date, callback){
     initiate_db()
     if(max_date == "0"){
         db.inventory.find({}, [], callback)
+    }
+    else if(max_date == "-1"){
+        db.appointments.find({}, [], callback)
     }
     else{
         db.invoices.find({'date_number':{"$bt": [max_date, min_date]}},[],function(err, res){
@@ -112,7 +131,7 @@ function update_setting(key, value, callback){
     })
 }
 
-function add_inventory(prod_id, prod_name, prod_count){
+function add_inventory(prod_id, prod_name, prod_count, mrp=0){
     initiate_db()
     db.inventory.find({'prod_id':prod_id},[], function(err, res){
         if(err){
@@ -124,10 +143,47 @@ function add_inventory(prod_id, prod_name, prod_count){
             new_item.count += prod_count
         }
         else{
-            new_item = new db.inventory({prod_name:prod_name, prod_id:prod_id, count :0+prod_count})
+            new_item = new db.inventory({prod_name:prod_name, prod_id:prod_id, count :0+prod_count, mrp: Math.round(Number(mrp)/Number(prod_count))})
         }
         new_item.save()
     })
+}
+
+function add_appointment(phone_number, cust_name, apt_date_time, services, smile_provider, duration, notes){
+    initiate_db()
+    months = {
+        "jan" : '01',
+        "feb" : '02',
+        "mar" : '03',
+        "apr" : '04',
+        "may" : '05',
+        "jun" : '06',
+        "jul" : '07',
+        "aug" : '08',
+        "sep" : '09',
+        "oct" : '10',
+        "nov" : '11',
+        "dec" : '12'
+    }
+    for (var month in months) {
+        if(apt_date_time.toLowerCase().indexOf(month) > 0){
+            apt_date_time = apt_date_time.toLowerCase().replace(month, months[month]).toUpperCase()
+            break
+        }
+    }
+
+    app_data = JSON.stringify({ 'phone_number': phone_number, 
+                                'cust_name': cust_name, 
+                                'apt_date_time': apt_date_time,
+                                'services': services, 
+                                'smile_provider': smile_provider, 
+                                'duration': duration, 
+                                'notes': notes
+                })
+    date_numbers = apt_date_time.split(' ')[0].split("-")
+    date_number = Number(date_numbers[2]+date_numbers[1]+date_numbers[0])
+    new_item = new db.appointments({Date:date_number, apt_data:app_data})
+    new_item.save()
 }
 
 // function get_nt_services(callback){
