@@ -1938,7 +1938,7 @@ function filter_sca_products(productname){
         //                             return SCAProducts.some(function(o2){
         //                                 return o1.value == o2.prod_id && o2.count > 0;
         //                             })})
-        sca_selected_prods = SCAProducts.filter(function(p){return p.prod_name.toLowerCase().indexOf(productname) > -1 && p.count > 0})
+        sca_selected_prods = SCAProducts.filter(function(p){return p.prod_name.toLowerCase().indexOf(productname.toLowerCase()) > -1 && p.count > 0})
     }
     return sca_selected_prods
 }
