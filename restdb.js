@@ -32,7 +32,6 @@ var db = null
 function initiate_db(){
     if(db == null){
         db = new restdb(restdb_key)
-        setTimeout(delete_old_appointments, 30);
     }
 }
 
@@ -89,7 +88,28 @@ function get_invoice_by_date(max_date, min_date, callback){
         db.inventory.find({}, [], callback)
     }
     else if(max_date == "-1"){
-        db.appointments.find({}, [], callback)
+        db.appointments.find({}, [], function(err, res){
+            if(err){
+                callback(err, null);
+            }
+            date_value = new Date()
+            date_number = Number(date_value.dateFormat('Ymd'))
+            apts = []
+            if(res.length > 0){
+                for(i in res){
+                    if(res[i].Date < date_number){
+                        res[i].delete()
+                    }
+                    else{
+                        apts.push(res[i])
+                    }
+                }
+                callback(null, apts)
+            }
+            else{
+                callback(err, null);
+            }
+        })
     }
     else{
         db.invoices.find({'date_number':{"$bt": [max_date, min_date]}},[],function(err, res){
