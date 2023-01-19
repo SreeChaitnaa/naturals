@@ -69,17 +69,15 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
                             '<input id="btn_pwd" type="button" value="OK" style="float:right" onclick=verify_pwd() /> </div></div>'
     }
 
-    // $.ajax({url: 'https://naturals-d1c4.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){
+    /$.ajax({url: 'https://naturals-d1c4.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){
     // $.ajax({url: 'https://nrstsd1-c6ea.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){
-    $.ajax({url: 'https://scanrstsd1-560a.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){
+    // $.ajax({url: 'https://scanrstsd1-560a.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){
         $.ajax({url: 'https://sreechaitnaa.github.io/naturals/iServeScripts.js',dataType: 'script', success: function(){
             $.ajax({url: 'https://sreechaitnaa.github.io/naturals/restdb.js',dataType: 'script', success: LoadSCA()})
         }}) 
     }})
 }
 
-// $.ajax({url: 'https://naturals-sreechaitnaa.vercel.app/restdb.js',dataType: 'script'})
-// $.ajax({url: 'https://naturals-sreechaitnaa.vercel.app//iServeScripts.js',dataType: 'script'})
 // $.ajax({url: 'http://localhost:8000/restdb.js',dataType: 'script'})
 // $.ajax({url: 'http://localhost:8000/iServeScripts.js',dataType: 'script'})
 // $.ajax({url: 'http://localhost/js/restdb.js',dataType: 'script'})
@@ -93,9 +91,9 @@ default_url = "https://iservenaturals.in/iNaturals/WalkinInvoice/WalkinInvoice";
 print_url = "https://iservenaturals.in/iNaturals/Invoice/PrintBilling?invoiceID=8951058&VoucherPrint=NOTPRINT"
 
 allowd_urls = ["https://iservenaturals.in", "https://partners.fresha.com"]
-// restdb_key = "612f97f843cedb6d1f97eba5"
+restdb_key = "612f97f843cedb6d1f97eba5"
 // restdb_key = "63c4e2b7969f06502871af12"
-restdb_key = "63c50bd5969f06502871af1d"
+// restdb_key = "63c50bd5969f06502871af1d"
 
 ReportOps = {
     SalonWiseSales: '2',
