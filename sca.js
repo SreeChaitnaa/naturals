@@ -404,7 +404,7 @@ function add_products_page_setup(){
 }
 
 function NewAppointment() {
-
+    CreateAppoinment()
     setTimeout(function () {
         function BindCustomerList() {
             $("#CustomerName").autocomplete({
@@ -468,7 +468,7 @@ function NewAppointment() {
         inputs[inputs.length - 2].onclick = function () { SaveAppointmentDetailsSCA(1) }
         $("#AppointMethod")[0].options.selectedIndex = 1
         show_sca_apt_details()
-    }, 2000);
+    }, 3000);
 }
 
 function show_sca_apt_details(){
