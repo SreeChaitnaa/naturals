@@ -333,7 +333,7 @@ function LoadSCA(){
             add_sca_report("Product Inventory", ReportOps.SCAProductInventory)
             add_sca_report("Appointments", ReportOps.SCAAppointments)
             $('#txt_Search')[0].value = ''
-            initiate_db()
+            initiate_db(null)
             if(is_admin){
                 add_sca_report("SCA Invoices", AdminReportOps.SCAInvoices)
                 add_sca_report("SCA DayWise Sales", AdminReportOps.SCADayWiseSales)
@@ -999,7 +999,6 @@ function doMMDBill(InvoiceModels){
         debugger
         if (CustomServices || InvoiceModels.Products.length > 0 || (rand_value < numerator) || (InvoiceModels.InvoiceDetails.RemarksRating.toLowerCase().indexOf("mmd") > -1)) {
             FirstInvoice = InvoiceModels
-            initiate_db()
             for (i = 0; i < InvoiceModels.Services.length; i++) {
                 InvoiceModels.Services[i].ServiceName = SCAServiceList.filter(function (x) { return x.value == InvoiceModels.Services[i].ServiceID; })[0].ServiceName
                 InvoiceModels.Services[i].EmployeeName = EmployeeList.filter(function (x) { return x.value == InvoiceModels.Services[i].EmployeeID; })[0].EMPName
