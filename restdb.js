@@ -3,11 +3,17 @@ last_min_date = null
 last_max_date = null
 last_results = []
 last_error = null
+loading_db = false
 
 function initiate_db(){
-    if(db == null){
+    if(db == null && !loading_db){
+        loading_db = true
         $.ajax({url: 'https://'+ restdb_name +'.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){ db = new restdb(restdb_key) }})
     }
+    while(db == null){}
+    loading_db = false
+    console.log("DB Script loaded")
+    console.log(db)
 }
 
 // function delete_old_appointments(){
