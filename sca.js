@@ -333,15 +333,16 @@ function LoadSCA(){
             add_sca_report("Product Inventory", ReportOps.SCAProductInventory)
             add_sca_report("Appointments", ReportOps.SCAAppointments)
             $('#txt_Search')[0].value = ''
+            initiate_db()
             if(is_admin){
                 add_sca_report("SCA Invoices", AdminReportOps.SCAInvoices)
                 add_sca_report("SCA DayWise Sales", AdminReportOps.SCADayWiseSales)
             }
             if(window.location.href.indexOf('dayClose') > 0){
-                setTimeout(day_close, 1000)
+                setTimeout(day_close, 2000)
             }
             else if(window.location.href.indexOf('appointments') > 0){
-                setTimeout(show_appointments, 1000)
+                setTimeout(show_appointments, 2000)
             }
             else{
                 $('#divloadingscreen').hide()
