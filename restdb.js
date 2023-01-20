@@ -3,17 +3,10 @@ last_min_date = null
 last_max_date = null
 last_results = []
 last_error = null
-restdb_api_loaded = false
 
 function initiate_db(){
     if(db == null){
-        if(!restdb_api_loaded){
-            $.ajax({url: 'https://'+ restdb_name +'.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){ restdb_api_loaded = true }})
-            while(!restdb_api_loaded){
-                console.log("Loadig RESTDB API")
-            }
-        }
-        db = new restdb(restdb_key)
+        $.ajax({url: 'https://'+ restdb_name +'.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){ db = new restdb(restdb_key) }})
     }
 }
 
