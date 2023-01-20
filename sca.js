@@ -66,7 +66,7 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
         $("button")[1].click();
     }
     else{
-        db_needed_pages = ['invoiceID', 'WalkinInvoice', 'Home', 'Reports']
+        db_needed_pages = ['invoice', 'mome', 'reports']
         if($('#div_pwd')[0] == undefined) {
             pwd_div = document.createElement("div");
             document.body.appendChild(pwd_div);
@@ -84,10 +84,8 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
                 db_page = false
                 for(idx in db_needed_pages){
                     db_needed_page = db_needed_pages[idx]
-                    if(window.location.href.indexOf(db_needed_page) > -1){
-                        $.ajax({url: 'https://naturals-d1c4.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){
-                            $.ajax({url: 'https://sreechaitnaa.github.io/naturals/restdb.js',dataType: 'script', success: LoadSCA})
-                        }})
+                    if(window.location.href.toLowerCase().indexOf(db_needed_page) > -1){
+                        $.ajax({url: 'https://sreechaitnaa.github.io/naturals/restdb.js',dataType: 'script', success: LoadSCA})
                         db_page = true
                         break;
                     }
@@ -187,8 +185,6 @@ if (!valid_url) {
 
 url_params = new URLSearchParams(window.location.search)
 
-// Comment
-
 function send_fresha_appointment(){
     console.log("SCA Appt got called")
     fr_cust_name = xpath('//p[@data-qa="customer-name"]').innerText
@@ -278,13 +274,10 @@ function LoadSCA(){
     setTimeout(function () {
         try{
             if($('#navbar-collapse')[0] != undefined){
-                initiate_db()
                 setTimeout(function(){
-                    get_invoice("925", function(err, res){
-                        if(err == null){
-                            xpath('//*[@id="navbar-collapse"]/div/table/tbody/tr/td[1]').innerHTML = xpath('//*[@id="navbar-collapse"]/div/table/tbody/tr/td[1]').innerHTML.replace('I','')
-                        }
-                    })
+                    if(SCAServices[0].value != null){
+                        xpath('//*[@id="navbar-collapse"]/div/table/tbody/tr/td[1]').innerHTML = xpath('//*[@id="navbar-collapse"]/div/table/tbody/tr/td[1]').innerHTML.replace('I','')
+                    }
                 }, 500)
             }
         }
@@ -314,22 +307,6 @@ function LoadSCA(){
                 add_products_page_setup()
             }
             else{
-                get_invoice_by_date("0", "0", function(err, res){
-                    for(i in res){
-                        res[i].value = res[i].prod_id
-                        res[i].taxpercent = "18.00"
-                        res[i].taxname = "GST 18%"
-                        res[i].taxid = "1"
-                        res[i].sgstpercent = "9.00"
-                        res[i].price = Number(res[i].mrp) / 1.18
-                        res[i].label = res[i].prod_name
-                        res[i].cgstpercent = "9.00"
-                        res[i].cesspercent = "0.00"
-                        res[i].ProductName = res[i].prod_name
-                        res[i].ProductCode = "MMD-" + res[i].prod_id
-                        res[i].BrandID = "MMD"
-                    }
-                    SCAProducts = res})
 
                 for(i in SCAServices){
                     SCAServices[i].cgstpercent = 9
@@ -1080,11 +1057,11 @@ function doMMDBill(InvoiceModels){
                 InvoiceModels.Services[i].ServiceName = SCAServiceList.filter(function (x) { return x.value == InvoiceModels.Services[i].ServiceID; })[0].ServiceName
                 InvoiceModels.Services[i].EmployeeName = EmployeeList.filter(function (x) { return x.value == InvoiceModels.Services[i].EmployeeID; })[0].EMPName
             }
-            if (InvoiceModels.Products.length > 0) {
-                while (SCAProducts == undefined) {
-                    console.log("Waiting for Prod List")
-                }
-            }
+            // if (InvoiceModels.Products.length > 0) {
+            //     while (SCAProducts == undefined) {
+            //         console.log("Waiting for Prod List")
+            //     }
+            // }
             for (i = 0; i < InvoiceModels.Products.length; i++) {
                 InvoiceModels.Products[i].ProductName = SCAProducts.filter(function (x) { return x.value == InvoiceModels.Products[i].ProductID; })[0].ProductName
                 InvoiceModels.Products[i].EmployeeName = EmployeeList.filter(function (x) { return x.value == InvoiceModels.Products[i].EmployeeID; })[0].EMPName
@@ -1948,6 +1925,24 @@ function update_incentives(fromDate, toDate){
 
 function filter_sca_products(productname){
     sca_selected_prods = []
+    if(SCAProducts.length == 0){
+        get_invoice_by_date("0", "0", function(err, res){
+            for(i in res){
+                res[i].value = res[i].prod_id
+                res[i].taxpercent = "18.00"
+                res[i].taxname = "GST 18%"
+                res[i].taxid = "1"
+                res[i].sgstpercent = "9.00"
+                res[i].price = Number(res[i].mrp) / 1.18
+                res[i].label = res[i].prod_name
+                res[i].cgstpercent = "9.00"
+                res[i].cesspercent = "0.00"
+                res[i].ProductName = res[i].prod_name
+                res[i].ProductCode = "MMD-" + res[i].prod_id
+                res[i].BrandID = "MMD"
+            }
+            SCAProducts = res})
+    }
     if(SCAProducts.length > 0){
         // products = products.filter(function(o1){
         //                             return SCAProducts.some(function(o2){
