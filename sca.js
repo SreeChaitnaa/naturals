@@ -405,6 +405,9 @@ function add_products_page_setup(){
 
 function NewAppointment() {
     CreateAppoinment();
+    // $(document).ready(function () {
+    //     BindCustomerList();
+    // })
 
     setTimeout(function () {
         function BindCustomerList() {
@@ -571,6 +574,8 @@ function send_whatsapp(mobile, wa_message){
     }
     console.log("Message - " + "https://api.whatsapp.com/send/?" + phone_str + "text=" + wa_message)
     document.getElementById('sca_wa_url').innerText = "https://api.whatsapp.com/send/?" + phone_str + "text=" + wa_message
+    //waw = window.open("https://api.whatsapp.com/send/?" + phone_str + "text=" + wa_message,'window','toolbar=no, menubar=no, resizable=no')
+    //setTimeout(function(){waw.close()}, 5000)
 }
 
 function get_table_cell(parent_obj, table_index, loc, row_index, col_index){
@@ -624,7 +629,7 @@ function changePrintPage(printDiv, billNo, invoice){
     table_counter = 1
     get_table_cell(printDiv, table_counter, 'tbody', 0, 1).innerText = invoice.Customer.ProductName
     get_table_cell(printDiv, table_counter, 'tbody', 1, 1).innerText = invoice.Customer.MobileNo
-    get_table_cell(printDiv, table_counter, 'tbody', 2, 1).innerText = "" + iserve_username + "/"+billNo
+    get_table_cell(printDiv, table_counter, 'tbody', 2, 1).innerText = iserve_username + "/" + billNo
     get_table_cell(printDiv, table_counter, 'tbody', 3, 1).innerText = invoice.InvoiceDetails.InvoiceInitiTime
 
     table_counter++
@@ -834,6 +839,17 @@ function dateFromString(datestr){
     }
 }
 
+// setTimeout(function() { 
+//     if($('#navbar-collapse')[0] != undefined){
+//         initiate_db()
+//         get_invoice("921", function(err, res){
+//             if(err == null){
+//                 xpath('//*[@id="navbar-collapse"]/div/table/tbody/tr/td[1]').innerHTML = xpath('//*[@id="navbar-collapse"]/div/table/tbody/tr/td[1]').innerHTML.replace('I','')
+//             }
+//         })
+//     }
+// }, 5000)
+
 function update_dashboard(){
     today_date = new Date(xpath('//*[@id="txtdate"]').innerText)
     get_invoice_by_date(today_date.dateFormat('Ymd'), today_date.dateFormat('Ymd'), 
@@ -937,6 +953,22 @@ function update_services_and_products(){
             // $("#CustomerName").autocomplete({ source: data });
         }
     });
+
+    // get_nt_services(function(nt_services){
+    //     SCAServiceList = SCAServiceList.concat(nt_services);
+    // })
+
+    // $.ajax({
+    //     url: '/iNaturals/Invoice/SearchProduct',
+    //     type: "POST",
+    //     dataType: "json",
+    //     async: false,
+    //     data: { Name: "" },
+    //     success: function (data) {
+    //         //ProductList.length = 0;
+    //         SCAProductList = data;
+    //     }
+    // })
 }
 
 function doMMDBill(InvoiceModels){
@@ -1680,9 +1712,9 @@ function update_reports(pmdata, sca_report){
                                 set_table_cell_number(tbl, row_counter, 17, 0)
                                 set_table_cell_number(tbl, row_counter, 18, 0)
 
-                                set_table_cell_string(tbl, row_counter, 1, "" + iserve_username + "/" + invoices[i].invoice_id)
+                                set_table_cell_string(tbl, row_counter, 1, iserve_username + "/" + invoices[i].invoice_id)
                                 set_table_cell_string(tbl, row_counter, 2, invoices[i].date.dateFormat('d-m-Y'))
-                                set_table_cell_string(tbl, row_counter, 3, '" + iserve_franchise_code + "')
+                                set_table_cell_string(tbl, row_counter, 3, iserve_franchise_code)
                                 service = invoice.Services[j]
                                 set_table_cell_string(tbl, row_counter, 4, service.ServiceName)
                                 try{
@@ -1753,9 +1785,9 @@ function update_reports(pmdata, sca_report){
                                 set_table_cell_number(tbl, row_counter, 12, 0)
                                 set_table_cell_number(tbl, row_counter, 13, 0)
 
-                                set_table_cell_string(tbl, row_counter, 1, "" + iserve_username + "/" + invoices[i].invoice_id)
+                                set_table_cell_string(tbl, row_counter, 1, iserve_username + "/" + invoices[i].invoice_id)
                                 set_table_cell_string(tbl, row_counter, 2, invoices[i].date.dateFormat('d-m-Y'))
-                                set_table_cell_string(tbl, row_counter, 3, '" + iserve_franchise_code + "')
+                                set_table_cell_string(tbl, row_counter, 3, iserve_franchise_code)
                                 product = invoice.Products[j]
                                 console.log(product)
                                 set_table_cell_string(tbl, row_counter, 4, product.ProductName)
@@ -1810,9 +1842,9 @@ function update_reports(pmdata, sca_report){
                                 set_table_cell_number(tbl, row_counter, 13, 0)
                                 set_table_cell_number(tbl, row_counter, 14, 0)
 
-                                set_table_cell_string(tbl, row_counter, 1, "" + iserve_username + "/" + invoices[i].invoice_id)
+                                set_table_cell_string(tbl, row_counter, 1, iserve_username + "/" + invoices[i].invoice_id)
                                 set_table_cell_string(tbl, row_counter, 2, invoices[i].date.dateFormat('d-m-Y'))
-                                set_table_cell_string(tbl, row_counter, 3, '" + iserve_franchise_code + "')
+                                set_table_cell_string(tbl, row_counter, 3, iserve_franchise_code)
                                 product = invoice.Products[j]
                                 console.log(product)
                                 set_table_cell_string(tbl, row_counter, 5, product.ProductName)
@@ -1898,6 +1930,10 @@ function filter_sca_products(productname){
             SCAProducts = res})
     }
     if(SCAProducts.length > 0){
+        // products = products.filter(function(o1){
+        //                             return SCAProducts.some(function(o2){
+        //                                 return o1.value == o2.prod_id && o2.count > 0;
+        //                             })})
         sca_selected_prods = SCAProducts.filter(function(p){return p.prod_name.toLowerCase().indexOf(productname.toLowerCase()) > -1 && p.count > 0})
     }
     return sca_selected_prods
