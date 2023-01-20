@@ -5,38 +5,10 @@ last_results = []
 last_error = null
 restdb_api_loaded = false
 
-// headers = {
-//     "x-apikey": "612f97f843cedb6d1f97eba5",
-//     "Content-Type": "application/json"
-// }
-
-// last_settings = ''
-// function add_item(collection, item, callback = undefined){
-//     var settings = {
-//         "url": "https://naturals-d1c4.restdb.io/rest/" + collection,
-//         "method": "POST",
-//         "timeout": 0,
-//         "headers": headers,
-//         "data": JSON.stringify(item),
-//     };
-//     last_settings = settings;
-
-//     $.ajax(settings).done(function (response) {
-//         console.log(response);
-//         if(callback != undefined){
-//             callback(response)
-//         }
-//     });
-// }
-
-// function add_product(name, count) {
-//     add_item("inventory", { "prod_name": name, "count": count })
-// }
-
 function initiate_db(){
     if(db == null){
         if(!restdb_api_loaded){
-            $.ajax({url: 'https://naturals-d1c4.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){ restdb_api_loaded = true }})
+            $.ajax({url: 'https://'+ restdb_name +'.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){ restdb_api_loaded = true }})
             while(!restdb_api_loaded){
                 console.log("Loadig RESTDB API")
             }
@@ -144,33 +116,6 @@ function get_invoice_by_date(max_date, min_date, callback){
     }
 }
 
-// function get_setting(key, callback){
-//     initiate_db()
-//     db.settings.find({'key':key},[],function(err, res){
-//         if(err != null){
-//             callback(err, null);
-//         }
-//         else{
-//             console.log(res)
-//             callback(null, res[0].value)
-//         }
-//     })
-// }
-
-// function update_setting(key, value, callback){
-//     initiate_db()
-//     db.settings.find({'key':key},[],function(err, res){
-//         if(err != null && callback){
-//             callback(err, null);
-//         }
-//         else{
-//             console.log(res)
-//             res[0].value = value
-//             res[0].save(callback)
-//         }
-//     })
-// }
-
 function add_inventory(prod_id, prod_name, prod_count, mrp=0){
     initiate_db()
     db.inventory.find({'prod_id':prod_id},[], function(err, res){
@@ -225,27 +170,4 @@ function add_appointment(phone_number, cust_name, apt_date_time, services, smile
     new_item = new db.appointments({Date:date_number, apt_data:app_data})
     new_item.save()
 }
-
-// function get_nt_services(callback){
-//     initiate_db()
-//     db.ntservices.find({},[], function(err, nt_services){
-//         if(err){
-//             throw err
-//         }
-//         if(nt_services.length > 0){
-//             for(i in nt_services){
-//                 nt_services[i].cgstpercent = 9
-//                 nt_services[i].kfcpercent = 0
-//                 nt_services[i].label = nt_services[i].ServiceName + "-" +nt_services[i].ServiceCode + " - " + nt_services[i].actualPrice
-//                 nt_services[i].memberDiscount = 0
-//                 nt_services[i].qty = 1
-//                 nt_services[i].sgstpercent = 9
-//                 nt_services[i].taxid = "1"
-//                 nt_services[i].taxname = "18 %"
-//                 nt_services[i].value = nt_services[i].ServiceCode
-//             }
-//             callback(nt_services)
-//         }
-//     })
-// }
 console.log("RESTDB JS Loaded")
