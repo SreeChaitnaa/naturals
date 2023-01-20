@@ -65,7 +65,7 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
             $("button")[1].click();
             return
         }
-        db_needed_pages = ['invoice', 'mome', 'reports']
+        db_needed_pages = ['invoice', 'home', 'reports']
         if($('#div_pwd')[0] == undefined) {
             pwd_div = document.createElement("div");
             document.body.appendChild(pwd_div);
