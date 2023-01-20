@@ -998,6 +998,7 @@ function doMMDBill(InvoiceModels){
         debugger
         if (CustomServices || InvoiceModels.Products.length > 0 || (rand_value < numerator) || (InvoiceModels.InvoiceDetails.RemarksRating.toLowerCase().indexOf("mmd") > -1)) {
             FirstInvoice = InvoiceModels
+            initiate_db()
             for (i = 0; i < InvoiceModels.Services.length; i++) {
                 InvoiceModels.Services[i].ServiceName = SCAServiceList.filter(function (x) { return x.value == InvoiceModels.Services[i].ServiceID; })[0].ServiceName
                 InvoiceModels.Services[i].EmployeeName = EmployeeList.filter(function (x) { return x.value == InvoiceModels.Services[i].EmployeeID; })[0].EMPName
