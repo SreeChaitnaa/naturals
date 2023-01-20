@@ -404,10 +404,6 @@ function add_products_page_setup(){
 }
 
 function NewAppointment() {
-    CreateAppoinment();
-    // $(document).ready(function () {
-    //     BindCustomerList();
-    // })
 
     setTimeout(function () {
         function BindCustomerList() {
@@ -432,10 +428,7 @@ function NewAppointment() {
                         }
                     })
                 },
-                //focus: function (event, ui) {
-                //    $(this).autocomplete("search", "");
-                //    return false;
-                //},
+                
                 select: function (event, ui) {
                     $("#CustomerName").val(ui.item.label);
                     $("#hdnCustomerID").val(ui.item.value);
@@ -574,8 +567,6 @@ function send_whatsapp(mobile, wa_message){
     }
     console.log("Message - " + "https://api.whatsapp.com/send/?" + phone_str + "text=" + wa_message)
     document.getElementById('sca_wa_url').innerText = "https://api.whatsapp.com/send/?" + phone_str + "text=" + wa_message
-    //waw = window.open("https://api.whatsapp.com/send/?" + phone_str + "text=" + wa_message,'window','toolbar=no, menubar=no, resizable=no')
-    //setTimeout(function(){waw.close()}, 5000)
 }
 
 function get_table_cell(parent_obj, table_index, loc, row_index, col_index){
@@ -839,17 +830,6 @@ function dateFromString(datestr){
     }
 }
 
-// setTimeout(function() { 
-//     if($('#navbar-collapse')[0] != undefined){
-//         initiate_db()
-//         get_invoice("921", function(err, res){
-//             if(err == null){
-//                 xpath('//*[@id="navbar-collapse"]/div/table/tbody/tr/td[1]').innerHTML = xpath('//*[@id="navbar-collapse"]/div/table/tbody/tr/td[1]').innerHTML.replace('I','')
-//             }
-//         })
-//     }
-// }, 5000)
-
 function update_dashboard(){
     today_date = new Date(xpath('//*[@id="txtdate"]').innerText)
     get_invoice_by_date(today_date.dateFormat('Ymd'), today_date.dateFormat('Ymd'), 
@@ -950,25 +930,8 @@ function update_services_and_products(){
         data: { Name: '' },
         success: function (data) {
             SCAServiceList = SCAServices.concat(data);
-            // $("#CustomerName").autocomplete({ source: data });
         }
     });
-
-    // get_nt_services(function(nt_services){
-    //     SCAServiceList = SCAServiceList.concat(nt_services);
-    // })
-
-    // $.ajax({
-    //     url: '/iNaturals/Invoice/SearchProduct',
-    //     type: "POST",
-    //     dataType: "json",
-    //     async: false,
-    //     data: { Name: "" },
-    //     success: function (data) {
-    //         //ProductList.length = 0;
-    //         SCAProductList = data;
-    //     }
-    // })
 }
 
 function doMMDBill(InvoiceModels){
@@ -1000,11 +963,7 @@ function doMMDBill(InvoiceModels){
         else{
             InvoiceModels.Customer = Customer
         }
-        // Customer = CustomerList.filter(function (x) { return x.value == InvoiceModels.InvoiceDetails.CustomerID; })[0]
-        // send_whatsapp(Customer.MobileNo, SalesMessage)
-        // if(Customer.Membership.indexOf("Non") < 0 || Number(InvoiceModels.InvoiceDetails.MemberDiscount) > 0){
-        //     return
-        // }
+
         NewMember = false
         CustomServices = false
         for(i in InvoiceModels.Products){
@@ -1043,11 +1002,7 @@ function doMMDBill(InvoiceModels){
                 InvoiceModels.Services[i].ServiceName = SCAServiceList.filter(function (x) { return x.value == InvoiceModels.Services[i].ServiceID; })[0].ServiceName
                 InvoiceModels.Services[i].EmployeeName = EmployeeList.filter(function (x) { return x.value == InvoiceModels.Services[i].EmployeeID; })[0].EMPName
             }
-            // if (InvoiceModels.Products.length > 0) {
-            //     while (SCAProducts == undefined) {
-            //         console.log("Waiting for Prod List")
-            //     }
-            // }
+            
             for (i = 0; i < InvoiceModels.Products.length; i++) {
                 InvoiceModels.Products[i].ProductName = SCAProducts.filter(function (x) { return x.value == InvoiceModels.Products[i].ProductID; })[0].ProductName
                 InvoiceModels.Products[i].EmployeeName = EmployeeList.filter(function (x) { return x.value == InvoiceModels.Products[i].EmployeeID; })[0].EMPName
@@ -1281,14 +1236,7 @@ function check_allowed_report(pmdata){
                 $('#div_pwd').show()
                 throw "Need PIN Verification"
             }
-            // $("#invfrom")[0].value = today_date.dateFormat('d/m/Y')
-            // $("#invTo")[0].value = today_date.dateFormat('d/m/Y')
-            // pmdata.invTo = today_date.dateFormat('d/m/Y')
-            // pmdata.invfrom = pmdata.invTo
         }
-        // if(pmdata.ReportOption == ReportOps.UnlimitedOffer && !is_admin){
-        //     pmdata.ReportOption = ReportOps.UnlimitedOffer
-        // }
         if(pmdata.ReportOption.startsWith("SCA")){
             if(pmdata.ReportOption == ReportOps.SCAProductInventory){
                 pmdata.invTo = "0"
@@ -1930,10 +1878,6 @@ function filter_sca_products(productname){
             SCAProducts = res})
     }
     if(SCAProducts.length > 0){
-        // products = products.filter(function(o1){
-        //                             return SCAProducts.some(function(o2){
-        //                                 return o1.value == o2.prod_id && o2.count > 0;
-        //                             })})
         sca_selected_prods = SCAProducts.filter(function(p){return p.prod_name.toLowerCase().indexOf(productname.toLowerCase()) > -1 && p.count > 0})
     }
     return sca_selected_prods
