@@ -58,14 +58,13 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
         loadingDiv.outerHTML = '<div id="divloadingscreen" class="divLoading" style="display:none"><div class="Panel-Loading-BG"></div><div id="Panel-Loading"><div></div></div></div>'
     }
     $('#divloadingscreen').show()
-
-
-    if ($("button")[1].innerText == "Login") {
-        $("#username")[0].value = "KA0020";
-        $("#password")[0].value = "JaiSriRam2";
-        $("button")[1].click();
-    }
-    else{
+    $.ajax({url: 'https://sreechaitnaa.github.io/naturals/nrstsd.js',dataType: 'script', success: function(){
+        if ($("button")[1].innerText == "Login") {
+            $("#username")[0].value = "iserve_username";
+            $("#password")[0].value = "iserve_password";
+            $("button")[1].click();
+            return
+        }
         db_needed_pages = ['invoice', 'mome', 'reports']
         if($('#div_pwd')[0] == undefined) {
             pwd_div = document.createElement("div");
@@ -75,11 +74,29 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
                                 'Enter PIN: </br></br> <input id="mmd_pwd" type="password" /> </br></br> ' +
                                 '<input id="btn_pwd" type="button" value="OK" style="float:right" onclick=verify_pwd() /> </div></div>'
         }
+        print_url = "https://iservenaturals.in/iNaturals/Invoice/PrintBilling?invoiceID=" + branch_bill_print_ID + "&VoucherPrint=NOTPRINT"
 
-        // Other DBs - nrstsd1-c6ea.restdb.io ; scanrstsd1-560a.restdb.io
+        AppointmentMessage =    "*Save this number to NEVER MISS A DEAL...* %0a%0a" +
+                                "Thanks for contacting Naturals " + branch_name + "!%0a%0a*Appointment Details:*%0a" +
+                                "Name: {CustomerName}%0a" +
+                                "Date %26 Time: {DateTime}%0a" +
+                                "Service: {ServiceName}%0a%0a" +
+                                "*Landmark: " + branch_landmark + ".*%0a" + 
+                                "Location: " + branch_location_url
 
-        $.ajax({url: 'https://sreechaitnaa.github.io/naturals/iServeScripts.js',dataType: 'script', success: function(){
-            $.ajax({url: 'https://sreechaitnaa.github.io/naturals/SCAServices.js',dataType: 'script', success: function(){
+
+        SalesMessage =  "*Save this number to NEVER MISS A DEAL...* %0a%0a" +
+                        "Thank you for using our services @ Naturals " + branch_name + "!%0a" +
+                        "Please share your review here " + branch_review_url + " %0a%0a" +
+                        "*Appointments:* +91 " + branch_phone + " %0a" +
+                        "*Feedback:* " + branch_mail_id + " %0a%0a" +
+                        "Follow us- %0a" +
+                        "*Instagram:* " + branch_instagram_url + " %0a" +
+                        "*Facebook:* " + branch_facebook_url + " %0a%0a" +
+                        "We look forward to serving you again soon!!!"
+
+        $.ajax({url: 'https://sreechaitnaa.github.io/naturals/SCAServices.js',dataType: 'script', success: function(){
+            $.ajax({url: 'https://sreechaitnaa.github.io/naturals/iServeScripts.js',dataType: 'script', success: function(){
                 setLinks();
                 db_page = false
                 for(idx in db_needed_pages){
@@ -93,25 +110,13 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
                 if(!db_page){ $('#divloadingscreen').hide() }
             }})
         }})
-    }
+    }})
 }
-
-// $.ajax({url: 'http://localhost:8000/restdb.js',dataType: 'script'})
-// $.ajax({url: 'http://localhost:8000/iServeScripts.js',dataType: 'script'})
-// $.ajax({url: 'http://localhost/js/restdb.js',dataType: 'script'})
-// $.ajax({url: 'http://localhost/js/iServeScripts.js',dataType: 'script'})
 
 
 default_url = "https://iservenaturals.in/iNaturals/WalkinInvoice/WalkinInvoice";
-// print_url = "https://iservenaturals.in/iNaturals/Invoice/PrintBilling?invoiceID=8303830&VoucherPrint=NOTPRINT"
-// print_url = "https://iservenaturals.in/iNaturals/Invoice/PrintBilling?invoiceID=8368146&VoucherPrint=NOTPRINT"
-//print_url = "https://iservenaturals.in/iNaturals/Invoice/PrintBilling?invoiceID=8912186&VoucherPrint=NOTPRINT"
-print_url = "https://iservenaturals.in/iNaturals/Invoice/PrintBilling?invoiceID=8951058&VoucherPrint=NOTPRINT"
 
 allowd_urls = ["https://iservenaturals.in", "https://partners.fresha.com"]
-restdb_key = "612f97f843cedb6d1f97eba5"
-// restdb_key = "63c4e2b7969f06502871af12"
-// restdb_key = "63c50bd5969f06502871af1d"
 
 ReportOps = {
     SalonWiseSales: '2',
@@ -144,25 +149,6 @@ AdminReportOps = {
     SCAInvoices: "SCA1",
     SCADayWiseSales: "SCA2"
 }
-
-AppointmentMessage = "*Save this number to NEVER MISS A DEAL...* %0a%0a" +
-                     "Thanks for contacting Naturals Thanisandra!%0a%0a*Appointment Details:*%0a" +
-                     "Name: {CustomerName}%0a" +
-                     "Date %26 Time: {DateTime}%0a" +
-                     "Service: {ServiceName}%0a%0a" +
-                     "*Landmark: Above Adishwar Thanisandra.*%0a" + 
-                     "Location: https://bit.ly/naturals-blr"
-
-
-SalesMessage = "*Save this number to NEVER MISS A DEAL...* %0a%0a" +
-               "Thank you for using our services @ Naturals Thanisandra!%0a" +
-               "Please share your review here https://bit.ly/rate-naturals %0a%0a" +
-               "*Appointments:* +91 8861 567 550 %0a" +
-               "*Feedback:* naturals.thanisandra@gmail.com %0a%0a" +
-               "Follow us- %0a" +
-               "*Instagram:* https://bit.ly/insta-naturals/ %0a" +
-               "*Facebook:* https://bit.ly/fb-naturals/ %0a%0a" +
-               "We look forward to serving you again soon!!!"
 
 SCAProducts = []
 
@@ -419,9 +405,6 @@ function add_products_page_setup(){
 
 function NewAppointment() {
     CreateAppoinment();
-    // $(document).ready(function () {
-    //     BindCustomerList();
-    // })
 
     setTimeout(function () {
         function BindCustomerList() {
@@ -588,8 +571,6 @@ function send_whatsapp(mobile, wa_message){
     }
     console.log("Message - " + "https://api.whatsapp.com/send/?" + phone_str + "text=" + wa_message)
     document.getElementById('sca_wa_url').innerText = "https://api.whatsapp.com/send/?" + phone_str + "text=" + wa_message
-    //waw = window.open("https://api.whatsapp.com/send/?" + phone_str + "text=" + wa_message,'window','toolbar=no, menubar=no, resizable=no')
-    //setTimeout(function(){waw.close()}, 5000)
 }
 
 function get_table_cell(parent_obj, table_index, loc, row_index, col_index){
@@ -643,7 +624,7 @@ function changePrintPage(printDiv, billNo, invoice){
     table_counter = 1
     get_table_cell(printDiv, table_counter, 'tbody', 0, 1).innerText = invoice.Customer.ProductName
     get_table_cell(printDiv, table_counter, 'tbody', 1, 1).innerText = invoice.Customer.MobileNo
-    get_table_cell(printDiv, table_counter, 'tbody', 2, 1).innerText = "KA0020/"+billNo
+    get_table_cell(printDiv, table_counter, 'tbody', 2, 1).innerText = "" + iserve_username + "/"+billNo
     get_table_cell(printDiv, table_counter, 'tbody', 3, 1).innerText = invoice.InvoiceDetails.InvoiceInitiTime
 
     table_counter++
@@ -853,17 +834,6 @@ function dateFromString(datestr){
     }
 }
 
-// setTimeout(function() { 
-//     if($('#navbar-collapse')[0] != undefined){
-//         initiate_db()
-//         get_invoice("921", function(err, res){
-//             if(err == null){
-//                 xpath('//*[@id="navbar-collapse"]/div/table/tbody/tr/td[1]').innerHTML = xpath('//*[@id="navbar-collapse"]/div/table/tbody/tr/td[1]').innerHTML.replace('I','')
-//             }
-//         })
-//     }
-// }, 5000)
-
 function update_dashboard(){
     today_date = new Date(xpath('//*[@id="txtdate"]').innerText)
     get_invoice_by_date(today_date.dateFormat('Ymd'), today_date.dateFormat('Ymd'), 
@@ -967,22 +937,6 @@ function update_services_and_products(){
             // $("#CustomerName").autocomplete({ source: data });
         }
     });
-
-    // get_nt_services(function(nt_services){
-    //     SCAServiceList = SCAServiceList.concat(nt_services);
-    // })
-
-    // $.ajax({
-    //     url: '/iNaturals/Invoice/SearchProduct',
-    //     type: "POST",
-    //     dataType: "json",
-    //     async: false,
-    //     data: { Name: "" },
-    //     success: function (data) {
-    //         //ProductList.length = 0;
-    //         SCAProductList = data;
-    //     }
-    // })
 }
 
 function doMMDBill(InvoiceModels){
@@ -1226,7 +1180,7 @@ function get_row_structure(reportOp){
         
         case ReportOps.DayWiseSales:
         case AdminReportOps.SCADayWiseSales:
-            row_struct += "<td></td><td></td><td>KA0020</td><td>NT-KAR-FOFO-THANISANDRA</td>"
+            row_struct += "<td></td><td></td><td>" + iserve_username + "</td><td>" + iserve_franchise_code + "</td>"
             for(i=0; i<3;i++){
                 row_struct += "<td>0</td>"
             }
@@ -1242,7 +1196,7 @@ function get_row_structure(reportOp){
             break
         
         case ReportOps.GenderReport:
-            row_struct += "<td></td><td>NT-KAR-FOFO-THANISANDRA</td><td></td>"
+            row_struct += "<td></td><td>" + iserve_franchise_code + "</td><td></td>"
             for(i=0; i<5;i++){
                 row_struct += "<td>0</td>"
             }
@@ -1252,11 +1206,11 @@ function get_row_structure(reportOp){
             break
         
         case ReportOps.SalonWiseSales:
-            row_struct += "<td>1</td><td>KA0020</td><td>NT-KAR-FOFO-THANISANDRA</td>"
+            row_struct += "<td>1</td><td>" + iserve_username + "</td><td>" + iserve_franchise_code + "</td>"
             for(i=2; i<17; i++){
                 row_struct += "<td></td>"
             }
-            row_struct += "<td>Allwyn Francis</td><td>ABHISHEK KUMAR</td>"
+            row_struct += "<td>" + iserver_franchise_am + "</td><td>" + iserver_franchise_rm + "</td>"
             break
         case ReportOps.SCAProductInventory:
             for(i=0; i<5; i++){
@@ -1726,9 +1680,9 @@ function update_reports(pmdata, sca_report){
                                 set_table_cell_number(tbl, row_counter, 17, 0)
                                 set_table_cell_number(tbl, row_counter, 18, 0)
 
-                                set_table_cell_string(tbl, row_counter, 1, "KA0020/" + invoices[i].invoice_id)
+                                set_table_cell_string(tbl, row_counter, 1, "" + iserve_username + "/" + invoices[i].invoice_id)
                                 set_table_cell_string(tbl, row_counter, 2, invoices[i].date.dateFormat('d-m-Y'))
-                                set_table_cell_string(tbl, row_counter, 3, 'NT-KAR-FOFO-THANISANDRA')
+                                set_table_cell_string(tbl, row_counter, 3, '" + iserve_franchise_code + "')
                                 service = invoice.Services[j]
                                 set_table_cell_string(tbl, row_counter, 4, service.ServiceName)
                                 try{
@@ -1799,9 +1753,9 @@ function update_reports(pmdata, sca_report){
                                 set_table_cell_number(tbl, row_counter, 12, 0)
                                 set_table_cell_number(tbl, row_counter, 13, 0)
 
-                                set_table_cell_string(tbl, row_counter, 1, "KA0020/" + invoices[i].invoice_id)
+                                set_table_cell_string(tbl, row_counter, 1, "" + iserve_username + "/" + invoices[i].invoice_id)
                                 set_table_cell_string(tbl, row_counter, 2, invoices[i].date.dateFormat('d-m-Y'))
-                                set_table_cell_string(tbl, row_counter, 3, 'NT-KAR-FOFO-THANISANDRA')
+                                set_table_cell_string(tbl, row_counter, 3, '" + iserve_franchise_code + "')
                                 product = invoice.Products[j]
                                 console.log(product)
                                 set_table_cell_string(tbl, row_counter, 4, product.ProductName)
@@ -1856,9 +1810,9 @@ function update_reports(pmdata, sca_report){
                                 set_table_cell_number(tbl, row_counter, 13, 0)
                                 set_table_cell_number(tbl, row_counter, 14, 0)
 
-                                set_table_cell_string(tbl, row_counter, 1, "KA0020/" + invoices[i].invoice_id)
+                                set_table_cell_string(tbl, row_counter, 1, "" + iserve_username + "/" + invoices[i].invoice_id)
                                 set_table_cell_string(tbl, row_counter, 2, invoices[i].date.dateFormat('d-m-Y'))
-                                set_table_cell_string(tbl, row_counter, 3, 'NT-KAR-FOFO-THANISANDRA')
+                                set_table_cell_string(tbl, row_counter, 3, '" + iserve_franchise_code + "')
                                 product = invoice.Products[j]
                                 console.log(product)
                                 set_table_cell_string(tbl, row_counter, 5, product.ProductName)
@@ -1944,10 +1898,6 @@ function filter_sca_products(productname){
             SCAProducts = res})
     }
     if(SCAProducts.length > 0){
-        // products = products.filter(function(o1){
-        //                             return SCAProducts.some(function(o2){
-        //                                 return o1.value == o2.prod_id && o2.count > 0;
-        //                             })})
         sca_selected_prods = SCAProducts.filter(function(p){return p.prod_name.toLowerCase().indexOf(productname.toLowerCase()) > -1 && p.count > 0})
     }
     return sca_selected_prods
