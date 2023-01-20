@@ -11,11 +11,10 @@ function initiate_db(){
         $.ajax({url: 'https://'+ restdb_name +'.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){ 
             db = new restdb(restdb_key) 
             loading_db = false
+            console.log("DB Script loaded")
+            console.log(db)
         }})
     }
-    while(db == null){}
-    console.log("DB Script loaded")
-    console.log(db)
 }
 
 // function delete_old_appointments(){
