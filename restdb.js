@@ -8,10 +8,12 @@ loading_db = false
 function initiate_db(){
     if(db == null && !loading_db){
         loading_db = true
-        $.ajax({url: 'https://'+ restdb_name +'.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){ db = new restdb(restdb_key) }})
+        $.ajax({url: 'https://'+ restdb_name +'.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){ 
+            db = new restdb(restdb_key) 
+            loading_db = false
+        }})
     }
     while(db == null){}
-    loading_db = false
     console.log("DB Script loaded")
     console.log(db)
 }
