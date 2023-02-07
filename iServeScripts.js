@@ -1,9 +1,8 @@
-function saveInvoice(elem, alive_check){
+function saveInvoice(elem, alive_check) {
     debugger;
-    
     //MMD call
     update_services_and_products()
-    
+
     $('#btnGenerateInvoice').prop('disabled', true);
     var invoiceModel = new Object();
     var invoiceServiceArray = [];
@@ -128,7 +127,10 @@ function saveInvoice(elem, alive_check){
         qty = (qty != null && qty != '' ? qty : 0);
         taxPercent = (taxPercent != null && taxPercent != '' ? taxPercent : '0');
         grandPrice = (grandPrice != null && grandPrice != '' ? grandPrice : '0');
-
+        // Added By Chandru 24022022 Start
+        disPercent = (disPercent != null && disPercent != '' ? disPercent : 0);
+        disAmount = (disAmount != null && disAmount != '' ? disAmount : 0);
+         // Added By Chandru 24022022 End
         cgstPercent = (cgstPercent != null && cgstPercent != '' ? cgstPercent : 0);
         sgstPercent = (sgstPercent != null && sgstPercent != '' ? sgstPercent : 0);
         cessPercent = (cessPercent != null && cessPercent != '' ? cessPercent : 0);
@@ -167,9 +169,9 @@ function saveInvoice(elem, alive_check){
         });
     }
     if (parseInt(comDiscountId) >= parseInt(0) && parseFloat(comDiscountPercent) >= parseFloat(0)) {
-        debugger;
+        //debugger;;
         invoiceDiscountArray.push({
-            DiscountID: comDiscountId, DiscountPercent: comDiscountPercent, DiscountAmount: comDiscountAmount
+            DiscountID : comDiscountId, DiscountPercent: comDiscountPercent, DiscountAmount: comDiscountAmount
         });
     }
 
@@ -215,12 +217,17 @@ function saveInvoice(elem, alive_check){
     var phonepeAmt1 = $('#PhonePeAmount').val();
     var amtReturned1 = $('#AmountReturned').val();
 
+    //Added by balamurugan E on 04012023 Starts Here
+    var EMIAmt1 = $('#EMIAmount').val();
+    //Added by balamurugan E on 04012023 Ends Here
+
     walletBalance1 = (walletBalance1 != null && walletBalance1 != '' ? walletBalance1 : 0);
     walletAmt1 = (walletAmt1 != null && walletAmt1 != '' ? walletAmt1 : 0);
     cashAmt1 = (cashAmt1 != null && cashAmt1 != '' ? cashAmt1 : 0);
     cardAmt1 = (cardAmt1 != null && cardAmt1 != '' ? cardAmt1 : 0);
     paytmAmt1 = (paytmAmt1 != null && paytmAmt1 != '' ? paytmAmt1 : 0);
     phonepeAmt1 = (phonepeAmt1 != null && phonepeAmt1 != '' ? phonepeAmt1 : 0);
+    EMIAmt1 = (EMIAmt1 != null && EMIAmt1 != '' ? EMIAmt1 : 0);
 
     if (parseFloat(walletBalance1) < parseFloat(walletAmt1)) {
         success = false;
@@ -228,11 +235,11 @@ function saveInvoice(elem, alive_check){
         return false;
     }
 
-    var receivedAmount1 = parseFloat(walletAmt1) + parseFloat(cashAmt1) + parseFloat(cardAmt1) + parseFloat(paytmAmt1) + parseFloat(phonepeAmt1);
+    var receivedAmount1 = parseFloat(walletAmt1) + parseFloat(cashAmt1) + parseFloat(cardAmt1) + parseFloat(paytmAmt1) + parseFloat(phonepeAmt1) + parseFloat(EMIAmt1);
     receivedAmount1 = parseFloat(receivedAmount1).toFixed(2);
 
     if (parseFloat(grandTotal1) > parseFloat(receivedAmount1)) {
-
+         
         toastr.error("Invalid receive amount", "Error");
         $('#btnGenerateInvoice').prop('disabled', false);
         success = false;
@@ -245,6 +252,7 @@ function saveInvoice(elem, alive_check){
     var isCardStatus1 = ($('#isCardAmount').is(":checked")) ? true : false;
     var isPaytmStatus1 = ($('#isPaytmAmount').is(":checked")) ? true : false;
     var isPhonePeStatus1 = ($('#isPhonePeAmount').is(":checked")) ? true : false;
+    var isEMIStatus1 = ($('#isEMIAmount').is(":checked")) ? true : false;
 
     if (isWalletStatus1 == true) {
         if (parseFloat(walletAmt1) <= parseFloat(0)) {
@@ -296,6 +304,15 @@ function saveInvoice(elem, alive_check){
         }
 
     }
+    if (isEMIStatus1 == true) {
+        if (parseFloat(EMIAmt1) <= parseFloat(0) && parseFloat(grandTotal1) > parseFloat(0)) {
+            toastr.error("Invalid EMI amount", "Error");
+            success = false;
+            $('#btnGenerateInvoice').prop('disabled', false);
+            $('#EMIAmount').focus();
+            return false;
+        }
+    }
     if ($('#customerRating').val() == "0") {
         toastr.error("Give rating to customer", "Error");
         success = false;
@@ -304,9 +321,7 @@ function saveInvoice(elem, alive_check){
         return false;
     }
 
-
-    //var serviceBasicSales = $("#serviceTotAmt").text();
-    //var productBasicSales = $("#productTotAmt").text();
+     
 
     var serviceBasicSales = 0;
     var productBasicSales = 0;
@@ -325,6 +340,10 @@ function saveInvoice(elem, alive_check){
         if (parseFloat(invoiceProductArray[i].hdnIsMembershipSales) == 0) {
             productNetSales = parseFloat(productNetSales) + parseFloat(invoiceProductArray[i].GrandPrice);
             productTaxAmount = parseFloat(productTaxAmount) + parseFloat(invoiceProductArray[i].TaxAmount);
+
+            //Added By Chandru on 24022022 start
+            otherDiscount = parseFloat(otherDiscount) + parseFloat(invoiceProductArray[i].DiscountAmount);
+            //Added By Chandru on 24022022 end
 
             productBasicSales = parseFloat(productBasicSales) + parseFloat(invoiceProductArray[i].NetPrice);
             productCessTaxAmount = parseFloat(productCessTaxAmount) + parseFloat(invoiceProductArray[i].productCESS);
@@ -358,6 +377,12 @@ function saveInvoice(elem, alive_check){
     var isPhonepe = ($('#isPhonePeAmount').is(":checked")) ? "1" : "0";
     var phonepeNumber = $('#PhonePeNumber').val();
     var phonepeAmount = ($('#isPhonePeAmount').is(":checked")) ? $('#PhonePeAmount').val() : "0";
+    //Added by balamurugan E on 04012023 Starts Here
+
+    var isEMI = ($('#isEMIAmount').is(":checked")) ? "1" : "0";
+    var EMIAmount = ($('#isEMIAmount').is(":checked")) ? $('#EMIAmount').val() : "0";
+    //Added by Balamurugan E on 04012023 Ends here
+
     var Willing = $('#Accept').val();
     if (Willing == 3 || Willing == "3" || Willing == null || Willing == "") {
         Willing = 2;
@@ -388,6 +413,98 @@ function saveInvoice(elem, alive_check){
     var Lorealofferinvoiceid = $('#hdnblorealoldInvoiceIDafter').val() || 0;
     //...Bala code ends....///////////
 
+    //Added by chandru on 15032022
+    var NYKAA_Maskoffer = "0";
+
+    if ($("#hdnNKY_Qty").val() >= 5) {
+        NYKAA_Maskoffer = "1";
+    }
+    else {
+        NYKAA_Maskoffer = "0";
+    }
+    var prod1947Interested = "";
+
+    var prod1947Discount = $("#productTotDiscount").text();
+    if($("#hdn1947PopupStatus").val() == "Approved") {
+        prod1947Interested = "1";
+    }
+    else if ($("#hdn1947PopupStatus2").val() == "Approved") {
+        prod1947Interested = "1";
+    }
+
+    if ($("#hdn1947PopupStatusNotInt").val() == "NotApproved") {
+        prod1947Interested = "0";
+    }
+    if ($("#hdn1947PopupStatusNotInt2").val() == "NotApproved") {
+        prod1947Interested = "0";
+    }
+    if ($("#hdn1947PopupStatusNotInt").val() == "NotApproved" && $("#hdn1947PopupStatus2").val() == "Approved") {
+        prod1947Interested = "1";
+    }
+
+    var offerMarathonPedicure = "";
+    var offerMarathon1947 = "";
+    var offerMarathon1947PedicureStatus = "";
+
+    if ($("#hdnofferMarathon1947PedicureStatus").val() == "1") {
+
+        offerMarathon1947 = $('input[name="offer_name"]:checked').val();
+
+        if (offerMarathon1947 == "NoVoucher1") {
+            offerMarathon1947 = "NoVoucher";//;$('input[name="offer_name"]:checked').val();
+            offerMarathonPedicure = "";
+            offerMarathon1947PedicureStatus = "1";
+        }
+        else {
+            offerMarathon1947 = "";
+            offerMarathonPedicure = "Marathon 1947"//$('input[name="offer_name"]:checked').val();
+            offerMarathon1947PedicureStatus = "1";
+        }
+    }
+    else if ($("#hdnofferMarathon1947PedicureStatus").val() == "2") {
+
+        offerMarathon1947 = $('input[name="offer_name1"]:checked').val();
+
+        if (offerMarathon1947 == "NoVoucher") {
+            offerMarathon1947 = "NoVoucher";//$('input[name="offer_name1"]:checked').val();
+            offerMarathonPedicure = "";
+            offerMarathon1947PedicureStatus = "2";
+        }
+        else {
+            offerMarathon1947 = "";
+            offerMarathonPedicure = "Marathon Pedicure";//$('input[name="offer_name1"]:checked').val();
+            offerMarathon1947PedicureStatus = "2";
+        }
+
+    }
+    else if ($("#hdnofferMarathon1947PedicureStatus").val() == "3") {
+
+        offerMarathon1947 = $('input[name="offer_name2"]:checked').val();
+
+        if (offerMarathon1947 == "1947_Glimmer_Radio2") {
+            offerMarathon1947 = "Freedom 1947";//$('input[name="offer_name2"]:checked').val();
+            offerMarathonPedicure = "";
+            offerMarathon1947PedicureStatus = "3";
+        }
+        else {
+            offerMarathon1947 = "";
+            offerMarathonPedicure = "Marathon Pedicure";//$('input[name="offer_name2"]:checked').val();
+            offerMarathon1947PedicureStatus = "3";
+        }
+    }
+
+    if ($("#hdnoffer1").val() == "Approved") {
+        offerMarathonPedicure = "Offer750";
+    }
+    if ($("#hdnofferBrCy").val() == "Approved") {
+        offerMarathonPedicure = "Offer1000";
+    }
+    if ($("#hdnoffer2").val() == "Approved") {
+        offerMarathonPedicure = "Offer500";
+    }
+    
+    //...chandru code ends 15032022....///////////
+
     custID = (custID != null && custID != '' ? custID : '');
     grossTot = (grossTot != null && grossTot != '' ? grossTot : 0);
     commTotAmount = (commTotAmount != null && commTotAmount != '' ? commTotAmount : 0);
@@ -415,6 +532,11 @@ function saveInvoice(elem, alive_check){
     PaytmAmount = (PaytmAmount != null && PaytmAmount != '' ? PaytmAmount : '');
     isPhonepe = (isPhonepe != null && isPhonepe != '' ? isPhonepe : '');
     phonepeAmount = (phonepeAmount != null && phonepeAmount != '' ? phonepeAmount : '');
+
+    //Added by balamurugan E on 04012023 Starts Here
+    isEMI = (isEMI != null && isEMI != '' ? isEMI : '');
+    EMIAmount = (EMIAmount != null && EMIAmount != '' ? EMIAmount : '');
+    //Added by balamurugan E on 04012023 Ends Here
 
     var invoiceDetails = new Object();
     invoiceDetails.APPID = appID;
@@ -486,6 +608,23 @@ function saveInvoice(elem, alive_check){
 
     //--------------------------//
 
+    //added by chandru on 15032022 start
+    invoiceDetails.NYKAA_MASK_OFFER = NYKAA_Maskoffer;
+    invoiceDetails.prod1947Interested = prod1947Interested;
+    invoiceDetails.prod1947Discount = prod1947Discount;
+
+    invoiceDetails.offerMarathonPedicure = offerMarathonPedicure;
+    invoiceDetails.offerMarathon1947 = offerMarathon1947;
+    invoiceDetails.offerMarathon1947PedicureStatus = offerMarathon1947PedicureStatus;
+
+
+    //added by chandru on 15032022 end
+
+    //Added by balamurugan E on 04012023 Starts Here
+    invoiceDetails.isEMI = isEMI;
+    invoiceDetails.EMIAmount = EMIAmount;
+    //Added by balamurugan E on 04012023 Ends Here
+
     var InvoiceModels = {
         InvoiceDetails: invoiceDetails,
         Services: invoiceServiceArray,
@@ -504,12 +643,12 @@ function saveInvoice(elem, alive_check){
     //alert(JSON.stringify(InvoiceModels))
     //Response.Write(JSON.stringify(InvoiceModels));
     //Console.log(JSON.stringify(InvoiceModels));
-    //return;
+    //console.log(invoiceProductArray);
+    //return false;
     if (success == true) {
 
         //MMD Call
         doMMDBill(InvoiceModels)
-
         $.ajax({
             url: '/iNaturals/WalkinInvoice/saveInvoice',
             data: JSON.stringify(InvoiceModels),
