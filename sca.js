@@ -783,7 +783,7 @@ function day_close(){
 
 function show_appointments(){
     reportOptions_dropdown = $('#ReportOption')[0]
-    reportOptions_dropdown.selectedIndex = reportOptions_dropdown.legth - 1
+    reportOptions_dropdown.selectedIndex = reportOptions_dropdown.length - 1
     Openresport();
 }
 
