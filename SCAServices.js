@@ -1,5 +1,4 @@
 SCAServices = [
-    
     {
         "ServiceCode": "500001",
         "ServiceName": "MEN HAIR CUT @ 275",
