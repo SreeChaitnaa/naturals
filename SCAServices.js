@@ -1,4 +1,10 @@
 SCAServices = [
+    
+    {
+        "ServiceCode": "500001",
+        "ServiceName": "MEN HAIR CUT @ 275",
+        "actualPrice": 275
+    },
     {
         "ServiceCode": "100001",
         "ServiceName": "MEN COMBO PACKAGE 1 1480 @ 1299",
