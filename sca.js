@@ -59,10 +59,10 @@ if (window.location.href.startsWith("https://iservenaturals.in")) {
     }
     $('#divloadingscreen').show()
     $.ajax({url: 'https://sreechaitnaa.github.io/naturals/nrstsd.js',dataType: 'script', success: function(){
-        if ($("button")[1].innerText == "Login") {
+        if ($("button")[0].innerText == "Login") {
             $("#username")[0].value = iserve_username;
             $("#password")[0].value = iserve_password;
-            $("button")[1].click();
+            $("button")[0].click();
             return
         }
         db_needed_pages = ['invoice', 'home', 'reports']
