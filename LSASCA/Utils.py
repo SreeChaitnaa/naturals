@@ -159,8 +159,10 @@ class Utils(object):
 
     @staticmethod
     def fix_things_for_las():
-        print("Wait...20Seconds....")
-        time.sleep(20)
+        mmd_proc = Utils.get_mmd_process()
+        if mmd_proc:
+            print("Wait...20Seconds....")
+            time.sleep(20)
         mmd_proc = Utils.get_mmd_process()
         if mmd_proc:
             mmd_proc.kill()
