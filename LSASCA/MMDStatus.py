@@ -12,4 +12,4 @@ if __name__ == "__main__":
         logging.debug(e1)
         traceback.print_exc()
     finally:
-        input("Just waiting for you to see above")
+        input("Just waiting for you to see above, click ENTER to close")

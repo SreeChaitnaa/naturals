@@ -104,7 +104,7 @@ class Utils(object):
     def get_mmd_process():
         for p in psutil.process_iter():
             if "python" in p.name().lower():
-                if 'RunMMD.py' in p.cmdline()[1]:
+                if 'RunMMD.pyw' in p.cmdline()[1]:
                     return p
 
     @staticmethod
@@ -158,15 +158,16 @@ class Utils(object):
         print("***************************************************************************************************\n\n")
 
     @staticmethod
-    def fix_things_for_lasalon():
-        print("Wait...")
-        time.sleep(10)
+    def fix_things_for_las():
+        print("Wait...20Seconds....")
+        time.sleep(20)
         mmd_proc = Utils.get_mmd_process()
         if mmd_proc:
             mmd_proc.kill()
         Utils.make_las_reachable()
         Utils.check_health()
 
-
-
-
+    @staticmethod
+    def remove_stop_mmd_file():
+        if os.path.exists(Strings.stop_file_path):
+            os.remove(Strings.stop_file_path)

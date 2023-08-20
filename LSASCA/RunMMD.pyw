@@ -6,9 +6,11 @@ from LSASCA.RestDB import RestDB
 from LSASCA.Utils import *
 
 if __name__ == "__main__":
+    all_good = False
     try:
         Utils.set_logging(Strings.log_path)
         # Utils.set_logging()
+        Utils.remove_stop_mmd_file()
         Utils.make_las_not_reachable()
         salon_db = SQLDB()
         rest_db = RestDB()
@@ -50,14 +52,14 @@ if __name__ == "__main__":
 
         logging.debug("Stop file found")
         Utils.make_las_reachable()
-        os.remove(Strings.stop_file_path)
+        Utils.remove_stop_mmd_file()
         logging.debug("i am all good")
+        all_good = True
 
     except Exception as e1:
         logging.debug(e1)
         traceback.print_exc()
     finally:
-        Utils.make_las_reachable()
-        if os.path.exists(Strings.stop_file_path):
-            os.remove(Strings.stop_file_path)
-        input("Just waiting for you to see above")
+        if not all_good:
+            Utils.make_las_reachable()
+            Utils.remove_stop_mmd_file()
