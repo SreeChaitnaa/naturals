@@ -56,7 +56,7 @@ class Utils(object):
     @staticmethod
     def is_mmd_bill(bill_data):
         if Strings.discount_table in bill_data:
-            return Strings.mmd_selector in bill_data[Strings.discount_table][0][Strings.comments]
+            return Strings.mmd_selector in bill_data[Strings.discount_table][0][Strings.comments].lower()
         return False
 
     @staticmethod
