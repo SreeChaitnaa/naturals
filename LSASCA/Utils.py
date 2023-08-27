@@ -173,3 +173,13 @@ class Utils(object):
     def remove_stop_mmd_file():
         if os.path.exists(Strings.stop_file_path):
             os.remove(Strings.stop_file_path)
+
+    @staticmethod
+    def send_whatsapp(phone_no="", message=""):
+        if isinstance(message, list):
+            message = "\n".join(message)
+        message = message.replace(" ", "%20").replace("\n", "%0a")
+        if phone_no:
+            os.system('start whatsapp://send?phone=+91{0}^&text={1}'.format(phone_no, message))
+        else:
+            os.system('start whatsapp://send?text={1}'.format(phone_no, message))
