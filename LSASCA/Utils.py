@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import shutil
+import sys
 import time
 
 import psutil
@@ -24,8 +25,11 @@ class Strings(object):
     config_last_bill_no = "last_bill_no"
     mmd_path = "E:\\Murali\\LSCA\\"
     sql_back_up_path = mmd_path + "MainBackup.bkp"
+    sql_back_up_stacked_path = mmd_path + "StackedBackup.bkp"
+    stacked_diff_bill_path = mmd_path + "Stacked_diff_bill_no"
     log_path = mmd_path + "MyLog.log"
     stop_file_path = mmd_path + "done.txt"
+    running_file_path = mmd_path + "running.txt"
     not_reachable_hosts = mmd_path + "SCA\\hosts"
     reachable_hosts = mmd_path + "LS\\hosts"
     etc_hosts = "C:\\Windows\\System32\\drivers\\etc\\hosts"
@@ -67,8 +71,14 @@ class Utils(object):
         return os.system(sql_cmd) == 0
 
     @staticmethod
-    def take_backup():
+    def take_backup(new_bill_number=None):
         if os.path.exists(Strings.sql_back_up_path):
+            if new_bill_number:
+                Utils.push_last_backup_to_old(new_bill_number)
+            else:
+                if os.path.exists(Strings.sql_back_up_stacked_path):
+                    logging.debug("Removing {0}".format(Strings.sql_back_up_stacked_path))
+                    os.remove(Strings.sql_back_up_stacked_path)
             logging.debug("Removing {0}".format(Strings.sql_back_up_path))
             os.remove(Strings.sql_back_up_path)
         sql_query = "BACKUP DATABASE {0} TO DISK = '{1}'".format(Strings.sql_db_name, Strings.sql_back_up_path)
@@ -79,11 +89,20 @@ class Utils(object):
         return False
 
     @staticmethod
-    def restore_database():
+    def push_last_backup_to_old(next_bill_number):
+        os.system("copy {0} {1} /Y".format(Strings.sql_back_up_path,
+                                           Strings.sql_back_up_stacked_path))
+        fw = open(Strings.stacked_diff_bill_path, "w")
+        fw.write(str(next_bill_number))
+        fw.close()
+
+    @staticmethod
+    def restore_database(use_stacked=False):
+        backup_path = Strings.sql_back_up_stacked_path if use_stacked else Strings.sql_back_up_path
         sql_query = ("Alter database {0} set OffLINE with rollback immediate;"
                      "RESTORE DATABASE {0} FROM DISK = '{1}' WITH REPLACE;"
                      "Alter database {0} set ONLINE with rollback immediate").format(Strings.sql_db_name,
-                                                                                     Strings.sql_back_up_path)
+                                                                                     backup_path)
         if os.path.exists(Strings.sql_back_up_path):
             logging.debug("Restoring DB from {}".format(Strings.sql_back_up_path))
             return Utils.run_sql_cmd(sql_query)
@@ -148,14 +167,18 @@ class Utils(object):
         else:
             lasalon_ok = False
 
+        status = 0
         print("\n\n***************************************************************************************************")
         if mmd_ok and not lasalon_ok:
             print("All good for MMD")
+            status = 1
         elif lasalon_ok and not mmd_ok:
             print("All good for LaSalon")
+            status = 2
         else:
             print("Something wrong, Contact MURALI quick, or run MMD or fixLasaon")
         print("***************************************************************************************************\n\n")
+        return status
 
     @staticmethod
     def fix_things_for_las():
@@ -173,6 +196,8 @@ class Utils(object):
     def remove_stop_mmd_file():
         if os.path.exists(Strings.stop_file_path):
             os.remove(Strings.stop_file_path)
+        if os.path.exists(Strings.stacked_diff_bill_path):
+            os.remove(Strings.stacked_diff_bill_path)
 
     @staticmethod
     def send_whatsapp(phone_no="", message=""):
@@ -183,3 +208,13 @@ class Utils(object):
             os.system('start whatsapp://send?phone=+91{0}^&text={1}'.format(phone_no, message))
         else:
             os.system('start whatsapp://send?text={1}'.format(phone_no, message))
+
+    @staticmethod
+    def check_existing_mmd():
+        if os.path.exists(Strings.running_file_path):
+            logging.debug("MMD already running")
+            sys.exit(-1)
+        else:
+            x = open(Strings.running_file_path, "w")
+            x.write("Running")
+            x.close()

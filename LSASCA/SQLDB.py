@@ -57,20 +57,3 @@ class SQLDB(object):
                 bill_data[tab_name] = bill_rows
         return bill_data
 
-    def get_bill_data_if_mmd_bill(self, bill_no):
-        bill_data = self.get_bill_data_from_all_tables(bill_no)
-        if Strings.discount_table in bill_data:
-            if Strings.mmd_selector in bill_data[Strings.discount_table][0][Strings.comments]:
-                return bill_data
-
-    def remove_bill_data(self, bill_no):
-        for tab_name in self.get_all_ticket_tables():
-            self.run_sql_query("delete from {0} where {1}={2}".format(tab_name, Strings.ticket_id.lower(), bill_no))
-
-    def mmd_task(self, last_bill):
-        for bill_no in self.get_new_bills(last_bill):
-            bill_data = self.get_bill_data_if_mmd_bill(bill_no)
-            if bill_data:
-                self.remove_bill_data(bill_no)
-                save_bill_data(bill_no, bill_data)
-
