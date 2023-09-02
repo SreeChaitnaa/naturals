@@ -116,7 +116,7 @@ function get_invoice_by_date(max_date, min_date, callback){
             })
         }
         else{
-            db.invoices.find({'date_number':{"$bt": [max_date, min_date]}},[],function(err, res){
+            db.bills.find({'date_num':{"$bt": [max_date, min_date]}},[],function(err, res){
                 if(err != null){
                     set_last_values_and_call_callback(max_date, min_date, err, null, callback)
                 }
