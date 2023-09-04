@@ -2,11 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Natutals Thanisandra</title>
+    <title>Naturals Thanisandra</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
     <script src="./restdb.js"></script>
+    <script src="./reports.js"></script>
 </head>
-<body>
-Hello
+<body onload="LoadReports()">
+<h2>Thanisandra Reports</h2>
+From: <input type="date" id="fromdt">
+&nbsp; &nbsp; To: <input type="date" id="todt">
+&nbsp; &nbsp; Report: <select id="reportopt"></select>
+&nbsp; &nbsp; <input type="button" id="reportbtn" value="Show Reports" onclick="
+show_reports()" />
+<table id="reporttbl"></table>
 </body>
 </html>
