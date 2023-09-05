@@ -26,6 +26,16 @@ function LoadReports(){
 }
 
 function show_reports(){
+    min_date = from_date()
+    max_date = to_date()
+    get_rest_data_by_date(max_date, min_date, function(err, res){
+        column_names = []
+        first_row = true
+        res.forEach(function(value, index, array) {
+            bill = JSON.parse(value.bill_data)
+            
+        })
+    })
 
 }
 function set_table_data(cols, jsonData){

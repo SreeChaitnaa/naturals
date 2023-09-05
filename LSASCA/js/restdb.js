@@ -4,26 +4,13 @@ last_max_date = null
 last_results = []
 last_error = null
 loading_db = false
-restdb_name = "lasnrs-c22b"
 restdb_key = "64f33b986888542efc0bfdfa"
 
-function initiate_db(callback){
+function initiate_db(){
     if(db == null && !loading_db){
         loading_db = true
-        $.ajax({url: 'https://'+ restdb_name +'.restdb.io/rest/_jsapi.js',dataType: 'script', success: function(){ 
-            db = new restdb(restdb_key) 
-            loading_db = false
-            console.log("DB Script loaded")
-            console.log(db)
-            if(callback != null){
-                callback()
-            }
-        }})
-    }
-    else{
-        if(callback != null){
-            callback()
-        }
+        db = new restdb(restdb_key)
+        loading_db = false
     }
 }
 
@@ -84,49 +71,46 @@ function set_last_values_and_call_callback(max_date, min_date, err, res, callbac
     callback(err, res)
 }
 
-function get_invoice_by_date(max_date, min_date, callback){
+function get_rest_data_by_date(max_date, min_date, callback){
     if(max_date == last_max_date && min_date == last_min_date){
         callback(last_error, last_results);
         return
     }
-
-    initiate_db(function(){
-        if(max_date == "0"){
-            db.inventory.find({}, [], function(err, res){set_last_values_and_call_callback(max_date, min_date, err, res, callback)})
-        }
-        else if(max_date == "-1"){
-            db.appointments.find({}, [], function(err, res){
-                if(err){
-                    set_last_values_and_call_callback(max_date, min_date, err, null, callback)
-                }
-                date_value = new Date()
-                date_number = Number(date_value.dateFormat('Ymd'))
-                apts = []
-                if(res.length > 0){
-                    for(i in res){
-                        if(res[i].Date < date_number){
-                            res[i].delete()
-                        }
-                        else{
-                            apts.push(res[i])
-                        }
+    if(max_date == "0"){
+        db.inventory.find({}, [], function(err, res){set_last_values_and_call_callback(max_date, min_date, err, res, callback)})
+    }
+    else if(max_date == "-1"){
+        db.appointments.find({}, [], function(err, res){
+            if(err){
+                set_last_values_and_call_callback(max_date, min_date, err, null, callback)
+            }
+            date_value = new Date()
+            date_number = Number(date_value.dateFormat('Ymd'))
+            apts = []
+            if(res.length > 0){
+                for(i in res){
+                    if(res[i].Date < date_number){
+                        res[i].delete()
+                    }
+                    else{
+                        apts.push(res[i])
                     }
                 }
-                set_last_values_and_call_callback(max_date, min_date, null, apts, callback)
-            })
-        }
-        else{
-            db.bills.find({'date_num':{"$bt": [max_date, min_date]}},[],function(err, res){
-                if(err != null){
-                    set_last_values_and_call_callback(max_date, min_date, err, null, callback)
-                }
-                else{
-                    console.log(res)
-                    set_last_values_and_call_callback(max_date, min_date, null, res, callback)
-                }
-            })
-        }
-    })
+            }
+            set_last_values_and_call_callback(max_date, min_date, null, apts, callback)
+        })
+    }
+    else{
+        db.bills.find({'date_num':{"$bt": [max_date, min_date]}},[],function(err, res){
+            if(err != null){
+                set_last_values_and_call_callback(max_date, min_date, err, null, callback)
+            }
+            else{
+                console.log(res)
+                set_last_values_and_call_callback(max_date, min_date, null, res, callback)
+            }
+        })
+    }
 }
 
 function add_inventory(prod_id, prod_name, prod_count, mrp=0){
