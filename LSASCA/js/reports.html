@@ -7,6 +7,11 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
     <script src="./restdb.js"></script>
     <script src="./reports.js"></script>
+    <style type="text/css">
+        .dataframe { background-color:#eee;border-collapse:collapse; }
+        .dataframe th { background-color:#02b;color:white; text-align:center;}
+        .dataframe td, .dataframe th { padding:5px;border:1px solid #000; text-align:left;}
+    </style>
 </head>
 <body onload="LoadReports()">
 <h2>Thanisandra Reports</h2>
@@ -15,6 +20,7 @@ From: <input type="date" id="fromdt">
 &nbsp; &nbsp; Report: <select id="reportopt"></select>
 &nbsp; &nbsp; <input type="button" id="reportbtn" value="Show Reports" onclick="
 show_reports()" />
-<table id="reporttbl"></table>
+<br /><hr /><br />
+<table id="reporttbl" class="dataframe"></table>
 </body>
 </html>
