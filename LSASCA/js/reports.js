@@ -146,16 +146,28 @@ function get_employee_sale_row(bill, return_columns=false){
     return services
 }
 
+function get_base_row(row, key_name){
+    base_row = {}
+    for(key in row)
+        if(key != key_name)
+            base_row[key] = 0
+        else
+            base_row[key] = row[key]
+    return base_row
+}
+
 function merge_rows(rows, key_name){
     merged_rows = {}
+    total_row = get_base_row(rows[0], key_name)
+    total_row[key_name] = "Total"
     rows.forEach(function(row, index, array){
         row_selector = row[key_name]
         if(merged_rows[row_selector] === undefined)
-            merged_rows[row_selector] = structuredClone(row)
-        else{
-            for(key in row){
-                if(key != key_name)
-                    merged_rows[row_selector][key] += row[key]
+            merged_rows[row_selector] = get_base_row(row, key_name)
+        for(key in row){
+            if(key != key_name){
+                merged_rows[row_selector][key] += row[key]
+                total_row[key] += row[key]
             }
         }
     })
@@ -166,6 +178,10 @@ function merge_rows(rows, key_name){
                 merged_rows[row_selector][key] = Number(merged_rows[row_selector][key].toFixed(2))
         merged_rows_array.push(merged_rows[row_selector])
     }
+    for(key in total_row)
+        if(key != key_name)
+            total_row[key] = Number(total_row[key].toFixed(2))
+    merged_rows_array.push(total_row)
     return merged_rows_array
 }
 
@@ -191,18 +207,21 @@ function show_reports(){
                 table_rows.push(table_row)
         })
         console.log(table_rows)
+        last_row_is_total = false
         if(selected_opt == "Employee Sales Report"){
             table_rows = merge_rows(table_rows, "Employee Name")
+            last_row_is_total = true
         }
         if(selected_opt == "Day wise Sales Report"){
             table_rows = merge_rows(table_rows, "Date")
+            last_row_is_total = true
         }
-        set_table_data(column_names, table_rows)
+        set_table_data(column_names, table_rows, last_row_is_total)
         console.log(table_rows)
     })
 
 }
-function set_table_data(cols, jsonData){
+function set_table_data(cols, jsonData, last_row_is_total){
     table = $('#reporttbl')[0]
     table.innerHTML = ""
 
@@ -220,7 +239,16 @@ function set_table_data(cols, jsonData){
     table.append(tr) // Append the header to the table
 
     // Loop through the JSON data and create table rows
+    counter = 0
+    last_line_index = jsonData.length - 1
     jsonData.forEach((item) => {
+        bold_this = false
+        if(last_line_index == counter){
+            if(last_row_is_total){
+                bold_this = true
+            }
+        }
+        counter++
         let tr = document.createElement("tr");
 
         // Get the values of the current object in the JSON data
@@ -228,9 +256,11 @@ function set_table_data(cols, jsonData){
 
         // Loop through the values and create table cells
         vals.forEach((elem) => {
-           let td = document.createElement("td");
-           td.innerText = elem; // Set the value as the text of the table cell
-           tr.appendChild(td); // Append the table cell to the table row
+            let td = document.createElement("td");
+            td.innerHTML = elem; // Set the value as the text of the table cell
+            if(bold_this)
+                td.innerHTML = "<b>"+td.innerHTML+"</b>"
+            tr.appendChild(td); // Append the table cell to the table row
         });
         table.appendChild(tr); // Append the table row to the table
     });
