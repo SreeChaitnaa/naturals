@@ -59,12 +59,13 @@ function get_customer_details(client_id){
 
 function get_invoice_table_row(bill, return_columns=false){
     if(return_columns){
-        return ["Time", "Guest", "Phone", "Services", "Net Sale", "Total", "Payment Mode", "Payment Split"]
+        return ["Time", "Bill#", "Guest", "Phone", "Services", "Net Sale", "Total", "Payment Mode", "Payment Split"]
     }
     row_data = {}
     client_details = get_customer_details(bill.Ticket[0].ClientID)
     ticket_details = bill.Ticket_Details[0]
     row_data["Phone"] = client_details.Phone
+    row_data["Bill#"] = bill.Ticket[0].TicketID
     row_data["Guest"] = client_details.Name
     row_data["Services"] = bill.Ticket[0].servicedesc
     row_data["Net Sale"] = bill.Ticket[0].Total_WithoutTax
