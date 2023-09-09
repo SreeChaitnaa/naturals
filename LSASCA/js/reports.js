@@ -1,8 +1,8 @@
 ReportOptions = {
-    "Employee Sales Report": get_employee_sale_row,
-    "Invoices": get_invoice_table_row,
-    "Service Report": get_service_report_row,
-    "Day wise Sales Report": get_day_wise_report_row
+    "Employee Sales Report": {fun: get_employee_sale_row, merge:"Employee Name"},
+    "Invoices": {fun: get_invoice_table_row, merge:null},
+    "Service Report": {fun: get_service_report_row, merge:null},
+    "Day wise Sales Report": {fun: get_day_wise_report_row, merge:"Date"}
 }
 
 function employee_name(emp_id){
@@ -40,7 +40,7 @@ function LoadReports(){
 
 function get_payment_type(pay_type){
     if(pay_type == "EVallet")
-        pay_type = "PhonePe"
+        pay_type = "UPI"
     else if(pay_type != "Cash")
         pay_type = "Card"
     return pay_type
@@ -59,15 +59,16 @@ function get_customer_details(client_id){
 
 function get_invoice_table_row(bill, return_columns=false){
     if(return_columns){
-        return ["Customer Name", "Phone", "Services", "Net Sale", "Total", "Payment Mode", "Payment Split"]
+        return ["Time", "Guest", "Phone", "Services", "Net Sale", "Total", "Payment Mode", "Payment Split"]
     }
     row_data = {}
     client_details = get_customer_details(bill.Ticket[0].ClientID)
     ticket_details = bill.Ticket_Details[0]
     row_data["Phone"] = client_details.Phone
-    row_data["Customer Name"] = client_details.Name
+    row_data["Guest"] = client_details.Name
     row_data["Services"] = bill.Ticket[0].servicedesc
     row_data["Net Sale"] = bill.Ticket[0].Total_WithoutTax
+    row_data["Time"] = bill.Ticket[0].TimeMark.split(".")[0]
     row_data["Total"] = bill.Ticket[0].Total
     pay_type1 = get_payment_type(ticket_details.PayType1)
     row_data["Payment Mode"] = pay_type1
@@ -84,12 +85,12 @@ function get_invoice_table_row(bill, return_columns=false){
 
 function get_day_wise_report_row(bill, return_columns=false){
     if(return_columns){
-        return ["Date", "Bills", "Services", "Net Sale", "Total"]
+        return ["Date", "Bill Count", "Services", "Net Sale", "Total"]
     }
     row_data = {}
     ticket_details = bill.Ticket_Details[0]
     row_data["Date"] = bill.Ticket[0].Created_Date.split(" ")[0]
-    row_data["Bills"] = 1
+    row_data["Bill Count"] = 1
     row_data["Services"] = bill.Ticket_Product_Details.length
     row_data["Net Sale"] = Number(bill.Ticket[0].Total_WithoutTax.toFixed(2))
     row_data["Total"] = Number(bill.Ticket[0].Total.toFixed(2))
@@ -98,14 +99,15 @@ function get_day_wise_report_row(bill, return_columns=false){
 
 function get_service_report_row(bill, return_columns=false){
     if(return_columns){
-        return ["Customer Name", "Phone", "Service Name", "Employee Name", "Price", "Qty", "Mem Discount",
+        return ["Time", "Guest", "Phone", "Service Name", "Employee Name", "Price", "Qty", "Mem Discount",
                 "Other Discount", "Total Discount", "Net Price", "Total Price"]
     }
     services = []
     client_details = get_customer_details(bill.Ticket[0].ClientID)
-    bill.Ticket_Product_Details.forEach(function(service, index, array){
+    bill.Ticket_Product_Details.forEach((service) => {
         row_data = {}
-        row_data["Customer Name"] = client_details.Name
+        row_data["Time"] = bill.Ticket[0].TimeMark.split(".")[0]
+        row_data["Guest"] = client_details.Name
         row_data["Phone"] = client_details.Phone
         row_data["Service Name"] = service.Descr
         row_data["Employee Name"] = employee_name(service.EmpID)
@@ -127,7 +129,7 @@ function get_employee_sale_row(bill, return_columns=false){
     }
     services = []
     employees_added = []
-    bill.Ticket_Product_Details.forEach(function(service, index, array){
+    bill.Ticket_Product_Details.forEach((service) => {
         row_data = {}
         emp_name = employee_name(service.EmpID)
         bill_count = 1
@@ -160,7 +162,7 @@ function merge_rows(rows, key_name){
     merged_rows = {}
     total_row = get_base_row(rows[0], key_name)
     total_row[key_name] = "Total"
-    rows.forEach(function(row, index, array){
+    rows.forEach((row) => {
         row_selector = row[key_name]
         if(merged_rows[row_selector] === undefined)
             merged_rows[row_selector] = get_base_row(row, key_name)
@@ -185,6 +187,13 @@ function merge_rows(rows, key_name){
     return merged_rows_array
 }
 
+function add_abv(table_rows, net_sale_key, bill_count_key){
+    table_rows.forEach((row) => {
+        row["ABV"] = Number((row[net_sale_key]/row[bill_count_key]).toFixed(2))
+    })
+    return table_rows
+}
+
 function show_reports(){
     initiate_db()
     min_date = from_date()
@@ -194,11 +203,15 @@ function show_reports(){
         table_rows = []
         first_row = true
         selected_opt = selected_option()
-        method = ReportOptions[selected_opt]
-        res.forEach(function(value, index, array) {
+        method = ReportOptions[selected_opt].fun
+        total_row = {}
+        res.forEach((value) => {
             bill = JSON.parse(value.bill_data)
             if(first_row)
                 column_names = method(null, first_row)
+                column_names.forEach((col_name) => {
+                    total_row[col_name] = "-"
+                })
             first_row = false
             table_row = method(bill)
             if(Array.isArray(table_row))
@@ -206,17 +219,39 @@ function show_reports(){
             else
                 table_rows.push(table_row)
         })
-        console.log(table_rows)
-        last_row_is_total = false
-        if(selected_opt == "Employee Sales Report"){
-            table_rows = merge_rows(table_rows, "Employee Name")
-            last_row_is_total = true
+        merge_key = ReportOptions[selected_opt].merge
+        if(merge_key != null){
+            table_rows = merge_rows(table_rows, merge_key)
+            column_names.push("ABV")
+            table_rows = add_abv(table_rows, "Net Sale", "Bill Count")
         }
-        if(selected_opt == "Day wise Sales Report"){
-            table_rows = merge_rows(table_rows, "Date")
-            last_row_is_total = true
+        row_index = 1
+        table_rows.forEach((trow) => {
+            if(merge_key == null){
+                column_names.forEach((col_name) => {
+                    if(typeof(trow[col_name]) == "number"){
+                        if(total_row[col_name] == "-"){
+                            total_row[col_name] = trow[col_name]
+                        }
+                        else{
+                            total_row[col_name] += trow[col_name]
+                        }
+                    }
+                })
+            }
+            trow["Sr No"] = row_index++
+        })
+        if(merge_key == null)
+        {
+            column_names.forEach((col_name) => {
+                if(typeof(total_row[col_name]) == "number"){
+                    total_row[col_name] = Number(total_row[col_name].toFixed(2))
+                }
+            })
+            table_rows.push(total_row)
         }
-        set_table_data(column_names, table_rows, last_row_is_total)
+        column_names = ["Sr No"].concat(column_names)
+        set_table_data(column_names, table_rows, true)
         console.log(table_rows)
     })
 
@@ -248,16 +283,17 @@ function set_table_data(cols, jsonData, last_row_is_total){
                 bold_this = true
             }
         }
+        console.log(item)
         counter++
         let tr = document.createElement("tr");
 
-        // Get the values of the current object in the JSON data
-        let vals = Object.values(item);
-
+        if(bold_this){
+            item["Sr No"] = "#"
+        }
         // Loop through the values and create table cells
-        vals.forEach((elem) => {
+        cols.forEach((col_name) => {
             let td = document.createElement("td");
-            td.innerHTML = elem; // Set the value as the text of the table cell
+            td.innerHTML = item[col_name]; // Set the value as the text of the table cell
             if(bold_this)
                 td.innerHTML = "<b>"+td.innerHTML+"</b>"
             tr.appendChild(td); // Append the table cell to the table row
