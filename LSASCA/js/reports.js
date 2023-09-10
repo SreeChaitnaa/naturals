@@ -10,7 +10,7 @@ all_bills = []
 function employee_name(emp_id){
     emp_map = { "700946": "Raghu", "700947": "Mary", "700948": "Suresh",
                 "700949": "Margarate", "700950": "Meenakshi", "700951": "Muskan",
-                "700952": "Suprita", "700953": "Shekar", "700954": "Nagaraju"}
+                "700952": "Tanu", "700953": "Shekar", "700954": "Nagaraju"}
     emp_id = emp_id.toString()
     if(emp_map[emp_id] != undefined){
         return emp_map[emp_id]
