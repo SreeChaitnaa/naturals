@@ -15,12 +15,18 @@
 </head>
 <body onload="LoadReports()">
 <h2>Thanisandra Reports</h2>
-From: <input type="date" id="fromdt">
-&nbsp; &nbsp; To: <input type="date" id="todt">
-&nbsp; &nbsp; Report: <select id="reportopt"></select>
-&nbsp; &nbsp; <input type="button" id="reportbtn" value="Show Reports" onclick="
-show_reports()" />
-<br /><hr /><br />
-<table id="reporttbl" class="dataframe"></table>
+<div id="pwd_div">
+    Password: <input type="password" id="ip_pwd" />
+    <input type="submit" id="btn_login" value="Login" onclick="login()"/>
+    <label id="lbl_err" style="color:red"></label>
+</div>
+<div id="report_div" style="display:none">
+    From: <input type="date" id="fromdt">
+    &nbsp; &nbsp; To: <input type="date" id="todt">
+    &nbsp; &nbsp; Report: <select id="reportopt"></select>
+    &nbsp; &nbsp; <input type="button" id="reportbtn" value="Show Reports" onclick="show_reports()" />
+    <br /><hr /><br />
+    <table id="reporttbl" class="dataframe"></table>
+</div>
 </body>
 </html>
