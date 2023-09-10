@@ -28,6 +28,21 @@ function selected_option(){
     return $('#reportopt')[0].value
 }
 
+function login(){
+    if($('#ip_pwd')[0].value == "929496"){
+        show_reports_div()
+    }
+    else{
+        $('#lbl_err')[0].innerText = "Access Denied!!!"
+    }
+    $('#ip_pwd')[0].value = ""
+}
+
+function show_reports_div(){
+    $('#report_div')[0].style.display = "block"
+    $('#pwd_div')[0].style.display = "none"
+}
+
 function LoadReports(){
     for(opt in ReportOptions){
         var option = document.createElement("option");
