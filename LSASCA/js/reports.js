@@ -5,6 +5,8 @@ ReportOptions = {
     "Day wise Sales Report": {fun: get_day_wise_report_row, merge:"Date"}
 }
 
+all_bills = []
+
 function employee_name(emp_id){
     emp_map = { "700946": "Raghu", "700947": "Mary", "700948": "Suresh",
                 "700949": "Margarate", "700950": "Meenakshi", "700951": "Muskan",
@@ -215,6 +217,7 @@ function show_reports(){
     min_date = from_date()
     max_date = to_date()
     get_rest_data_by_date(max_date, min_date, function(err, res){
+        all_bills = []
         column_names = []
         table_rows = []
         first_row = true
@@ -223,6 +226,7 @@ function show_reports(){
         total_row = {}
         res.forEach((value) => {
             bill = JSON.parse(value.bill_data)
+            all_bills.push(structuredClone(bill))
             if(first_row)
                 column_names = method(null, first_row)
                 column_names.forEach((col_name) => {
