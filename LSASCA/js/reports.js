@@ -2,7 +2,8 @@ ReportOptions = {
     "Employee Sales Report": {fun: get_employee_sale_row, merge:"Employee Name"},
     "Invoices": {fun: get_invoice_table_row, merge:null},
     "Service Report": {fun: get_service_report_row, merge:null},
-    "Day wise Sales Report": {fun: get_day_wise_report_row, merge:"Date"}
+    "Day wise Sales Report": {fun: get_day_wise_report_row, merge:"Date",
+    "Service Wise Report": {fun: get_service_wise_report_row, merge:"Service Name"}
 }
 
 all_bills = []
@@ -128,6 +129,27 @@ function get_service_report_row(bill, return_columns=false){
         row_data["Phone"] = client_details.Phone
         row_data["Service Name"] = service.Descr
         row_data["Employee Name"] = employee_name(service.EmpID)
+        row_data["Price"] = service.Retail_Price
+        row_data["Qty"] = service.Qty
+        row_data["Mem Discount"] = service.Mem_Disc
+        row_data["Other Discount"] = Number(service.Oth_Disc.toFixed(2))
+        row_data["Total Discount"] = Number(service.Discount_Amt.toFixed(2))
+        row_data["Net Price"] = Number(((service.Qty * service.Retail_Price) - service.Discount_Amt).toFixed(2))
+        row_data["Total Price"] = Number(service.Total.toFixed(2))
+        services.push(row_data)
+    })
+    return services
+}
+
+function get_service_wise_report_row(bill, return_columns=false){
+    if(return_columns){
+        return ["Service Name", "Price", "Qty", "Mem Discount",
+                "Other Discount", "Total Discount", "Net Price", "Total Price"]
+    }
+    services = []
+    bill.Ticket_Product_Details.forEach((service) => {
+        row_data = {}
+        row_data["Service Name"] = service.Descr
         row_data["Price"] = service.Retail_Price
         row_data["Qty"] = service.Qty
         row_data["Mem Discount"] = service.Mem_Disc
