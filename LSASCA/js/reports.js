@@ -2,7 +2,7 @@ ReportOptions = {
     "Employee Sales Report": {fun: get_employee_sale_row, merge:"Employee Name"},
     "Invoices": {fun: get_invoice_table_row, merge:null},
     "Service Report": {fun: get_service_report_row, merge:null},
-    "Day wise Sales Report": {fun: get_day_wise_report_row, merge:"Date",
+    "Day wise Sales Report": {fun: get_day_wise_report_row, merge:"Date"},
     "Service Wise Report": {fun: get_service_wise_report_row, merge:"Service Name"}
 }
 
