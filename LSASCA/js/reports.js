@@ -1,9 +1,9 @@
 ReportOptions = {
     "Employee Sales Report": {fun: get_employee_sale_row, merge:"Employee Name"},
-    "Invoices": {fun: get_invoice_table_row, merge:null},
-    "Service Report": {fun: get_service_report_row, merge:null},
+    "Invoices": {fun: get_invoice_table_row},
+    "Service Report": {fun: get_service_report_row},
     "Day wise Sales Report": {fun: get_day_wise_report_row, merge:"Date"},
-    "Service Wise Report": {fun: get_service_wise_report_row, merge:"Service Name"}
+    "Service Wise Report": {fun: get_service_wise_report_row, merge:"Service Name", abv_key:"Qty"}
 }
 
 all_bills = []
@@ -144,7 +144,7 @@ function get_service_report_row(bill, return_columns=false){
 function get_service_wise_report_row(bill, return_columns=false){
     if(return_columns){
         return ["Service Name", "Price", "Qty", "Mem Discount",
-                "Other Discount", "Total Discount", "Net Price", "Total Price"]
+                "Other Discount", "Total Discount", "Net Sale", "Total Price"]
     }
     services = []
     bill.Ticket_Product_Details.forEach((service) => {
@@ -155,7 +155,7 @@ function get_service_wise_report_row(bill, return_columns=false){
         row_data["Mem Discount"] = service.Mem_Disc
         row_data["Other Discount"] = Number(service.Oth_Disc.toFixed(2))
         row_data["Total Discount"] = Number(service.Discount_Amt.toFixed(2))
-        row_data["Net Price"] = Number(((service.Qty * service.Retail_Price) - service.Discount_Amt).toFixed(2))
+        row_data["Net Sale"] = Number(((service.Qty * service.Retail_Price) - service.Discount_Amt).toFixed(2))
         row_data["Total Price"] = Number(service.Total.toFixed(2))
         services.push(row_data)
     })
@@ -261,16 +261,20 @@ function show_reports(){
                 table_rows.push(table_row)
         })
         merge_key = ReportOptions[selected_opt].merge
-        if(merge_key != null){
+        if(merge_key != undefined){
+            abv_key = ReportOptions[selected_opt].abv_key
+            if(abv_key == undefined){
+                abv_key = "Bill Count"
+            }
             table_rows = merge_rows(table_rows, merge_key)
             column_names.push("ABV")
-            table_rows = add_abv(table_rows, "Net Sale", "Bill Count")
+            table_rows = add_abv(table_rows, "Net Sale", abv_key)
         }
         row_index = 1
         table_rows.forEach((trow) => {
-            if(merge_key == null){
+            if(merge_key === undefined){
                 column_names.forEach((col_name) => {
-                    if(typeof(trow[col_name]) == "number"){
+                    if(typeof(trow[col_name]) == "number" && col_name != "Bill#"){
                         if(total_row[col_name] == "-"){
                             total_row[col_name] = trow[col_name]
                         }
@@ -282,7 +286,7 @@ function show_reports(){
             }
             trow["Sr No"] = row_index++
         })
-        if(merge_key == null)
+        if(merge_key === undefined)
         {
             column_names.forEach((col_name) => {
                 if(typeof(total_row[col_name]) == "number"){
