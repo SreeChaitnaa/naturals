@@ -6,22 +6,49 @@ ReportOptions = {
     "Day wise Sales Report": {fun: get_day_wise_report_row, merge:"Date"},
     "Service Wise Report": {fun: get_service_wise_report_row,
                             merge:"Service Name", abv_key:"Qty",
-                            sort_method=sortHelperByQty}
+                            sort_method:sortHelperByQty}
 }
+
+sort_key = "Sr No"
 
 non_summable_int_columns = ["Bill#", "Payment Split"]
 
 all_bills = []
+column_names = []
+sort_select = null
 
-function sortHelperByQty(a, b){
-    return sortHelperByKey("Qty")
+function add_option(selector_dd, option_value){
+    var option = document.createElement("option");
+    option.text = option_value;
+    selector_dd.add(option);
 }
 
-function sortHelperByKey(a, b, key_name) {
-  if (a[key_name] < b[key_name]) {
+function reverse_table(){
+    total_row = table_rows.pop()
+    table_rows = table_rows.reverse()
+    table_rows.push(total_row)
+    set_table_data(column_names, table_rows, true)
+}
+
+function sort_table(){
+    sort_key = $('#sortopt')[0].value
+    total_row = table_rows.pop()
+    table_rows.sort(sortHelperByKey)
+    table_rows.push(total_row)
+    set_table_data(column_names, table_rows, true)
+}
+
+function sortHelperByQty(a, b){
+    sort_key = "Qty"
+    return sortHelperByKey(a, b)
+}
+
+function sortHelperByKey(a, b) {
+  console.log(a, b)
+  if (a[sort_key] < b[sort_key]) {
     return -1;
   }
-  if (a[key_name] > b[key_name]) {
+  if (a[sort_key] > b[sort_key]) {
     return 1;
   }
   return 0;
@@ -65,10 +92,10 @@ function show_reports_div(){
 }
 
 function LoadReports(){
+    sort_select = $('#sortopt')[0]
+    report_select = $('#reportopt')[0]
     for(opt in ReportOptions){
-        var option = document.createElement("option");
-        option.text = opt;
-        $('#reportopt')[0].add(option);
+        add_option(report_select, opt)
     }
     $('#fromdt')[0].valueAsDate = new Date()
     $('#todt')[0].valueAsDate = new Date()
@@ -261,7 +288,6 @@ function show_reports(){
     max_date = to_date()
     get_rest_data_by_date(max_date, min_date, function(err, res){
         all_bills = []
-        column_names = []
         table_rows = []
         first_row = true
         selected_opt = selected_option()
@@ -272,8 +298,11 @@ function show_reports(){
             all_bills.push(structuredClone(bill))
             if(first_row)
                 column_names = method(null, first_row)
+                sort_select.innerHTML = ""
+                add_option(sort_select, "Sr No")
                 column_names.forEach((col_name) => {
                     total_row[col_name] = "-"
+                    add_option(sort_select, col_name)
                 })
             first_row = false
             table_row = method(bill)
@@ -321,6 +350,7 @@ function show_reports(){
         column_names = ["Sr No"].concat(column_names)
         set_table_data(column_names, table_rows, true)
         console.log(table_rows)
+        $("#sortdiv")[0].style.display = ""
     })
 
 }

@@ -26,6 +26,9 @@
     &nbsp; &nbsp; Report: <select id="reportopt"></select>
     &nbsp; &nbsp; <input type="button" id="reportbtn" value="Show Reports" onclick="show_reports()" />
     <br /><hr /><br />
+    <div id="sortdiv" style="display:none">Sort By: <select  id="sortopt" onchange="sort_table()"></select>
+    &nbsp; &nbsp; <input type="button" id="sortReverseBtn" value="Reverse Order" onclick="reverse_table()" />
+    </div> <br />
     <table id="reporttbl" class="dataframe"></table>
 </div>
 </body>
