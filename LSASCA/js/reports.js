@@ -1,12 +1,31 @@
 ReportOptions = {
-    "Employee Sales Report": {fun: get_employee_sale_row, merge:"Employee Name"},
+    "Employee Sales Report": {fun: get_employee_sale_row,
+                              merge:"Employee Name"},
     "Invoices": {fun: get_invoice_table_row},
     "Service Report": {fun: get_service_report_row},
     "Day wise Sales Report": {fun: get_day_wise_report_row, merge:"Date"},
-    "Service Wise Report": {fun: get_service_wise_report_row, merge:"Service Name", abv_key:"Qty"}
+    "Service Wise Report": {fun: get_service_wise_report_row,
+                            merge:"Service Name", abv_key:"Qty",
+                            sort_method=sortHelperByQty}
 }
 
+non_summable_int_columns = ["Bill#", "Payment Split"]
+
 all_bills = []
+
+function sortHelperByQty(a, b){
+    return sortHelperByKey("Qty")
+}
+
+function sortHelperByKey(a, b, key_name) {
+  if (a[key_name] < b[key_name]) {
+    return -1;
+  }
+  if (a[key_name] > b[key_name]) {
+    return 1;
+  }
+  return 0;
+}
 
 function employee_name(emp_id){
     emp_map = { "700946": "Raghu", "700947": "Mary", "700948": "Suresh", "700949": "Margarate", "700950": "Meenakshi", "700951": "Muskan",
@@ -197,7 +216,7 @@ function get_base_row(row, key_name){
     return base_row
 }
 
-function merge_rows(rows, key_name){
+function merge_rows(rows, key_name, sort_method){
     merged_rows = {}
     total_row = get_base_row(rows[0], key_name)
     total_row[key_name] = "Total"
@@ -218,6 +237,9 @@ function merge_rows(rows, key_name){
             if(key != key_name)
                 merged_rows[row_selector][key] = Number(merged_rows[row_selector][key].toFixed(2))
         merged_rows_array.push(merged_rows[row_selector])
+    }
+    if(sort_method != undefined){
+        merged_rows_array.sort(sort_method);
     }
     for(key in total_row)
         if(key != key_name)
@@ -263,10 +285,11 @@ function show_reports(){
         merge_key = ReportOptions[selected_opt].merge
         if(merge_key != undefined){
             abv_key = ReportOptions[selected_opt].abv_key
+            sort_method = ReportOptions[selected_opt].sort_method
             if(abv_key == undefined){
                 abv_key = "Bill Count"
             }
-            table_rows = merge_rows(table_rows, merge_key)
+            table_rows = merge_rows(table_rows, merge_key, sort_method)
             column_names.push("ABV")
             table_rows = add_abv(table_rows, "Net Sale", abv_key)
         }
@@ -274,7 +297,7 @@ function show_reports(){
         table_rows.forEach((trow) => {
             if(merge_key === undefined){
                 column_names.forEach((col_name) => {
-                    if(typeof(trow[col_name]) == "number" && col_name != "Bill#"){
+                    if(typeof(trow[col_name]) == "number" && !non_summable_int_columns.includes(col_name)){
                         if(total_row[col_name] == "-"){
                             total_row[col_name] = trow[col_name]
                         }
