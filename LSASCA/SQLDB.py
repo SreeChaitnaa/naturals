@@ -22,6 +22,9 @@ class SQLDB(object):
         query = "SELECT name FROM sys.tables"
         return [row["name"] for row in self.read_sql_query(query)]
 
+    def get_client_count(self):
+        return self.read_sql_query("select count(*) from dbo.client")[0][""]
+
     def get_all_tables_with_given_column(self, column_name):
         query = "SELECT tab.name as table_name " \
                 "FROM sys.tables as tab " \

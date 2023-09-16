@@ -15,6 +15,7 @@ if __name__ == "__main__":
         Utils.make_las_not_reachable()
         salon_db = SQLDB()
         rest_db = RestDB()
+        client_count = salon_db.get_client_count()
         Utils.take_backup()
         last_bill_number = int(rest_db.get_config(Strings.config_last_bill_no))
         last_bill_number_changed = False
@@ -28,6 +29,7 @@ if __name__ == "__main__":
             rest_db.set_config(Strings.config_last_bill_no, str(last_bill_number))
 
         while not os.path.exists(Strings.stop_file_path):
+            new_client_count = salon_db.get_client_count()
             new_bills = salon_db.get_new_bills(last_bill_number)
             last_bill_number_before_new_bills = last_bill_number
             if new_bills:
@@ -50,7 +52,9 @@ if __name__ == "__main__":
                 else:
                     Utils.take_backup(last_bill_number)
                     rest_db.set_config(Strings.config_last_bill_no, str(last_bill_number))
-            logging.debug("Waiting for 10sec for new bills")
+            elif new_client_count > client_count:
+                client_count = new_client_count
+                Utils.take_backup()
             time.sleep(10)
 
         logging.debug("Stop file found")
