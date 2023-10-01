@@ -35,6 +35,7 @@ class Strings(object):
     etc_hosts = "C:\\Windows\\System32\\drivers\\etc\\hosts"
     lasalon_urls = ['naturals.lasalon.in', 'owncloud.mousebizindia.com', 'vpn.lasalon.co.in']
     sql_back_process_name = 'SQLAutobackup.exe'
+    local_clients_file = 'C:\\inetpub\\wwwroot\\known_clients.json'
 
 
 class LSCAJSONEncoder(json.JSONEncoder):
@@ -218,3 +219,5 @@ class Utils(object):
             x = open(Strings.running_file_path, "w")
             x.write("Running")
             x.close()
+
+

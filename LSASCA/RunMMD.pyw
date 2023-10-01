@@ -55,6 +55,7 @@ if __name__ == "__main__":
             elif new_client_count > client_count:
                 client_count = new_client_count
                 Utils.take_backup()
+                salon_db.update_all_clients_in_db()
             time.sleep(10)
 
         logging.debug("Stop file found")

@@ -43,6 +43,15 @@ class SQLDB(object):
             results.append(dict(zip(columns, row)))
         return results
 
+    def update_all_clients_in_db(self):
+        query = "Select [HomePhone],FirstName from dbo.client"
+        all_clients = self.read_sql_query(query)
+        clients_dict = {}
+        for client in all_clients:
+            clients_dict[client["HomePhone"]] = client["FirstName"]
+        json.dump(clients_dict, open(Strings.local_clients_file, "w"))
+
+
     def get_new_bills(self, last_bill):
         query = "select {0} from {1} where {0} > {2}".format(Strings.ticket_id, Strings.ticket_table, last_bill)
         new_bill_numbers = [row[Strings.ticket_id] for row in self.read_sql_query(query)]
