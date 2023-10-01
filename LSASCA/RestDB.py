@@ -64,8 +64,9 @@ class RestDB(object):
 
     def add_bill(self, bill_num, bill_data):
         date_num = int(bill_data['Ticket'][0]['Created_Date'].strftime("%Y%m%d"))
+        phone_no = bill_data['Ticket'][0]['ClientID'][-10:]
         payload = {"bill_no": int(bill_num), "bill_data": json.dumps(bill_data, cls=LSCAJSONEncoder),
-                   "date_num": date_num, "is_mmd": Utils.is_mmd_bill(bill_data)}
+                   "date_num": date_num, "is_mmd": Utils.is_mmd_bill(bill_data), "phone": phone_no}
         self.do_request(payload, "POST")
 
 
