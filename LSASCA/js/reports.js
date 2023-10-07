@@ -282,7 +282,7 @@ function add_abv(table_rows, net_sale_key, bill_count_key){
     return table_rows
 }
 
-function show_bills_in_table(bills, table_name, selected_opt, show_total){
+function show_bills_in_table(bills, table_name, selected_opt, show_total, reverse_rows){
     all_bills = []
     table_rows = []
     first_row = true
@@ -321,6 +321,9 @@ function show_bills_in_table(bills, table_name, selected_opt, show_total){
         column_names.push("ABV")
         table_rows = add_abv(table_rows, "Net Sale", abv_key)
     }
+    if(reverse_rows){
+        table_rows = table_rows.reverse()
+    }
     row_index = 1
     table_rows.forEach((trow) => {
         if(merge_key === undefined){
@@ -357,7 +360,7 @@ function show_reports(){
     max_date = to_date()
     get_rest_data_by_date(max_date, min_date, function(err, res){
         selected_opt = selected_option()
-        show_bills_in_table(res, "reporttbl", selected_opt, true)
+        show_bills_in_table(res, "reporttbl", selected_opt, true, false)
         $("#sortdiv")[0].style.display = ""
     })
 
