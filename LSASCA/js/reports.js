@@ -27,7 +27,7 @@ function reverse_table(){
     total_row = table_rows.pop()
     table_rows = table_rows.reverse()
     table_rows.push(total_row)
-    set_table_data(column_names, table_rows, true)
+    set_table_data(column_names, table_rows, true, "reporttbl")
 }
 
 function sort_table(){
@@ -35,7 +35,7 @@ function sort_table(){
     total_row = table_rows.pop()
     table_rows.sort(sortHelperByKey)
     table_rows.push(total_row)
-    set_table_data(column_names, table_rows, true)
+    set_table_data(column_names, table_rows, true, "reporttbl")
 }
 
 function sortHelperByQty(a, b){
@@ -282,80 +282,88 @@ function add_abv(table_rows, net_sale_key, bill_count_key){
     return table_rows
 }
 
+function show_bills_in_table(bills, table_name, selected_opt, show_total){
+    all_bills = []
+    table_rows = []
+    first_row = true
+    total_row = {}
+    method = ReportOptions[selected_opt].fun
+    bills.forEach((value) => {
+        bill = JSON.parse(value.bill_data)
+        all_bills.push(structuredClone(bill))
+        if(first_row)
+            column_names = method(null, first_row)
+            if(sort_select != null){
+                sort_select.innerHTML = ""
+                add_option(sort_select, "Sr No")
+            }
+            column_names.forEach((col_name) => {
+                total_row[col_name] = "-"
+                if(sort_select != null){
+                    add_option(sort_select, col_name)
+                }
+            })
+        first_row = false
+        table_row = method(bill)
+        if(Array.isArray(table_row))
+            table_rows = table_rows.concat(table_row)
+        else
+            table_rows.push(table_row)
+    })
+    merge_key = ReportOptions[selected_opt].merge
+    if(merge_key != undefined){
+        abv_key = ReportOptions[selected_opt].abv_key
+        sort_method = ReportOptions[selected_opt].sort_method
+        if(abv_key == undefined){
+            abv_key = "Bill Count"
+        }
+        table_rows = merge_rows(table_rows, merge_key, sort_method)
+        column_names.push("ABV")
+        table_rows = add_abv(table_rows, "Net Sale", abv_key)
+    }
+    row_index = 1
+    table_rows.forEach((trow) => {
+        if(merge_key === undefined){
+            column_names.forEach((col_name) => {
+                if(typeof(trow[col_name]) == "number" && !non_summable_int_columns.includes(col_name)){
+                    if(total_row[col_name] == "-"){
+                        total_row[col_name] = trow[col_name]
+                    }
+                    else{
+                        total_row[col_name] += trow[col_name]
+                    }
+                }
+            })
+        }
+        trow["Sr No"] = row_index++
+    })
+    if(merge_key === undefined)
+    {
+        column_names.forEach((col_name) => {
+            if(typeof(total_row[col_name]) == "number"){
+                total_row[col_name] = Number(total_row[col_name].toFixed(2))
+            }
+        })
+        table_rows.push(total_row)
+    }
+    column_names = ["Sr No"].concat(column_names)
+    set_table_data(column_names, table_rows, show_total, table_name)
+    console.log(table_rows)
+}
+
 function show_reports(){
     initiate_db()
     min_date = from_date()
     max_date = to_date()
     get_rest_data_by_date(max_date, min_date, function(err, res){
-        all_bills = []
-        table_rows = []
-        first_row = true
         selected_opt = selected_option()
-        method = ReportOptions[selected_opt].fun
-        total_row = {}
-        res.forEach((value) => {
-            bill = JSON.parse(value.bill_data)
-            all_bills.push(structuredClone(bill))
-            if(first_row)
-                column_names = method(null, first_row)
-                sort_select.innerHTML = ""
-                add_option(sort_select, "Sr No")
-                column_names.forEach((col_name) => {
-                    total_row[col_name] = "-"
-                    add_option(sort_select, col_name)
-                })
-            first_row = false
-            table_row = method(bill)
-            if(Array.isArray(table_row))
-                table_rows = table_rows.concat(table_row)
-            else
-                table_rows.push(table_row)
-        })
-        merge_key = ReportOptions[selected_opt].merge
-        if(merge_key != undefined){
-            abv_key = ReportOptions[selected_opt].abv_key
-            sort_method = ReportOptions[selected_opt].sort_method
-            if(abv_key == undefined){
-                abv_key = "Bill Count"
-            }
-            table_rows = merge_rows(table_rows, merge_key, sort_method)
-            column_names.push("ABV")
-            table_rows = add_abv(table_rows, "Net Sale", abv_key)
-        }
-        row_index = 1
-        table_rows.forEach((trow) => {
-            if(merge_key === undefined){
-                column_names.forEach((col_name) => {
-                    if(typeof(trow[col_name]) == "number" && !non_summable_int_columns.includes(col_name)){
-                        if(total_row[col_name] == "-"){
-                            total_row[col_name] = trow[col_name]
-                        }
-                        else{
-                            total_row[col_name] += trow[col_name]
-                        }
-                    }
-                })
-            }
-            trow["Sr No"] = row_index++
-        })
-        if(merge_key === undefined)
-        {
-            column_names.forEach((col_name) => {
-                if(typeof(total_row[col_name]) == "number"){
-                    total_row[col_name] = Number(total_row[col_name].toFixed(2))
-                }
-            })
-            table_rows.push(total_row)
-        }
-        column_names = ["Sr No"].concat(column_names)
-        set_table_data(column_names, table_rows, true)
-        console.log(table_rows)
+        show_bills_in_table(res, "reporttbl", selected_opt, true)
         $("#sortdiv")[0].style.display = ""
     })
 
 }
-function set_table_data(cols, jsonData, last_row_is_total){
-    table = $('#reporttbl')[0]
+function set_table_data(cols, jsonData, last_row_is_total, table_name){
+    table = $('#'+table_name)[0]
     table.innerHTML = ""
 
     // Create the header element

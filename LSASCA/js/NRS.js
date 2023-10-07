@@ -23,4 +23,19 @@ function LoadNRS(){
     $('#CustomersBtn')[0].click()
 }
 
+function searchCustomer(){
+    phone_no = $('#ip_custSearchPhone')[0].value
+    get_customer_bills(phone_no, function(err, bills){
+        if(bills.length > 0){
+            show_bills_in_table(bills, 'customerHistoryTbl', "Service Report", true)
+            $('#customerHistoryTbl')[0].style.display = "block"
+            $('#customerNoBillsLabel')[0].style.display = "none"
+        }
+        else{
+            $('#customerHistoryTbl')[0].style.display = "none"
+            $('#customerNoBillsLabel')[0].style.display = "block"
+        }
+    })
+}
+
 console.log("NRS JS Loaded")
