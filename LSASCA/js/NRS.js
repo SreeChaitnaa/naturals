@@ -25,7 +25,7 @@ function LoadNRS(){
 
 function searchCustomer(){
     phone_no = $('#ip_custSearchPhone')[0].value
-    get_customer_bills(phone_no, function(err, bills){
+    get_customer_bills(phone_no.trim(), function(err, bills){
         if(bills.length > 0){
             show_bills_in_table(bills, 'customerHistoryTbl', "Service Report", true)
             $('#customerHistoryTbl')[0].style.display = "block"
