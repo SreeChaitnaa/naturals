@@ -33,9 +33,11 @@
 </div>
 
 <div id="Appointments" class="tabcontent">
-    Phone No: <input type="text" id="ip_apt_phone" /> &tbsp; &tbsp;
-    Name: <input type="text" id="ip_apt_name"> <br />
-    Date: <input type="datetime-local" id="fromdt">
+    Phone No: <input type="text" id="ip_apt_phone" onchange="check_customer()"/> &nbsp; &nbsp;
+    Date: <input type="datetime-local" id="fromdt" /> &nbsp; &nbsp;
+    Name: <input type="text" id="ip_apt_name" /> <br /><br />
+    Services: <input type="text" id="ip_apt_services" /> &nbsp; &nbsp;
+    ServiceProvider: <select id="ip_apt_sp"><option>Any</option></select> <br /><br />
     <table id="aptTable" style="display:none" class="dataframe"></table>
 </div>
 </body>

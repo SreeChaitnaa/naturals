@@ -19,8 +19,28 @@ function openTab(evt, tabName) {
   evt.currentTarget.className += " active";
 }
 
+customer_names = {}
+
+
 function LoadNRS(){
     $('#CustomersBtn')[0].click()
+    fetch('http://localhost/known_clients.json')
+        .then(response => response.json())
+        .then(data => { customer_names = data })
+
+    apt_sp_select = $('#ip_apt_sp')[0]
+    for(opt in emp_map){
+        add_option(apt_sp_select, emp_map[opt])
+    }
+}
+
+function check_customer(){
+    apt_phone = $('#ip_apt_phone')[0].value
+    if(apt_phone.length == 10){
+        if(customer_names[apt_phone] != undefined){
+            $('#ip_apt_name')[0].value = customer_names[apt_phone]
+        }
+    }
 }
 
 function searchCustomer(){
