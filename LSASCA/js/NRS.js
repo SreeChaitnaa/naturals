@@ -39,20 +39,3 @@ function searchCustomer(){
 }
 
 console.log("NRS JS Loaded")
-
-
-//idx = 720
-//function update_phone(){
-//        console.log(idx)
-//    if(last_results[idx].phone == undefined){
-//    client_id =JSON.parse(last_results[idx].bill_data).Ticket[0].ClientID
-//    last_results[idx].phone = client_id.substring(client_id.length-10)
-//        if(last_results[idx].phone != 0){
-//    last_results[idx].save()
-//        console.log("updating phone to "+last_results[idx].phone)
-//        }
-//    }
-//    idx++
-//}
-//x = setInterval(update_phone, 1000)
-//clearInterval(x)
