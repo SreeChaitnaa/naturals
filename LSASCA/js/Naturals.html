@@ -34,10 +34,11 @@
 
 <div id="Appointments" class="tabcontent">
     Phone No: <input type="text" id="ip_apt_phone" onchange="check_customer()"/> &nbsp; &nbsp;
-    Date: <input type="datetime-local" id="fromdt" /> &nbsp; &nbsp;
+    Date: <input type="datetime-local" id="ip_apt_date" /> &nbsp; &nbsp;
     Name: <input type="text" id="ip_apt_name" /> <br /><br />
     Services: <input type="text" id="ip_apt_services" /> &nbsp; &nbsp;
-    ServiceProvider: <select id="ip_apt_sp"><option>Any</option></select> <br /><br />
+    ServiceProvider: <select id="ip_apt_sp"><option>Any</option></select>  &nbsp; &nbsp;
+    <input type="button" value="Add Appointment" onclick="saveAppointment()"><br /><br />
     <table id="aptTable" style="display:none" class="dataframe"></table>
 </div>
 </body>

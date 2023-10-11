@@ -1,3 +1,6 @@
+all_appointments = []
+customer_names = {}
+
 function openTab(evt, tabName) {
   // Declare all variables
   var i, tabcontent, tablinks;
@@ -17,10 +20,15 @@ function openTab(evt, tabName) {
   // Show the current tab, and add an "active" class to the button that opened the tab
   document.getElementById(tabName).style.display = "block";
   evt.currentTarget.className += " active";
+
+  if(tabName == "Appointments"){
+    get_rest_data_by_date("-1", 0, function(err, appts){
+        console.log(err)
+        all_appointments = appts
+        show_appointments()
+    })
+  }
 }
-
-customer_names = {}
-
 
 function LoadNRS(){
     $('#CustomersBtn')[0].click()
@@ -40,6 +48,9 @@ function check_customer(){
         if(customer_names[apt_phone] != undefined){
             $('#ip_apt_name')[0].value = customer_names[apt_phone]
         }
+        else{
+            $('#ip_apt_name')[0].value = "NewCustomer"
+        }
     }
 }
 
@@ -56,6 +67,25 @@ function searchCustomer(){
             $('#customerNoBillsLabel')[0].style.display = "block"
         }
     })
+}
+
+function saveAppointment(){
+    initiate_db()
+    appointment_data = {
+        "Date" : $('#ip_apt_date')[0].value.split("T")[0].replace("-", "").replace("-", ""),
+        "AptTime" : $('#ip_apt_date')[0].value,
+        "Phone" : $('#ip_apt_phone')[0].value,
+        "Name" : $('#ip_apt_name')[0].value,
+        "Services" : $('#ip_apt_services')[0].value,
+        "SP" : $('#ip_apt_sp')[0].value,
+    }
+    new_apt = new db.appointments(appointment_data)
+    new_apt.save()
+    all_appointments.push(new_apt)
+    show_appointments()
+}
+
+function show_appointments(){
 }
 
 console.log("NRS JS Loaded")

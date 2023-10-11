@@ -6,6 +6,9 @@ ReportOptions = {
     "Day wise Sales Report": {fun: get_day_wise_report_row, merge:"Date"},
     "Service Wise Report": {fun: get_service_wise_report_row,
                             merge:"Service Name", abv_key:"Qty",
+                            sort_method:sortHelperByQty},
+    "Appointments": {fun: get_service_wise_report_row,
+                            merge:"Service Name", abv_key:"Qty",
                             sort_method:sortHelperByQty}
 }
 
