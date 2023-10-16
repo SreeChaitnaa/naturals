@@ -4,6 +4,7 @@ ReportOptions = {
     "Invoices": {fun: get_invoice_table_row},
     "Service Report": {fun: get_service_report_row},
     "Day wise Sales Report": {fun: get_day_wise_report_row, merge:"Date"},
+    "Day wise Sales Report 2": {fun: get_day_wise_report_row_2, merge:"Date"},
     "Service Wise Report": {fun: get_service_wise_report_row,
                             merge:"Service Name", abv_key:"Qty",
                             sort_method:sortHelperByQty},
@@ -151,6 +152,21 @@ function get_invoice_table_row(bill, return_columns=false){
     return row_data
 }
 
+
+function get_day_wise_report_row_2(bill, return_columns=false){
+    row_data = get_day_wise_report_row(bill, return_columns)
+    if(return_columns){
+        return row_data
+    }
+    if(bill["is_mmd"]){
+        row_data["Date"] = row_data["Date"] + "(SCA)"
+    }
+    else{
+        row_data["Date"] = row_data["Date"] + "(NRS)"
+    }
+    return row_data
+}
+
 function get_day_wise_report_row(bill, return_columns=false){
     if(return_columns){
         return ["Date", "Bill Count", "Services", "Net Sale", "Total"]
@@ -292,8 +308,27 @@ function show_bills_in_table(bills, table_name, selected_opt, show_total, revers
     first_row = true
     total_row = {}
     method = ReportOptions[selected_opt].fun
+    occurrences = {}
+    bills.sort(function(a,b) { return (a.bill_no - b.bill_no); })
     bills.forEach((value) => {
+        if(occurrences[value.bill_no] === undefined){
+            occurrences[value.bill_no] = 1
+        }
+        else{
+            occurrences[value.bill_no]++
+        }
+    })
+    last_index = bills.length - 1
+    bills.forEach((value, idx) => {
         bill = JSON.parse(value.bill_data)
+        bill["is_mmd"] = false
+        if(value.is_mmd){
+            bill["is_mmd"] = true
+            if(occurrences[value.bill_no] == 1){
+                if(idx != last_index)
+                    bill["is_mmd"] = false
+            }
+        }
         all_bills.push(structuredClone(bill))
         if(first_row)
             column_names = method(null, first_row)
