@@ -67,6 +67,9 @@ function set_last_values_and_call_callback(max_date, min_date, err, res, callbac
     last_max_date = max_date
     last_min_date = min_date
     last_error = err
+    res.sort(function(a,b) {
+            return (new Date(a._created) - new Date(b._created));
+    })
     last_results = res
     callback(err, res)
 }
@@ -160,12 +163,12 @@ function add_appointment(phone_number, cust_name, apt_date_time, services, smile
             }
         }
 
-        app_data = JSON.stringify({ 'phone_number': phone_number, 
-                                    'cust_name': cust_name, 
+        app_data = JSON.stringify({ 'phone_number': phone_number,
+                                    'cust_name': cust_name,
                                     'apt_date_time': apt_date_time,
-                                    'services': services, 
-                                    'smile_provider': smile_provider, 
-                                    'duration': duration, 
+                                    'services': services,
+                                    'smile_provider': smile_provider,
+                                    'duration': duration,
                                     'notes': notes
                     })
         date_numbers = apt_date_time.split(' ')[0].split("-")
