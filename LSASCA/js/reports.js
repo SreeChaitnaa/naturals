@@ -7,9 +7,7 @@ ReportOptions = {
     "Service Wise Report": {fun: get_service_wise_report_row,
                             merge:"Service Name", abv_key:"Qty",
                             sort_method:sortHelperByQty},
-    "Appointments": {fun: get_service_wise_report_row,
-                            merge:"Service Name", abv_key:"Qty",
-                            sort_method:sortHelperByQty},
+    "Appointments": {fun: get_appointments_row},
     "Salon wise Sales Report": {fun: get_salon_wise_report_row, merge:"Salon"},
     "Day wise Sales Report 2": {fun: get_day_wise_report_row_2, merge:"Date"}
 }
@@ -101,7 +99,9 @@ function LoadReports(){
     sort_select = $('#sortopt')[0]
     report_select = $('#reportopt')[0]
     for(opt in ReportOptions){
-        add_option(report_select, opt)
+        if(opt != "Appointments"){
+            add_option(report_select, opt)
+        }
     }
     $('#fromdt')[0].valueAsDate = new Date()
     $('#todt')[0].valueAsDate = new Date()
@@ -195,6 +195,19 @@ function get_day_wise_report_row(bill, return_columns=false){
     row_data["Services"] = bill.Ticket_Product_Details.length
     row_data["Net Sale"] = Number(bill.Ticket[0].Total_WithoutTax.toFixed(2))
     row_data["Total"] = Number(bill.Ticket[0].Total.toFixed(2))
+    return row_data
+}
+
+function get_appointments_row(appointment, return_columns=false){
+    if(return_columns){
+        return ["Date Time", "Phone", "Customer Name", "Services", "Service Provider"]
+    }
+    row_data = {}
+    row_data["Date Time"] = (new Date(appointment.AptTime)).toLocaleString()
+    row_data["Phone"] = appointment.Phone
+    row_data["Services"] = appointment.Services
+    row_data["Customer Name"] = appointment.Name
+    row_data["Service Provider"] = appointment.SP
     return row_data
 }
 
@@ -336,12 +349,17 @@ function show_bills_in_table(bills, table_name, selected_opt, show_total, revers
     })
     last_index = bills.length - 1
     bills.forEach((value, idx) => {
-        bill = JSON.parse(value.bill_data)
-        bill["is_mmd"] = false
-        if(value.is_mmd){
-            bill["is_mmd"] = true
-            if(occurrences[value.bill_no] == 1 && idx != last_index)
-                bill["is_mmd"] = false
+        if(selected_opt == "Appointments"){
+            bill = value
+        }
+        else{
+            bill = JSON.parse(value.bill_data)
+            bill["is_mmd"] = false
+            if(value.is_mmd){
+                bill["is_mmd"] = true
+                if(occurrences[value.bill_no] == 1 && idx != last_index)
+                    bill["is_mmd"] = false
+            }
         }
         all_bills.push(structuredClone(bill))
         if(first_row)
@@ -379,7 +397,7 @@ function show_bills_in_table(bills, table_name, selected_opt, show_total, revers
     }
     row_index = 1
     table_rows.forEach((trow) => {
-        if(merge_key === undefined){
+        if(merge_key === undefined && show_total){
             column_names.forEach((col_name) => {
                 if(typeof(trow[col_name]) == "number" && !non_summable_int_columns.includes(col_name)){
                     if(total_row[col_name] == "-"){
@@ -393,7 +411,7 @@ function show_bills_in_table(bills, table_name, selected_opt, show_total, revers
         }
         trow["Sr No"] = row_index++
     })
-    if(merge_key === undefined)
+    if(merge_key === undefined && show_total)
     {
         column_names.forEach((col_name) => {
             if(typeof(total_row[col_name]) == "number"){
@@ -404,10 +422,6 @@ function show_bills_in_table(bills, table_name, selected_opt, show_total, revers
     }
     column_names = ["Sr No"].concat(column_names)
     set_table_data(column_names, table_rows, show_total, table_name)
-//    if(selected_opt == "Invoices"){
-//        $('#sortopt')[0].value = "Time"
-//        sort_table()
-//    }
     console.log(table_rows)
 }
 
