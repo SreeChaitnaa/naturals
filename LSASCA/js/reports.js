@@ -326,7 +326,6 @@ function show_bills_in_table(bills, table_name, selected_opt, show_total, revers
     total_row = {}
     method = ReportOptions[selected_opt].fun
     occurrences = {}
-    bills.sort(function(a,b) { return (a.bill_no - b.bill_no); })
     bills.forEach((value) => {
         if(occurrences[value.bill_no] === undefined){
             occurrences[value.bill_no] = 1
@@ -405,10 +404,10 @@ function show_bills_in_table(bills, table_name, selected_opt, show_total, revers
     }
     column_names = ["Sr No"].concat(column_names)
     set_table_data(column_names, table_rows, show_total, table_name)
-    if(selected_opt == "Invoices"){
-        $('#sortopt')[0].value = "Time"
-        sort_table()
-    }
+//    if(selected_opt == "Invoices"){
+//        $('#sortopt')[0].value = "Time"
+//        sort_table()
+//    }
     console.log(table_rows)
 }
 
