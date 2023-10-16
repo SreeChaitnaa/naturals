@@ -93,6 +93,7 @@ function saveAppointment(){
 }
 
 function show_appointments(){
+    if(all_appointments.length == 0) { return }
     all_appointments.sort(function(a,b) {return (new Date(a.AptTime) - new Date(b.AptTime)); })
     show_bills_in_table(all_appointments, "aptTable", "Appointments", false, false)
 }
