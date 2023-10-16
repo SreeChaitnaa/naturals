@@ -2,16 +2,16 @@ ReportOptions = {
     "Employee Sales Report": {fun: get_employee_sale_row,
                               merge:"Employee Name"},
     "Invoices": {fun: get_invoice_table_row},
-    "Invoices 2": {fun: get_invoice_table_row_2},
     "Service Report": {fun: get_service_report_row},
     "Day wise Sales Report": {fun: get_day_wise_report_row, merge:"Date"},
-    "Day wise Sales Report 2": {fun: get_day_wise_report_row_2, merge:"Date"},
     "Service Wise Report": {fun: get_service_wise_report_row,
                             merge:"Service Name", abv_key:"Qty",
                             sort_method:sortHelperByQty},
     "Appointments": {fun: get_service_wise_report_row,
                             merge:"Service Name", abv_key:"Qty",
-                            sort_method:sortHelperByQty}
+                            sort_method:sortHelperByQty},
+    "Salon wise Sales Report": {fun: get_salon_wise_report_row, merge:"Salon"},
+    "Day wise Sales Report 2": {fun: get_day_wise_report_row_2, merge:"Date"}
 }
 
 emp_map = { "700946": "Raghu", "700947": "Mary", "700949": "Margarate", "700950": "Meenakshi", "700951": "Muskan",
@@ -126,24 +126,10 @@ function get_customer_details(client_id){
     return {"Phone": client_id.substring(client_id.length-10), "Name": client_id.substring(0, client_id.length-10)}
 }
 
-function get_invoice_table_row_2(bill, return_columns=false){
-    row_data = get_invoice_table_row(bill, return_columns)
-    if(return_columns){
-        row_data.push("NRS/SCA")
-        return row_data
-    }
-    if(bill["is_mmd"]){
-        row_data["NRS/SCA"] = "SCA"
-    }
-    else{
-        row_data["NRS/SCA"] = "NRS"
-    }
-    return row_data
-}
-
 function get_invoice_table_row(bill, return_columns=false){
     if(return_columns){
-        return ["Time", "Bill#", "Guest", "Phone", "Services", "Net Sale", "Total", "Payment Split", "Payment Mode"]
+        return ["Time", "Bill#", "Guest", "Phone", "Services", "Net Sale", "Total",
+                "Payment Split", "Payment Mode", "NRS/SCA"]
     }
     row_data = {}
     client_details = get_customer_details(bill.Ticket[0].ClientID)
@@ -165,9 +151,24 @@ function get_invoice_table_row(bill, return_columns=false){
         row_data["Payment Mode"] = pay_type1 + "/" + pay_type2
         row_data["Payment Split"] = row_data["Payment Split"] + "/" + tender_2
     }
+    row_data["NRS/SCA"] = bill["is_mmd"] ? "SCA" : "NRS"
     return row_data
 }
 
+function get_salon_wise_report_row(bill, return_columns=false){
+    if(return_columns){
+        return ["Salon", "Bill Count", "Services", "Net Sale", "Total"]
+    }
+    row_data = get_day_wise_report_row(bill, return_columns)
+    delete(row_data["Date"])
+    if(bill["is_mmd"]){
+        row_data["Salon"] = "Thanisandra" + "(SCA)"
+    }
+    else{
+        row_data["Salon"] = "Thanisandra" + "(NRS)"
+    }
+    return row_data
+}
 
 function get_day_wise_report_row_2(bill, return_columns=false){
     row_data = get_day_wise_report_row(bill, return_columns)
@@ -340,10 +341,8 @@ function show_bills_in_table(bills, table_name, selected_opt, show_total, revers
         bill["is_mmd"] = false
         if(value.is_mmd){
             bill["is_mmd"] = true
-            if(occurrences[value.bill_no] == 1){
-                if(idx != last_index)
-                    bill["is_mmd"] = false
-            }
+            if(occurrences[value.bill_no] == 1 && idx != last_index)
+                bill["is_mmd"] = false
         }
         all_bills.push(structuredClone(bill))
         if(first_row)
