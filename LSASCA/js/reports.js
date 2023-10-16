@@ -2,6 +2,7 @@ ReportOptions = {
     "Employee Sales Report": {fun: get_employee_sale_row,
                               merge:"Employee Name"},
     "Invoices": {fun: get_invoice_table_row},
+    "Invoices 2": {fun: get_invoice_table_row_2},
     "Service Report": {fun: get_service_report_row},
     "Day wise Sales Report": {fun: get_day_wise_report_row, merge:"Date"},
     "Day wise Sales Report 2": {fun: get_day_wise_report_row_2, merge:"Date"},
@@ -123,6 +124,21 @@ function get_pay_tender(mode, tender, change){
 
 function get_customer_details(client_id){
     return {"Phone": client_id.substring(client_id.length-10), "Name": client_id.substring(0, client_id.length-10)}
+}
+
+function get_invoice_table_row_2(bill, return_columns=false){
+    row_data = get_invoice_table_row(bill, return_columns)
+    if(return_columns){
+        row_data.push("NRS/SCA")
+        return row_data
+    }
+    if(bill["is_mmd"]){
+        row_data["NRS/SCA"] = "SCA"
+    }
+    else{
+        row_data["NRS/SCA"] = "NRS"
+    }
+    return row_data
 }
 
 function get_invoice_table_row(bill, return_columns=false){
