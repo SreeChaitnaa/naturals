@@ -213,8 +213,8 @@ function get_appointments_row(appointment, return_columns=false){
 
 function get_service_report_row(bill, return_columns=false){
     if(return_columns){
-        return ["Time", "Guest", "Phone", "Service Name", "Employee Name", "Price", "Qty", "Mem Discount",
-                "Other Discount", "Total Discount", "Net Price", "Total Price"]
+        return ["Time", "Service Name", "Guest", "Phone", "Employee Name", "Qty", "Price", "Other Discount",
+                "Mem Discount", "Total Discount", "Net Price", "Total Price"]
     }
     services = []
     client_details = get_customer_details(bill.Ticket[0].ClientID)
