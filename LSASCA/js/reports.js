@@ -1,15 +1,15 @@
 ReportOptions = {
-    "Employee Sales Report": {fun: get_employee_sale_row,
+    "EmployeeSales Report": {fun: get_employee_sale_row,
                               merge:"Employee Name"},
+    "SalonWise Sales Report": {fun: get_salon_wise_report_row, merge:"Salon"},
     "Invoices": {fun: get_invoice_table_row},
-    "Service Report": {fun: get_service_report_row},
-    "Day wise Sales Report": {fun: get_day_wise_report_row, merge:"Date"},
-    "Service Wise Report": {fun: get_service_wise_report_row,
+    "ServiceClass Report": {fun: get_service_report_row},
+    "DaywiseSales Split": {fun: get_day_wise_report_row_2, merge:"Date"},
+    "ServiceWise Report": {fun: get_service_wise_report_row,
                             merge:"Service Name", abv_key:"Qty",
                             sort_method:sortHelperByQty},
-    "Appointments": {fun: get_appointments_row},
-    "Salon wise Sales Report": {fun: get_salon_wise_report_row, merge:"Salon"},
-    "Day wise Sales Report 2": {fun: get_day_wise_report_row_2, merge:"Date"}
+    "DaywiseSales Report": {fun: get_day_wise_report_row, merge:"Date"},
+    "Appointments": {fun: get_appointments_row}
 }
 
 emp_map = { "700946": "Raghu", "700947": "Mary", "700949": "Margarate", "700950": "Meenakshi", "700951": "Muskan",
