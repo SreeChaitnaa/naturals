@@ -1,18 +1,18 @@
 ReportOptions = {
-    "EmployeeSales Report": {fun: get_employee_sale_row,
+    "EmployeeWise": {fun: get_employee_sale_row,
                               merge:"Employee Name"},
-    "SalonWise Sales Report": {fun: get_salon_wise_report_row, merge:"Salon"},
+    "SalonWise": {fun: get_salon_wise_report_row, merge:"Salon"},
     "Invoices": {fun: get_invoice_table_row},
-    "ServiceClass Report": {fun: get_service_report_row},
-    "DaywiseSales Split": {fun: get_day_wise_report_row_2, merge:"Date"},
-    "ServiceWise Report": {fun: get_service_wise_report_row,
+    "ServiceClass": {fun: get_service_report_row},
+    "DayWise Spl": {fun: get_day_wise_report_row_2, merge:"Date"},
+    "ServiceWise": {fun: get_service_wise_report_row,
                             merge:"Service Name", abv_key:"Qty",
                             sort_method:sortHelperByQty},
-    "DaywiseSales Report": {fun: get_day_wise_report_row, merge:"Date"},
+    "DayWise": {fun: get_day_wise_report_row, merge:"Date"},
     "Appointments": {fun: get_appointments_row}
 }
 
-emp_map = { "700946": "Raghu", "700947": "Mary", "700949": "Margarate", "700950": "Meenakshi", "700951": "Muskan",
+emp_map = { "700946": "Raghunath V", "700947": "Mary", "700949": "Margaret", "700950": "Meenakshi", "700951": "Muskan",
             "700952": "Tanu", "700953": "Shekar", "700954": "Nagaraju", "708446": "Ali", "708517": "Namitha"}
 
 sort_key = "Sr No"
