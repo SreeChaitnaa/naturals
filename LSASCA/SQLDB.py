@@ -32,7 +32,7 @@ class SQLDB(object):
                 "on tab.object_id = col.object_id " \
                 "LEFT JOIN sys.types as t " \
                 "on col.user_type_id = t.user_type_id " \
-                "WHERE col.name like '%{}%'".format(column_name.lower())
+                "WHERE col.name = '{}'".format(column_name.lower())
         return [row["table_name"] for row in self.read_sql_query(query)]
 
     def read_sql_query(self, query):
