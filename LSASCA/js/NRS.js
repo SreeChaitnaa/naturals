@@ -22,6 +22,7 @@ function openTab(evt, tabName) {
   evt.currentTarget.className += " active";
 
   if(tabName == "Appointments"){
+    initiate_db()
     get_rest_data_by_date("-1", 0, function(err, appts){
         console.log(err)
         all_appointments = appts
@@ -32,14 +33,20 @@ function openTab(evt, tabName) {
 
 function LoadNRS(){
     $('#CustomersBtn')[0].click()
-    fetch('http://localhost/known_clients.json')
-        .then(response => response.json())
-        .then(data => { customer_names = data })
+    try{
+        fetch('http://localhost/known_clients.json')
+            .then(response => response.json())
+            .then(data => { customer_names = data })
+    }
+    catch{
+        console.log("Exception to load Known Clients")
+    }
 
     apt_sp_select = $('#ip_apt_sp')[0]
     for(opt in emp_map){
         add_option(apt_sp_select, emp_map[opt])
     }
+    $('#ip_apt_date').val(moment().format('YYYY-MM-DDTHH:MM'))
 }
 
 function check_customer(){
@@ -86,6 +93,9 @@ function saveAppointment(){
 }
 
 function show_appointments(){
+    if(all_appointments.length == 0) { return }
+    all_appointments.sort(function(a,b) {return (new Date(a.AptTime) - new Date(b.AptTime)); })
+    show_bills_in_table(all_appointments, "aptTable", "Appointments", false, false)
 }
 
 console.log("NRS JS Loaded")

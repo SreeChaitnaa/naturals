@@ -1,18 +1,18 @@
 ReportOptions = {
-    "Employee Sales Report": {fun: get_employee_sale_row,
+    "EmployeeWise": {fun: get_employee_sale_row,
                               merge:"Employee Name"},
+    "SalonWise": {fun: get_salon_wise_report_row, merge:"Salon"},
     "Invoices": {fun: get_invoice_table_row},
-    "Service Report": {fun: get_service_report_row},
-    "Day wise Sales Report": {fun: get_day_wise_report_row, merge:"Date"},
-    "Service Wise Report": {fun: get_service_wise_report_row,
+    "ServiceClass": {fun: get_service_report_row},
+    "DayWise Spl": {fun: get_day_wise_report_row_2, merge:"Date"},
+    "ServiceWise": {fun: get_service_wise_report_row,
                             merge:"Service Name", abv_key:"Qty",
                             sort_method:sortHelperByQty},
-    "Appointments": {fun: get_service_wise_report_row,
-                            merge:"Service Name", abv_key:"Qty",
-                            sort_method:sortHelperByQty}
+    "DayWise": {fun: get_day_wise_report_row, merge:"Date"},
+    "Appointments": {fun: get_appointments_row}
 }
 
-emp_map = { "700946": "Raghu", "700947": "Mary", "700949": "Margarate", "700950": "Meenakshi", "700951": "Muskan",
+emp_map = { "700946": "Raghunath V", "700947": "Mary", "700949": "Margaret", "700950": "Meenakshi", "700951": "Muskan",
             "700952": "Tanu", "700953": "Shekar", "700954": "Nagaraju", "708446": "Ali", "708517": "Namitha"}
 
 sort_key = "Sr No"
@@ -99,7 +99,9 @@ function LoadReports(){
     sort_select = $('#sortopt')[0]
     report_select = $('#reportopt')[0]
     for(opt in ReportOptions){
-        add_option(report_select, opt)
+        if(opt != "Appointments"){
+            add_option(report_select, opt)
+        }
     }
     $('#fromdt')[0].valueAsDate = new Date()
     $('#todt')[0].valueAsDate = new Date()
@@ -126,7 +128,8 @@ function get_customer_details(client_id){
 
 function get_invoice_table_row(bill, return_columns=false){
     if(return_columns){
-        return ["Time", "Bill#", "Guest", "Phone", "Services", "Net Sale", "Total", "Payment Split", "Payment Mode"]
+        return ["Time", "Bill#", "Guest", "Phone", "Services", "Net Sale", "Total",
+                "Payment Split", "Payment Mode", "NRS/SCA"]
     }
     row_data = {}
     client_details = get_customer_details(bill.Ticket[0].ClientID)
@@ -148,6 +151,36 @@ function get_invoice_table_row(bill, return_columns=false){
         row_data["Payment Mode"] = pay_type1 + "/" + pay_type2
         row_data["Payment Split"] = row_data["Payment Split"] + "/" + tender_2
     }
+    row_data["NRS/SCA"] = bill["is_mmd"] ? "SCA" : "NRS"
+    return row_data
+}
+
+function get_salon_wise_report_row(bill, return_columns=false){
+    if(return_columns){
+        return ["Salon", "Bill Count", "Services", "Net Sale", "Total"]
+    }
+    row_data = get_day_wise_report_row(bill, return_columns)
+    delete(row_data["Date"])
+    if(bill["is_mmd"]){
+        row_data["Salon"] = "Thanisandra" + "(SCA)"
+    }
+    else{
+        row_data["Salon"] = "Thanisandra" + "(NRS)"
+    }
+    return row_data
+}
+
+function get_day_wise_report_row_2(bill, return_columns=false){
+    row_data = get_day_wise_report_row(bill, return_columns)
+    if(return_columns){
+        return row_data
+    }
+    if(bill["is_mmd"]){
+        row_data["Date"] = row_data["Date"] + "(SCA)"
+    }
+    else{
+        row_data["Date"] = row_data["Date"] + "(NRS)"
+    }
     return row_data
 }
 
@@ -165,10 +198,23 @@ function get_day_wise_report_row(bill, return_columns=false){
     return row_data
 }
 
+function get_appointments_row(appointment, return_columns=false){
+    if(return_columns){
+        return ["Date Time", "Phone", "Customer Name", "Services", "Service Provider"]
+    }
+    row_data = {}
+    row_data["Date Time"] = (new Date(appointment.AptTime)).toLocaleString()
+    row_data["Phone"] = appointment.Phone
+    row_data["Services"] = appointment.Services
+    row_data["Customer Name"] = appointment.Name
+    row_data["Service Provider"] = appointment.SP
+    return row_data
+}
+
 function get_service_report_row(bill, return_columns=false){
     if(return_columns){
-        return ["Time", "Guest", "Phone", "Service Name", "Employee Name", "Price", "Qty", "Mem Discount",
-                "Other Discount", "Total Discount", "Net Price", "Total Price"]
+        return ["Time", "Service Name", "Guest", "Phone", "Employee Name", "Qty", "Price", "Other Discount",
+                "Mem Discount", "Total Discount", "Net Price", "Total Price"]
     }
     services = []
     client_details = get_customer_details(bill.Ticket[0].ClientID)
@@ -292,8 +338,29 @@ function show_bills_in_table(bills, table_name, selected_opt, show_total, revers
     first_row = true
     total_row = {}
     method = ReportOptions[selected_opt].fun
+    occurrences = {}
     bills.forEach((value) => {
-        bill = JSON.parse(value.bill_data)
+        if(occurrences[value.bill_no] === undefined){
+            occurrences[value.bill_no] = 1
+        }
+        else{
+            occurrences[value.bill_no]++
+        }
+    })
+    last_index = bills.length - 1
+    bills.forEach((value, idx) => {
+        if(selected_opt == "Appointments"){
+            bill = value
+        }
+        else{
+            bill = JSON.parse(value.bill_data)
+            bill["is_mmd"] = false
+            if(value.is_mmd){
+                bill["is_mmd"] = true
+                if(occurrences[value.bill_no] == 1 && idx != last_index)
+                    bill["is_mmd"] = false
+            }
+        }
         all_bills.push(structuredClone(bill))
         if(first_row)
             column_names = method(null, first_row)
@@ -330,7 +397,7 @@ function show_bills_in_table(bills, table_name, selected_opt, show_total, revers
     }
     row_index = 1
     table_rows.forEach((trow) => {
-        if(merge_key === undefined){
+        if(merge_key === undefined && show_total){
             column_names.forEach((col_name) => {
                 if(typeof(trow[col_name]) == "number" && !non_summable_int_columns.includes(col_name)){
                     if(total_row[col_name] == "-"){
@@ -344,7 +411,7 @@ function show_bills_in_table(bills, table_name, selected_opt, show_total, revers
         }
         trow["Sr No"] = row_index++
     })
-    if(merge_key === undefined)
+    if(merge_key === undefined && show_total)
     {
         column_names.forEach((col_name) => {
             if(typeof(total_row[col_name]) == "number"){
