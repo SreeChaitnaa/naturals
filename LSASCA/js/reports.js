@@ -142,7 +142,12 @@ function get_invoice_table_row(bill, return_columns=false){
     row_data["Time"] = bill.Ticket[0].TimeMark.split(".")[0]
     row_data["Total"] = bill.Ticket[0].Total
     // DiscRS
-    row_data["Discount"] = bill.TblDiscDetails[0].DiscRS
+    if(bill.TblDiscDetails != undefined){
+        row_data["Discount"] = bill.TblDiscDetails[0].DiscRS
+    }
+    else {
+        row_data["Discount"] = "0"
+    }
     pay_type1 = get_payment_type(ticket_details.PayType1)
     row_data["Payment Mode"] = pay_type1
     row_data["Payment Split"] = get_pay_tender(pay_type1, ticket_details.Tender1, ticket_details.ChangeAmt)
