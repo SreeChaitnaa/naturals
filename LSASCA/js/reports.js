@@ -128,7 +128,7 @@ function get_customer_details(client_id){
 
 function get_invoice_table_row(bill, return_columns=false){
     if(return_columns){
-        return ["Time", "Bill#", "Guest", "Phone", "Services", "Net Sale", "Total",
+        return ["Time", "Bill#", "Guest", "Phone", "Services", "Net Sale", "Total", "Discount",
                 "Payment Split", "Payment Mode", "NRS/SCA"]
     }
     row_data = {}
@@ -141,6 +141,8 @@ function get_invoice_table_row(bill, return_columns=false){
     row_data["Net Sale"] = bill.Ticket[0].Total_WithoutTax
     row_data["Time"] = bill.Ticket[0].TimeMark.split(".")[0]
     row_data["Total"] = bill.Ticket[0].Total
+    // DiscRS
+    row_data["Discount"] = bill.TblDiscDetails[0].DiscRS
     pay_type1 = get_payment_type(ticket_details.PayType1)
     row_data["Payment Mode"] = pay_type1
     row_data["Payment Split"] = get_pay_tender(pay_type1, ticket_details.Tender1, ticket_details.ChangeAmt)
