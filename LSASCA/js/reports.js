@@ -128,8 +128,8 @@ function get_customer_details(client_id){
 
 function get_invoice_table_row(bill, return_columns=false){
     if(return_columns){
-        return ["Time", "Bill#", "Guest", "Phone", "Services", "Net Sale", "Total", "Discount",
-                "Payment Split", "Payment Mode", "NRS/SCA"]
+        return ["Time", "Bill#", "Guest", "Phone", "Services", "Net Sale", "Total",
+                "Payment Split", "Payment Mode", "NRS/SCA", "Other Discount"]
     }
     row_data = {}
     client_details = get_customer_details(bill.Ticket[0].ClientID)
@@ -141,12 +141,10 @@ function get_invoice_table_row(bill, return_columns=false){
     row_data["Net Sale"] = bill.Ticket[0].Total_WithoutTax
     row_data["Time"] = bill.Ticket[0].TimeMark.split(".")[0]
     row_data["Total"] = bill.Ticket[0].Total
-    // DiscRS
+    // DiscRS, Mem_Disc
+    discount = 0
     if(bill.TblDiscDetails != undefined){
-        row_data["Discount"] = bill.TblDiscDetails[0].DiscRS
-    }
-    else {
-        row_data["Discount"] = "0"
+        discount = bill.TblDiscDetails[0].DiscRS
     }
     pay_type1 = get_payment_type(ticket_details.PayType1)
     row_data["Payment Mode"] = pay_type1
@@ -159,6 +157,7 @@ function get_invoice_table_row(bill, return_columns=false){
         row_data["Payment Split"] = row_data["Payment Split"] + "/" + tender_2
     }
     row_data["NRS/SCA"] = bill["is_mmd"] ? "SCA" : "NRS"
+    row_data["Other Discount"] = discount
     return row_data
 }
 
