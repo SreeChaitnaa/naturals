@@ -1,15 +1,19 @@
 var db = null
+var c22b_db = null
 last_min_date = null
 last_max_date = null
 last_results = []
 last_error = null
 loading_db = false
-restdb_key = "64f33b986888542efc0bfdfa"
+restdb_key = "63c50bd5969f06502871af1d"
+restdb_c22b_key = "64f33b986888542efc0bfdfa"
 
 function initiate_db(){
     if(db == null && !loading_db){
         loading_db = true
-        db = new restdb_c22b(restdb_key)
+        db = new restdb(restdb_key)
+        // C22 DB (Aug-2023 to Jan-6th Half)
+        c22b_db = new restdb_c22b(restdb_c22b_key)
         loading_db = false
     }
 }
@@ -72,9 +76,27 @@ function set_last_values_and_call_callback(max_date, min_date, err, res, callbac
     callback(err, res)
 }
 
-function get_customer_bills(cust_phone, callback){
+function get_bills_from_all_dbs(query, q_params, callback){
     initiate_db()
-    db.bills.find({"phone":cust_phone},[], callback)
+    db.bills.find(query, q_params, function(err, res){
+        if(err != null){
+            callback(err, res)
+            return
+        }
+        c22b_db.bills.find(query, q_params, function(err_c22, res_c22){
+            if(err_c22 != null){
+                callback(err_c22, res_c22)
+                return
+            }
+            callback(null, res.concat(res_c22))
+        })
+    })
+}
+
+function get_customer_bills(cust_phone, callback){
+    get_bills_from_all_dbs({"phone":cust_phone},[], callback)
+//    initiate_db()
+//    db.bills.find({"phone":cust_phone},[], callback)
 }
 
 function get_rest_data_by_date(max_date, min_date, callback){
@@ -106,7 +128,8 @@ function get_rest_data_by_date(max_date, min_date, callback){
         })
     }
     else{
-        db.bills.find({'date_num':{"$bt": [max_date, min_date]}},[],function(err, res){
+        get_bills_from_all_dbs({'date_num':{"$bt": [max_date, min_date]}},[],function(err, res){
+//        db.bills.find({'date_num':{"$bt": [max_date, min_date]}},[],function(err, res){
             if(err != null){
                 set_last_values_and_call_callback(max_date, min_date, err, null, callback)
             }
