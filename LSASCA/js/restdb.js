@@ -9,7 +9,7 @@ restdb_key = "64f33b986888542efc0bfdfa"
 function initiate_db(){
     if(db == null && !loading_db){
         loading_db = true
-        db = new restdb(restdb_key)
+        db = new restdb_c22b(restdb_key)
         loading_db = false
     }
 }
