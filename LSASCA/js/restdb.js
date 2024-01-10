@@ -1,5 +1,7 @@
 var db = null
 var c22b_db = null
+var dbs_to_check = []
+var dbs_all_bills = []
 last_min_date = null
 last_max_date = null
 last_results = []
@@ -76,27 +78,43 @@ function set_last_values_and_call_callback(max_date, min_date, err, res, callbac
     callback(err, res)
 }
 
+function get_bills_from_needed_dbs(query, q_params, callback){
+    current_db = dbs_to_check.pop()
+    if(current_db == null){
+        callback(null, dbs_all_bills)
+        return
+    }
+    current_db.bills.find(query, q_params, function(err, res){
+        if(err == null){
+            dbs_all_bills.push(...res)
+            get_bills_from_needed_dbs(query, q_params, callback)
+        }
+        else{
+            console.log(err)
+            callback(err, [])
+        }
+    })
+}
+
 function get_bills_from_all_dbs(query, q_params, callback){
     initiate_db()
-    db.bills.find(query, q_params, function(err, res){
-        if(err != null){
-            callback(err, res)
-            return
-        }
-        c22b_db.bills.find(query, q_params, function(err_c22, res_c22){
-            if(err_c22 != null){
-                callback(err_c22, res_c22)
-                return
-            }
-            callback(null, res.concat(res_c22))
-        })
-    })
+    dbs_to_check.length = 0
+    dbs_all_bills.length = 0
+    if(query['date_num'] == null){
+        dbs_to_check.push(db)
+        dbs_to_check.push(c22b_db)
+    }
+    if(query['date_num']["$bt"][1] < "20240107"){
+        dbs_to_check.push(c22b_db)
+    }
+    if(query['date_num']["$bt"][0] > "20240105"){
+        dbs_to_check.push(db)
+    }
+    get_bills_from_needed_dbs(query, q_params, callback)
 }
 
 function get_customer_bills(cust_phone, callback){
     get_bills_from_all_dbs({"phone":cust_phone},[], callback)
-//    initiate_db()
-//    db.bills.find({"phone":cust_phone},[], callback)
 }
 
 function get_rest_data_by_date(max_date, min_date, callback){
@@ -129,7 +147,6 @@ function get_rest_data_by_date(max_date, min_date, callback){
     }
     else{
         get_bills_from_all_dbs({'date_num':{"$bt": [max_date, min_date]}},[],function(err, res){
-//        db.bills.find({'date_num':{"$bt": [max_date, min_date]}},[],function(err, res){
             if(err != null){
                 set_last_values_and_call_callback(max_date, min_date, err, null, callback)
             }
