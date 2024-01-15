@@ -104,11 +104,13 @@ function get_bills_from_all_dbs(query, q_params, callback){
         dbs_to_check.push(db)
         dbs_to_check.push(c22b_db)
     }
-    if(query['date_num']["$bt"][1] < "20240107"){
-        dbs_to_check.push(c22b_db)
-    }
-    if(query['date_num']["$bt"][0] > "20240105"){
-        dbs_to_check.push(db)
+    else{
+        if(query['date_num']["$bt"][1] < "20240107"){
+            dbs_to_check.push(c22b_db)
+        }
+        if(query['date_num']["$bt"][0] > "20240105"){
+            dbs_to_check.push(db)
+        }
     }
     get_bills_from_needed_dbs(query, q_params, callback)
 }
