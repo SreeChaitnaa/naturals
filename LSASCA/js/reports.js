@@ -440,7 +440,7 @@ function show_reports(){
     get_rest_data_by_date(max_date, min_date, function(err, res){
         show_bills_in_table(res, "reporttbl", selected_opt, true, false)
         $("#sortdiv")[0].style.display = ""
-        $('#reportbtn')[0].disabled = true
+        $('#reportbtn')[0].disabled = false
     })
 
 }
