@@ -13,7 +13,7 @@ ReportOptions = {
 }
 
 emp_map = { "700946": "Raghunath V", "700947": "Mary", "700949": "Margaret", "700950": "Meenakshi", "700951": "Muskan",
-            "700952": "Tanu", "700953": "Shekar", "700954": "Nagaraju", "708446": "Ali", "708517": "Namitha"}
+            "700952": "Tanu", "700953": "Irshad", "700954": "Nagaraju", "708446": "Ali", "708517": "Namitha"}
 
 sort_key = "Sr No"
 
@@ -436,9 +436,11 @@ function show_reports(){
     min_date = from_date()
     max_date = to_date()
     selected_opt = selected_option()
+    $('#reportbtn')[0].disabled = true
     get_rest_data_by_date(max_date, min_date, function(err, res){
         show_bills_in_table(res, "reporttbl", selected_opt, true, false)
         $("#sortdiv")[0].style.display = ""
+        $('#reportbtn')[0].disabled = false
     })
 
 }
