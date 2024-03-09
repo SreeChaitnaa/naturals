@@ -3,6 +3,7 @@ import datetime
 import json
 import logging
 import os
+import random
 import shutil
 import sys
 import time
@@ -62,6 +63,13 @@ class Utils(object):
     def is_mmd_bill(bill_data):
         if Strings.discount_table in bill_data:
             return Strings.mmd_selector in bill_data[Strings.discount_table][0][Strings.comments].lower()
+        return False
+
+    @staticmethod
+    def print_cpn(bill_data):
+        if Strings.discount_table in bill_data:
+            disc_comment = bill_data[Strings.discount_table][0][Strings.comments].lower()
+            return "plat" in disc_comment or "cpn" in disc_comment
         return False
 
     @staticmethod
@@ -219,5 +227,30 @@ class Utils(object):
             x = open(Strings.running_file_path, "w")
             x.write("Running")
             x.close()
+
+    @staticmethod
+    def generate_discount(bill_data):
+        phone_no = bill_data['Ticket'][0]['ClientID'][-10:]
+        bill_value = int(bill_data['Ticket'][0]['Total']/1.18)
+        bill_value = max(750, bill_value + random.randint(90, 160))
+        discount = random.randint(5, 15)
+        cpn_name = "Flat {0}% discount on {1} or above".format(discount, bill_value)
+        message = ["Naturals Thanisandra", "-----------------",
+                   "Phone number - ", phone_no, "-----------------",
+                   "Coupon - ", cpn_name, "", "Valid till - ",
+                   str((datetime.date.today() + datetime.timedelta(days=60))),
+                   "-----------------", "Can't be clubbed with other discounts or coupons",
+                   "-----------------"]
+        message = "\n".join(message)
+        fpath = "C:\\Users\\user\\AppData\\Local\\Temp\\RandDiscount.txt"
+        try:
+            os.remove(fpath)
+        except:
+            pass
+        fd = open(fpath, "w")
+        fd.write(message)
+        fd.close()
+        os.startfile(fpath, "print")
+
 
 

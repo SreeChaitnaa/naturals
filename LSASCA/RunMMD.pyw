@@ -33,6 +33,9 @@ if __name__ == "__main__":
             new_bills = salon_db.get_new_bills(last_bill_number)
             last_bill_number_before_new_bills = last_bill_number
             if new_bills:
+                for bill_num, bill_data in new_bills.items():
+                    if Utils.print_cpn(bill_data):
+                        Utils.generate_discount(bill_data)
                 logging.debug("Sleeping 10Sec after finding new bill")
                 time.sleep(10)
                 is_mmd_bill = False
