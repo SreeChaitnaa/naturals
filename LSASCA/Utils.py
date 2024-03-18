@@ -233,7 +233,7 @@ class Utils(object):
         phone_no = bill_data['Ticket'][0]['ClientID'][-10:]
         bill_value = int(bill_data['Ticket'][0]['Total']/1.18)
         bill_value = max(750, bill_value + random.randint(90, 160))
-        discount = random.randint(5, 15)
+        discount = random.randint(12, 18)
         cpn_name = "Flat {0}% discount on {1} or above".format(discount, bill_value)
         message = ["Naturals Thanisandra", "-----------------",
                    "Phone number - ", phone_no, "-----------------",
