@@ -82,7 +82,7 @@ function selected_option(){
 }
 
 function login(){
-    if($('#ip_pwd')[0].value == "929496"){
+    if($('#ip_pwd')[0].value == "929495"){
         show_reports_div()
     }
     else{
