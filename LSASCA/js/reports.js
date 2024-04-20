@@ -12,9 +12,22 @@ ReportOptions = {
     "Appointments": {fun: get_appointments_row}
 }
 
-emp_map = { "700946": "Raghunath V", "700947": "Mary", "700949": "Margaret", "700950": "Meenakshi", "700951": "Muskan",
-            "700952": "Tanu", "700953": "Irshad", "700954": "Nagaraju", "708446": "Ali", "708517": "Namitha",
-            "210810748": "Shalini", "210810747": "Kavya", "210810746": "Reeta", "210811466": "Sneha"}
+emp_map = { "700946": "Raghunath V",
+            "700947": "Mary",
+            "700949": "Margaret",
+            "700950": "Meenakshi",
+            "700951": "Muskan",
+            "700952": "Tanu",
+            "700953": "Irshad",
+            "700954": "Nagaraju",
+            "708446": "Ali",
+            "708517": "Namitha",
+            "210810748": "Shalini",
+            "210810747": "Kavya",
+            "210810746": "Reeta",
+            "210811466": "Sneha",
+            "210811678": "Komathi"
+            }
 
 sort_key = "Sr No"
 
