@@ -3,6 +3,7 @@ ReportOptions = {
                               merge:"Employee Name"},
     "SalonWise": {fun: get_salon_wise_report_row, merge:"Salon"},
     "Invoices": {fun: get_invoice_table_row},
+    "Invoices2": {fun: get_invoice2_table_row},
     "ServiceClass": {fun: get_service_report_row},
     "DayWise Spl": {fun: get_day_wise_report_row_2, merge:"Date"},
     "ServiceWise": {fun: get_service_wise_report_row,
@@ -113,7 +114,7 @@ function LoadReports(){
     sort_select = $('#sortopt')[0]
     report_select = $('#reportopt')[0]
     for(opt in ReportOptions){
-        if(opt != "Appointments"){
+        if(opt != "Appointments" && opt != "Invoices2"){
             add_option(report_select, opt)
         }
     }
@@ -140,10 +141,18 @@ function get_customer_details(client_id){
     return {"Phone": client_id.substring(client_id.length-10), "Name": client_id.substring(0, client_id.length-10)}
 }
 
+function get_invoice2_table_row(bill, return_columns=false){
+    resp = get_invoice_table_row(bill, return_columns)
+    if(return_columns){
+        resp.pop()
+    }
+    return resp
+}
+
 function get_invoice_table_row(bill, return_columns=false){
     if(return_columns){
         return ["Time", "Bill#", "Guest", "Phone", "Services", "Net Sale", "Total",
-                "Payment Split", "Payment Mode", "NRS/SCA", "Other Discount"]
+                "Payment Split", "Payment Mode", "Other Discount", "NRS/SCA"]
     }
     row_data = {}
     client_details = get_customer_details(bill.Ticket[0].ClientID)

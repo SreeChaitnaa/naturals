@@ -9,6 +9,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
     <script src="https://momentjs.com/downloads/moment.min.js"></script>
     <script src="./restdb.js"></script>
+    <script src="./common.js"></script>
     <script src="./reports.js"></script>
     <script src="./NRS.js"></script>
     <link rel="stylesheet" href="styles.css">
@@ -17,8 +18,9 @@
 <h2>Naturals Thanisandra</h2>
 <div class="tab">
   <button id="CustomersBtn" class="tablinks" onclick="openTab(event, 'Customers')">Customers</button>
-  <!--button class="tablinks" onclick="openTab(event, 'Bills')">Product Bills</button>
-  <button class="tablinks" onclick="openTab(event, 'Appointments')">Appointments</button>-->
+  <button class="tablinks" onclick="openTab(event, 'Bills')">Bills</button>
+  <button class="tablinks" onclick="openTab(event, 'ProductBilling')">Product Billing</button>
+  <!--button class="tablinks" onclick="openTab(event, 'Appointments')">Appointments</button>-->
 </div>
 
 <!-- Tab content -->
@@ -30,6 +32,14 @@
 </div>
 
 <div id="Bills" class="tabcontent">
+    Phone No: <input type="text" id="ip_billSearchPhone" />
+    Bill No: <input type="text" id="ip_billSearch" />
+    <input type="button" value="Search" onclick="searchBill()"> <br /><hr />
+    <table id="billTbl" style="display:none" class="dataframe"></table>
+    <label id="NoBillsLabel" style="display:none">No Bill found</label>
+</div>
+
+<div id="ProductBilling" class="tabcontent">
   <h3>Product Bills</h3>
   <p>Product Billing here</p>
 </div>

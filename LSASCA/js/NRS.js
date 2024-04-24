@@ -76,6 +76,22 @@ function searchCustomer(){
     })
 }
 
+function searchBill(){
+    phone_no = $('#ip_billSearchPhone')[0].value
+    bill_no = $('#ip_billSearch')[0].value
+    get_bills_by_id(Number(bill_no.trim()), phone_no, function(err, bills){
+        if(bills.length > 0){
+            show_bills_in_table(bills, 'billTbl', "Invoices2", false)
+            $('#billTbl')[0].style.display = "block"
+            $('#NoBillsLabel')[0].style.display = "none"
+        }
+        else{
+            $('#billTbl')[0].style.display = "none"
+            $('#NoBillsLabel')[0].style.display = "block"
+        }
+    })
+}
+
 function saveAppointment(){
     initiate_db()
     appointment_data = {

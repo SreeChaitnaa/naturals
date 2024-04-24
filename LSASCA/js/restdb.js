@@ -119,6 +119,10 @@ function get_customer_bills(cust_phone, callback){
     get_bills_from_all_dbs({"phone":cust_phone},[], callback)
 }
 
+function get_bills_by_id(bill_id, cust_phone, callback){
+    get_bills_from_all_dbs({"bill_no":bill_id, "phone":cust_phone},[], callback)
+}
+
 function get_rest_data_by_date(max_date, min_date, callback){
     if(max_date == last_max_date && min_date == last_min_date){
         callback(last_error, last_results);
