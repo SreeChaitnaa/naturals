@@ -110,7 +110,7 @@ function get_bills_from_all_dbs(query, q_params, callback){
                 dbs_to_check.push(dbEntry.db)
             }
         }
-    }
+    })
     get_bills_from_needed_dbs(query, q_params, callback)
 }
 
