@@ -1,5 +1,4 @@
-var db = null
-var c22b_db = null
+var dbs = []
 var dbs_to_check = []
 var dbs_all_bills = []
 last_min_date = null
@@ -7,15 +6,17 @@ last_max_date = null
 last_results = []
 last_error = null
 loading_db = false
-restdb_key = "63c50bd5969f06502871af1d"
-restdb_c22b_key = "64f33b986888542efc0bfdfa"
 
 function initiate_db(){
-    if(db == null && !loading_db){
+    if(dbs == [] && !loading_db){
         loading_db = true
-        db = new restdb(restdb_key)
-        // C22 DB (Aug-2023 to Jan-6th Half)
-        c22b_db = new restdb_c22b(restdb_c22b_key)
+
+        dbs = [
+                {"db": new restdb("662de2879dbf3549ad8faf3a"),         "min_date":"20240427", "max_date": "30000000"},
+                {"db": new restdb_560a("63c50bd5969f06502871af1d"),    "min_date":"20240105", "max_date": "20240429"},
+                {"db": new restdb_c22b("64f33b986888542efc0bfdfa"),    "min_date":"10000000", "max_date": "20240107"}
+              ]
+
         loading_db = false
     }
 }
@@ -100,16 +101,17 @@ function get_bills_from_all_dbs(query, q_params, callback){
     initiate_db()
     dbs_to_check.length = 0
     dbs_all_bills.length = 0
-    if(query['date_num'] == null){
-        dbs_to_check.push(db)
-        dbs_to_check.push(c22b_db)
-    }
-    else{
-        if(query['date_num']["$bt"][1] < "20240107"){
-            dbs_to_check.push(c22b_db)
+    dbs.forEach((dbEntry) => {
+        if(query['date_num'] == null){
+            dbs_to_check.push(dbEntry.db)
         }
-        if(query['date_num']["$bt"][0] > "20240105"){
-            dbs_to_check.push(db)
+        else{
+            if(query['date_num']["$bt"][0] > dbEntry.min_date) && query['date_num']["$bt"][0] < dbEntry.max_date){
+                dbs_to_check.push(dbEntry.db)
+            }
+            if(query['date_num']["$bt"][0] < dbEntry.min_date) && query['date_num']["$bt"][1] > dbEntry.min_date){
+                dbs_to_check.push(dbEntry.db)
+            }
         }
     }
     get_bills_from_needed_dbs(query, q_params, callback)
