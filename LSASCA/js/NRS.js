@@ -92,7 +92,7 @@ function searchBill(){
             $('#billTbl')[0].style.display = "none"
             $('#NoBillsLabel')[0].style.display = "block"
         }
-        $('#BtnSearchBill')[0].disabled = true
+        $('#BtnSearchBill')[0].disabled = false
     })
 }
 
