@@ -56,20 +56,64 @@
     <table id="aptTable" class="dataframe"></table>
 </div>
 
-<div id="print_div" style="margin:auto; width:300px; text-align:center; line-height: 1.5">
-    <table>
-        <tr>
-            <td>
-                <br /><br />
-                <label id="lblLocation"></label>NATURALS @ THANISANDRA<br />
-                SreeChaitnaa Associates <br />
-                <label id="lblAddr1"></label>85/3, 1st Floor,<br />
-                <label id="lblAddr2"></label>King Space Meadow Apartments,<br />
-                <label id="lblAddr3"></label>THANISANDRA<br />
-                <hr />
-            </td>
-        </tr>
-    </table>
+<div id="print_div" style="margin:auto; width:280px; line-height: 1.2;">
+    <br /><br />
+    <div style="text-align:center; font-family:verdana">
+        <div style="font-size:12px">
+            <label id="lblLocation">NATURALS @ THANISANDRA</label><br />
+            SreeChaitnaa Associates <br />
+            <label id="lblAddr1">85/3, 1st Floor,</label><br />
+            <label id="lblAddr2">King Space Meadow Apartments,</label><br />
+            <label id="lblAddr3">THANISANDRA</label><br /><br />
+            <hr />
+        </div>
+        <div style="font-size:11px">
+            <table style="text-align:left">
+                <tr>
+                    <td> Customer Name:</td>
+                    <td><label id="lblCustomerName"></label></td>
+                </tr>
+                <tr>
+                    <td> Phone No:</td>
+                    <td><label id="lblPhoneNo"></label></td>
+                </tr>
+                <tr>
+                    <td><br /> Customer GST NO:</td>
+                    <td><label id="lblCustGSTNo"></label></td>
+                </tr>
+                <tr>
+                    <td> Cash Memo No:</td>
+                    <td><label id="lblCashMemoNo"></label></td>
+                </tr>
+                <tr>
+                    <td> Date:</td>
+                    <td><label id="lblDate"></label></td>
+                </tr>
+            </table>
+            <hr />
+            <table style="font-size:12px">
+                <tr>
+                    <td style="width:140px">Particular</td>
+                    <td style="width:40px">Qty</td>
+                    <td style="width:50px">Rate</td>
+                    <td style="width:70px">Amount</td>
+                </tr>
+            </table>
+            <hr />
+            <table id="tblParticulars">
+            </table>
+            <hr />
+            <table id="tblSummary">
+            </table>
+            <hr />
+            <table id="tblRoundOff">
+            </table>
+            <hr />
+            <table id="tblTenderChange">
+            </table>
+            <hr />
+        </div>
+    </div>
 </div>
 </body>
 </html>

@@ -528,4 +528,13 @@ function set_table_data(cols, jsonData, last_row_is_total, table_name){
         table.appendChild(tr); // Append the table row to the table
     });
 }
+
+function get_print_bill_particular_row(service_name, qty, price, amount){
+    row_html = "<td style='width:140px;text-align:left'> " + service_name + "</td>"
+    row_html = row_html + "<td style='width:40px'>" + qty + "</td>"
+    row_html = row_html + "<td style='width:50px'>" + price + "</td>"
+    row_html = row_html + "<td style='width:70px;text-align:right'>" + amount + "</td>"
+    return row_html
+}
+
 console.log("Reports JS Loaded")
