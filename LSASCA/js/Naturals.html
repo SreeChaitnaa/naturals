@@ -28,7 +28,7 @@
 <!-- Tab content -->
 <div id="Customers" class="tabcontent">
     Phone No: <input type="text" id="ip_custSearchPhone" />
-    <input type="button" value="Search" onclick="searchCustomer()"> <br /><hr />
+    <input id="BtnSearchCustomer" type="button" value="Search" onclick="searchCustomer()"> <br /><hr />
     <table id="customerHistoryTbl" style="display:none" class="dataframe"></table>
     <label id="customerNoBillsLabel" style="display:none">No Bills found</label>
 </div>
@@ -36,7 +36,7 @@
 <div id="Bills" class="tabcontent">
     Phone No: <input type="text" id="ip_billSearchPhone" />
     Bill No: <input type="text" id="ip_billSearch" />
-    <input type="button" value="Search" onclick="searchBill()"> <br /><hr />
+    <input id="BtnSearchBill" type="button" value="Search" onclick="searchBill()"> <br /><hr />
     <table id="billTbl" style="display:none" class="dataframe"></table>
     <label id="NoBillsLabel" style="display:none">No Bill found</label>
 </div>
