@@ -63,6 +63,7 @@ function check_customer(){
 
 function searchCustomer(){
     phone_no = $('#ip_custSearchPhone')[0].value
+    $('#BtnSearchCustomer')[0].disabled = true
     get_customer_bills(phone_no.trim(), function(err, bills){
         if(bills.length > 0){
             show_bills_in_table(bills, 'customerHistoryTbl', "ServiceClass", true, true)
@@ -73,12 +74,14 @@ function searchCustomer(){
             $('#customerHistoryTbl')[0].style.display = "none"
             $('#customerNoBillsLabel')[0].style.display = "block"
         }
+        $('#BtnSearchCustomer')[0].disabled = false
     })
 }
 
 function searchBill(){
     phone_no = $('#ip_billSearchPhone')[0].value
     bill_no = $('#ip_billSearch')[0].value
+    $('#BtnSearchBill')[0].disabled = true
     get_bills_by_id(Number(bill_no.trim()), phone_no, function(err, bills){
         if(bills.length > 0){
             show_bills_in_table(bills, 'billTbl', "Invoices2", false)
@@ -88,6 +91,7 @@ function searchBill(){
         else{
             $('#billTbl')[0].style.display = "none"
             $('#NoBillsLabel')[0].style.display = "block"
+            $('#BtnSearchBill')[0].disabled = true
         }
     })
 }
