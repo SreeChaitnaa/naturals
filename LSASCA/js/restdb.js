@@ -8,7 +8,7 @@ last_error = null
 loading_db = false
 
 function initiate_db(){
-    if(dbs == [] && !loading_db){
+    if(dbs.length != 3 && !loading_db){
         loading_db = true
 
         dbs = [
@@ -106,10 +106,7 @@ function get_bills_from_all_dbs(query, q_params, callback){
             dbs_to_check.push(dbEntry.db)
         }
         else{
-            if(query['date_num']["$bt"][0] > dbEntry.min_date) && query['date_num']["$bt"][0] < dbEntry.max_date){
-                dbs_to_check.push(dbEntry.db)
-            }
-            if(query['date_num']["$bt"][0] < dbEntry.min_date) && query['date_num']["$bt"][1] > dbEntry.min_date){
+            if(query['date_num']["$bt"][0] < dbEntry.max_date && query['date_num']["$bt"][1] > dbEntry.min_date){
                 dbs_to_check.push(dbEntry.db)
             }
         }
