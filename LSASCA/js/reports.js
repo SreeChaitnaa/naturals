@@ -3,7 +3,7 @@ ReportOptions = {
                               merge:"Employee Name"},
     "SalonWise": {fun: get_salon_wise_report_row, merge:"Salon"},
     "Invoices": {fun: get_invoice_table_row},
-    "Invoices2": {fun: get_invoice2_table_row},
+    "Invoices2": {fun: get_print_invoice_table_row},
     "ServiceClass": {fun: get_service_report_row},
     "DayWise Spl": {fun: get_day_wise_report_row_2, merge:"Date"},
     "ServiceWise": {fun: get_service_wise_report_row,
@@ -35,6 +35,7 @@ sort_key = "Sr No"
 non_summable_int_columns = ["Bill#", "Payment Split"]
 
 all_bills = []
+all_values = []
 column_names = []
 sort_select = null
 
@@ -141,10 +142,14 @@ function get_customer_details(client_id){
     return {"Phone": client_id.substring(client_id.length-10), "Name": client_id.substring(0, client_id.length-10)}
 }
 
-function get_invoice2_table_row(bill, return_columns=false){
+function get_print_invoice_table_row(bill, return_columns=false){
     resp = get_invoice_table_row(bill, return_columns)
     if(return_columns){
         resp.pop()
+        resp.push("Print")
+    }
+    else{
+    
     }
     return resp
 }
@@ -363,6 +368,7 @@ function add_abv(table_rows, net_sale_key, bill_count_key){
 
 function show_bills_in_table(bills, table_name, selected_opt, show_total, reverse_rows){
     all_bills = []
+    all_values = []
     table_rows = []
     first_row = true
     total_row = {}
@@ -391,6 +397,7 @@ function show_bills_in_table(bills, table_name, selected_opt, show_total, revers
             }
         }
         all_bills.push(structuredClone(bill))
+        all_values.push(value)
         if(first_row)
             column_names = method(null, first_row)
             if(sort_select != null){
