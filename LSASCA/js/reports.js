@@ -460,9 +460,13 @@ function show_bills_in_table(bills, table_name, selected_opt, show_total, revers
 }
 
 function show_reports(){
-    initiate_db()
     min_date = from_date()
     max_date = to_date()
+    if(min_date > max_date){
+        alert("From date can not be more than To Date")
+        return
+    }
+    initiate_db()
     selected_opt = selected_option()
     $('#reportbtn')[0].disabled = true
     get_rest_data_by_date(max_date, min_date, function(err, res){
