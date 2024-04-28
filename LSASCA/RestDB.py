@@ -10,6 +10,9 @@ class RestDB(object):
         
         self.url = "https://scanrstsd1-560a.restdb.io/rest/"
         x_apikey = '63c50bd5969f06502871af1d'
+
+        # self.url = "https://lasnrsmayur1-7677.restdb.io/rest/"
+        # x_apikey = "662de2879dbf3549ad8faf3a"
         
         self.headers = {'content-type': "application/json",
                         'x-apikey': x_apikey,
