@@ -106,7 +106,7 @@ function get_bills_from_all_dbs(query, q_params, callback){
             dbs_to_check.push(dbEntry.db)
         }
         else{
-            if(query['date_num']["$bt"][0] < dbEntry.max_date && query['date_num']["$bt"][1] > dbEntry.min_date){
+            if(query['date_num']["$bt"][1] < dbEntry.max_date && query['date_num']["$bt"][0] > dbEntry.min_date){
                 dbs_to_check.push(dbEntry.db)
             }
         }
