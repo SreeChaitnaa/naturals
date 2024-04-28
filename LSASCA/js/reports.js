@@ -470,8 +470,17 @@ function show_reports(){
     selected_opt = selected_option()
     $('#reportbtn')[0].disabled = true
     get_rest_data_by_date(max_date, min_date, function(err, res){
-        show_bills_in_table(res, "reporttbl", selected_opt, true, false)
-        $("#sortdiv")[0].style.display = ""
+
+        if(bills.length > 0){
+            show_bills_in_table(res, "reporttbl", selected_opt, true, false)
+            $("#sortdiv")[0].style.display = ""
+            $('#NoDataLabel')[0].style.display = "none"
+            $('#reporttbl')[0].style.display = "block"
+        }
+        else{
+            $('#reporttbl')[0].style.display = "none"
+            $('#NoDataLabel')[0].style.display = "block"
+        }
         $('#reportbtn')[0].disabled = false
     })
 
