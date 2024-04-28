@@ -34,8 +34,7 @@ sort_key = "Sr No"
 
 non_summable_int_columns = ["Bill#", "Payment Split"]
 
-all_bills = []
-all_values = []
+all_bills = {}
 column_names = []
 sort_select = null
 
@@ -149,7 +148,7 @@ function get_print_invoice_table_row(bill, return_columns=false){
         resp.push("Print")
     }
     else{
-    
+        resp["Print"] = '<input type="button" onclick=print_bill("'+ bill.id + '") value="Print" />'
     }
     return resp
 }
@@ -367,8 +366,7 @@ function add_abv(table_rows, net_sale_key, bill_count_key){
 }
 
 function show_bills_in_table(bills, table_name, selected_opt, show_total, reverse_rows){
-    all_bills = []
-    all_values = []
+    all_bills = {}
     table_rows = []
     first_row = true
     total_row = {}
@@ -395,9 +393,9 @@ function show_bills_in_table(bills, table_name, selected_opt, show_total, revers
                 if(occurrences[value.bill_no] == 1 && idx != last_index)
                     bill["is_mmd"] = false
             }
+            bill["id"] = value._id
         }
-        all_bills.push(structuredClone(bill))
-        all_values.push(value)
+        all_bills[value._id] = structuredClone(bill)
         if(first_row)
             column_names = method(null, first_row)
             if(sort_select != null){
