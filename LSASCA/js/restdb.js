@@ -12,7 +12,7 @@ function initiate_db(){
         loading_db = true
 
         dbs = [
-                {"db": new restdb("662de2879dbf3549ad8faf3a"),         "min_date":"20240427", "max_date": "30000000"},
+                {"db": new restdb("662de2879dbf3549ad8faf3a"),         "min_date":"20240428", "max_date": "30000000"},
                 {"db": new restdb_560a("63c50bd5969f06502871af1d"),    "min_date":"20240105", "max_date": "20240429"},
                 {"db": new restdb_c22b("64f33b986888542efc0bfdfa"),    "min_date":"10000000", "max_date": "20240107"}
               ]
