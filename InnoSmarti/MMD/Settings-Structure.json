@@ -1,0 +1,33 @@
+{
+    "show_invoices": true,
+    "bill_prefix": "MMD",
+    "chrome_driver": "C:\\Users\\user\\Documents\\GitHub\\naturals\\InnoSmarti\\MMD\\chromedriver-win64\\chromedriver.exe",
+    "chrome_user_data": "C:\\Users\\user\\Documents\\GitHub\\naturals\\InnoSmarti\\MMD\\chrome_user_data",
+    "bill_url": "https://naturals.innosmarti.com/",
+    "rest_api_host": "ntlivewebapi.innosmarti.com",
+    "rest_db_data": {
+        "1526": {
+            "url": "https://innosmartisca-d3db.restdb.io/rest",
+            "x-apikey": "9d98a5bb50be2daaa7f2ba0209cabcca93bd0",
+            "content-type": "application/json",
+            "cache-control": "no-cache"
+        }
+    },
+    "flask_command": "python -m flask run --debug -p 443 --cert Certs\\server2.crt --key Certs\\server2.key",
+    "user": {
+        "by": "name",
+        "selector": "email",
+        "value": "naturals.thanisandra@gmail.com"
+    },
+    "password": {
+        "by": "xpath",
+        "selector": "//input[@type='password']",
+        "value": "admin123"
+    },
+    "login": {
+        "by": "xpath",
+        "selector": "//button[@type='submit']",
+        "value": "click"
+    },
+    "hosts_file": "C:\\Windows\\System32\\drivers\\etc\\hosts"
+}

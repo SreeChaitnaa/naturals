@@ -1,0 +1,70 @@
+https://ntlivewebapi.innosmarti.com/api/auth/printreceipt
+
+
+PayLoad - {
+  "StoreID": "1526",
+  "OrgID": "1001",
+  "billid": 5868
+}
+
+Response - {{
+  "coupon": 0,
+  "merged": [
+    {
+      "AddressLine1": "85/3, 1ST FLOOR, KING SPACE MEADOWS APARTMENTS,",
+      "AddressLine2": "THANISANDRA MAIN RD, BENGALURU, KARNATAKA 560077",
+      "AdvanceAmount": 0,
+      "Area": "THANISANDRA",
+      "ChangeAmt": 0.5,
+      "CompanyNameGST": "0",
+      "Created_Date": "2024-09-18 19:46:36",
+      "CustomerGSTNo": "0",
+      "DiscID": null,
+      "DiscPer": null,
+      "DiscValue": null,
+      "DiscountAmount": 50,
+      "GSTNo": "29AELFS9751D1ZH",
+      "HSNCode": null,
+      "MemDisc": 50,
+      "OthDisc": 0,
+      "Price": 275,
+      "Qty": 1,
+      "Referral": "Request",
+      "SACCode": "440209",
+      "ServiceDescr": "HAIR CUT",
+      "ServiceID": "GS00000001",
+      "ServiceName": "HAIR CUT",
+      "Sex": "1",
+      "Taxamount": 18,
+      "TicketID": 6201,
+      "Total": 265.5,
+      "clntid": "Ashwin9072290686",
+      "clntname": "Ashwin",
+      "clntphone": "9072290686",
+      "empid": "210813515",
+      "empname": "IrshadM",
+      "member_check": 1,
+      "printed": 0,
+      "storePhone": "8.86156755096112e19",
+      "type": "S"
+    }
+  ],
+  "paymode": [
+    {
+      "ChangeAmt": 0.5,
+      "ModeofPayment": "Cash",
+      "PayType": null,
+      "PaytypeCardno": null,
+      "Tender": 1
+    },
+    {
+      "ChangeAmt": 0.5,
+      "ModeofPayment": "EWallet",
+      "PayType": "PhonePe",
+      "PaytypeCardno": null,
+      "Tender": 265
+    }
+  ],
+  "smoney": null,
+  "walletbls": 0
+}

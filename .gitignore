@@ -4,6 +4,10 @@
 .idea/modules.xml
 .idea/naturals.iml
 .idea/vcs.xml
-LSASCA/__pycache__/RestDB.cpython-37.pyc
-LSASCA/__pycache__/SQLDB.cpython-37.pyc
-LSASCA/__pycache__/Utils.cpython-37.pyc
+LSASCA/__pycache__/
+InnoSmarti/MMD/.idea/
+InnoSmarti/MMD/__pycache__/
+InnoSmarti/MMD/app.log
+InnoSmarti/MMD/chrome_user_data/
+InnoSmarti/MMD/chromedriver-win64/
+InnoSmarti/MMD/Settings.json
