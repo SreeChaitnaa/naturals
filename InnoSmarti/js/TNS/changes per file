@@ -1,0 +1,52 @@
+Add style -
+--------------
+      table, th, td { border: 1px solid black; border-collapse: collapse; }
+      td, th {padding: 10px;}
+--------------
+
+Set API Key - apikey
+
+
+remove if any aut filed exists like ServiceID, ProdID, BillID...
+
+add table in body -
+----------------
+<table id="dbdata"></table>
+----------------
+
+
+Replace Thank you message with page reload - location.reload();
+
+----------------------
+add below code to show table in end of script-
+---------------
+var ajaxSettingsGet = JSON.parse(JSON.stringify(ajaxSettings))
+  ajaxSettingsGet["method"] = "GET"
+  console.log(ajaxSettingsGet)
+  $.ajax(ajaxSettingsGet).done(function (jsonData) {
+    console.log(jsonData);
+    let table = $('#dbdata')
+    let cols = Object.keys(jsonData[0]).filter(e => (e !== '_id' && e !== "ServiceID"))
+    let thead = $("<thead>");
+    let tr = $("<tr>");
+    $.each(cols, function(i, item){
+      let th = $("<th>");
+      th.text(item); // Set the column name as the text of the header cell
+      tr.append(th); // Append the header cell to the header row
+    });
+    thead.append(tr); // Append the header row to the header
+    table.append(thead) // Append the header to the table
+
+    $.each(jsonData, function(i, item){
+      let tr = $("<tr>");
+<!--      let vals = Object.values(item);-->
+      $.each(cols, (i, elem) => {
+        let td = $("<td>");
+        td.text(item[elem]); // Set the value as the text of the table cell
+        tr.append(td); // Append the table cell to the table row
+      });
+      table.append(tr); // Append the table row to the table
+    });
+  });
+
+-----------------------
