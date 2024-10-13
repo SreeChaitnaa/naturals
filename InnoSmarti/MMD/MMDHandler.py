@@ -3,6 +3,8 @@ import json
 import operator
 from datetime import date
 from RestDB import RestDB
+from collections import OrderedDict
+import subprocess
 
 
 class Utils:
@@ -19,6 +21,41 @@ class Utils:
         c_name = client_id.replace(ph_no, "").strip()
         return c_name, ph_no
 
+    @staticmethod
+    def add_duplicates_in_dict(input_dicts, dup_list_dict, remove_key_in_input=False):
+        for i in range(len(input_dicts)):
+            for k in dup_list_dict:
+                for dup_k in dup_list_dict[k]:
+                    input_dicts[i][dup_k] = input_dicts[i][k]
+                if remove_key_in_input:
+                    del input_dicts[i][k]
+        return input_dicts
+
+    @staticmethod
+    def merge_lists(main_list, merge_list, use_main_as_template=True, incremental_key=None):
+        next_val = None
+        if incremental_key is not None and incremental_key in main_list[-1]:
+            next_val = main_list[-1][incremental_key] + 1
+        for i in range(len(merge_list)):
+            if use_main_as_template:
+                template = main_list[0].copy()
+                template.update(merge_list[i])
+                merge_list[i] = template
+            if next_val:
+                merge_list[i][incremental_key] = next_val
+                next_val += 1
+
+        main_list.extend(merge_list)
+        return main_list
+    
+    @staticmethod
+    def send_whatsapp(text="", phone_num=None):
+        wa_cmd = "cmd /C start whatsapp://send?"
+        if phone_num:
+            wa_cmd = wa_cmd + "phone=91" + phone_num + "&"
+        wa_cmd = wa_cmd + "text=" + text.replace(" ", "%20").replace("\n", "%0a")
+        subprocess.Popen(wa_cmd)
+
 
 class MMDStatus:
     NoServerCall = "NoServerCall"
@@ -29,7 +66,7 @@ class MMDStatus:
 
 
 class MMDHandler:
-    def __init__(self, request, settings):
+    def __init__(self, request, settings, logger):
         self.request = request
         self.settings = settings
 
@@ -41,26 +78,40 @@ class MMDHandler:
         self.merge_keys = {}
         self.post_merge_sort_keys = {}
         self.treat_as_int = []
+        self.logger = logger
 
         handler = None
         code_on_resp = MMDStatus.NoServerCall
         store_id = None
 
-        if "/savebill/" in request.url and request.method == "POST":
-            handler = self.save_bill_handler
-            store_id = self.get_store_id_from_url()
+        if request.method == "POST":
 
-        elif str(request.url).endswith('/printreceipt') and request.method == "POST":
-            handler = self.print_bill_handler
-            store_id = self.get_store_id_from_payload()
+            if "/savebill/" in request.url:
+                handler = self.save_bill_handler
+                store_id = self.get_store_id_from_url()
 
-        elif str(request.url).endswith("/employeewisesales") and request.method == "POST":
-            handler = self.get_employee_sales_handler
-            store_id = self.payload["SoreID"]
-            code_on_resp = MMDStatus.ReturnPostMerge
-            self.merge_types["data"] = MMDStatus.Merge
-            self.merge_keys["data"] = "EmpID"
-            self.treat_as_int = ["TotalProductCount", "TotalServiceCount"]
+            elif str(request.url).endswith('/printreceipt'):
+                handler = self.print_bill_handler
+                store_id = self.get_store_id_from_payload()
+
+            elif str(request.url).endswith('/salesOftheday'):
+                handler = self.day_close_handler
+                store_id = self.get_store_id_from_payload()
+                code_on_resp = MMDStatus.ReturnPostMerge
+
+            elif "/getServices/" in str(self.request.url):
+                if self.payload["TypeofService"] == "Normal":
+                    handler = self.get_services_handler
+                    store_id = self.get_store_id_from_url()
+                    code_on_resp = MMDStatus.ReturnPostMerge
+
+            elif str(request.url).endswith("/employeewisesales"):
+                handler = self.get_employee_sales_handler
+                store_id = self.payload["SoreID"]
+                code_on_resp = MMDStatus.ReturnPostMerge
+                self.merge_types["data"] = MMDStatus.Merge
+                self.merge_keys["data"] = "EmpID"
+                self.treat_as_int = ["TotalProductCount", "TotalServiceCount"]
 
         elif self.settings.show_invoices:
             if "/getTodayTicket/" in request.url or "/getTicketByDate/" in request.url:
@@ -71,9 +122,10 @@ class MMDHandler:
                 self.post_merge_sort_keys["bills"] = ["Created_Date"]
 
         if handler and store_id:
-            self.rest_db = RestDB(store_id, self.settings)
+            logger.info("Handling URL is {0}-{1}".format(request.method, str(request.url)))
+            self.rest_db = RestDB(store_id, self.settings, logger)
             self.pre_resp = handler()
-            if self.pre_resp:
+            if self.pre_resp is not None:
                 self.pre_resp_code = code_on_resp
 
     def get_store_id_from_url(self, position=0):
@@ -142,6 +194,13 @@ class MMDHandler:
             data.append(emp_dict)
         return {"data": data}
 
+    def day_close_handler(self):
+        req_date = str(self.payload["Date"]).replace("-", "")
+        bills_today = self.get_bills_and_summary_of_given_dates(req_date, req_date)
+        if bills_today is None:
+            bills_today = {}
+        return bills_today
+
     def get_tickets_handler(self):
         start_date = date.today().__format__("%Y%m%d")
         end_date = start_date
@@ -150,6 +209,9 @@ class MMDHandler:
             start_date = self.get_store_id_from_url(-2).replace("-", "")
             end_date = self.get_store_id_from_url(-1).replace("-", "")
 
+        return self.get_bills_and_summary_of_given_dates(start_date, end_date)
+
+    def get_bills_and_summary_of_given_dates(self, start_date, end_date):
         bills = self.rest_db.get_bills(date_start=start_date, date_end=end_date)
 
         if len(bills) == 0:
@@ -241,6 +303,7 @@ class MMDHandler:
             bill_to_add["FirstName"] = clntname
             bill_to_add["TicketID"] = "{0}{1}".format(self.settings.bill_prefix, bill["id"])
             bill_to_add["StoreID"] = self.rest_db.store_id
+
             for k in bill_to_add:
                 if k in sum_keys:
                     for service in services:
@@ -254,9 +317,10 @@ class MMDHandler:
             bill_to_add["Created_Date"] = bill_to_add["Created_Date"] + ":00"
             resp["bills"].append(bill_to_add)
             resp["bills"].sort(key=operator.itemgetter("TicketID"))
+            map_to_use = resp_bill_map
             for rk in resp:
-                if rk in resp_bill_map:
-                    resp[rk] += bill_to_add[resp_bill_map[rk]]
+                if rk in map_to_use:
+                    resp[rk] += bill_to_add[map_to_use[rk]]
                 elif rk in bill_to_add:
                     resp[rk] += bill_to_add[rk]
 
@@ -278,12 +342,36 @@ class MMDHandler:
 
             resp["NoOfBills"] += 1
             resp["TotGender"] += 1
-            resp["servicebillcount"] += 1
+
+            service_exists = False
+            product_exists = False
+            for service in services:
+                if str(service["ServiceID"]).lower().startswith("scap"):
+                    product_exists = True
+                    prod_gross = service["Total"]
+                    prod_net = round(prod_gross / 1.18, 2)
+                    resp["Productbillsales"] += prod_gross
+                    resp["servicebillsales"] -= prod_gross
+                    resp["Productbillsalesnet"] += prod_net
+                    resp["servicebillsalesnet"] -= prod_net
+                else:
+                    service_exists = True
+
+            if service_exists:
+                resp["servicebillcount"] += 1
+            if product_exists:
+                resp["Productbillcount"] += 1
 
         return resp
 
     def save_bill_handler(self):
-        if self.settings.bill_prefix.lower() in self.payload[0].get("Comments", "").lower():
+        is_mmd = self.settings.bill_prefix.lower() in self.payload[0].get("Comments", "").lower()
+        if not is_mmd:
+            for service in self.payload:
+                if str(service["ServiceID"]).lower().startswith("sca"):
+                    is_mmd = True
+                    break
+        if is_mmd:
             try:
                 _, ph_no = Utils.get_name_and_ph_no(self.payload[0]['clntid'])
                 saved_bill = self.rest_db.save_bill(self.payload, ph_no)
@@ -367,7 +455,7 @@ class MMDHandler:
                             if k in service:
                                 print_svc[k] = service[k]
                         elif k in keys_map:
-                            logging.error("Getting {0} from {1}".format(k, keys_map[k]))
+                            self.logger.error("Getting {0} from {1}".format(k, keys_map[k]))
                             if keys_map[k] in service:
                                 print_svc[k] = service[keys_map[k]]
                         if k == "Created_Date":
@@ -407,6 +495,25 @@ class MMDHandler:
         else:
             return None
 
+    def get_services_handler(self):
+        services = self.rest_db.get_services()
+        duplicate_entries = {
+            "ServiceID": ["value", "memprodid", "wsmemprodid"],
+            "ServiceName": ["label"],
+            "NormalPrice": ["Total", "Price"]
+        }
+        services = Utils.add_duplicates_in_dict(services, duplicate_entries)
+        products = [product for product in self.rest_db.get_products() if product.pop("Qty") > 0]
+        for product in products:
+            product["MRP"] = round(product["MRP"] / 1.18, 2)
+        duplicate_entries = {
+            "ProductID": ["ServiceID", "value", "memprodid", "wsmemprodid"],
+            "ProductName": ["ServiceName", "label"],
+            "MRP": ["MemberPrice", "NormalPrice", "Total", "Price"]
+        }
+        services.extend(Utils.add_duplicates_in_dict(products, duplicate_entries))
+        return services
+
     def merge_json_numbers(self, main_json, merge_json):
         for key in main_json:
             if key in merge_json:
@@ -416,10 +523,51 @@ class MMDHandler:
                     main_json[key] = str(int(main_json[key]) + int(merge_json[key]))
         return main_json
 
+    def send_day_close(self, orig_resp):
+        def get_sum(key):
+            return orig_resp[key] + self.pre_resp.get(key, 0)
+        day_close_data = OrderedDict()
+        day_close_data["Date"] = date.today().__format__("*%d-%B-%Y*")
+        day_close_data["NewLine1"] = 1
+        day_close_data["No of Clients"] = get_sum("NoOfBills")
+        day_close_data["New Clients"] = get_sum("newClient_count")
+        day_close_data["NewLine2"] = 1
+        sb_count = get_sum("servicebillcount")
+        day_close_data["Service Bills"] = sb_count
+        day_close_data["Service Sales"] = int(get_sum("servicebillsalesnet"))
+        day_close_data["Service ABV"] = int(get_sum("servicebillsalesnet") / max(sb_count, 1))
+        day_close_data["NewLine3"] = 1
+        day_close_data["Product Bills"] = get_sum("Productbillcount")
+        day_close_data["Product Sales"] = int(get_sum("Productbillsalesnet"))
+        day_close_data["NewLine4"] = 2
+        day_close_data["Net Sales"] = "*{}*".format(get_sum("Net"))
+        day_close_data["Cash"] = get_sum("cash")
+
+        message = ""
+        for k in day_close_data:
+            if k.startswith("NewLine"):
+                message = message + "\n" * day_close_data[k]
+            else:
+                message = "{0}{1}: {2}\n".format(message, k, day_close_data[k])
+        message = message + "\nClosing now, Good Night!!!\n"
+        self.logger.info("Message is {}".format(message))
+        Utils.send_whatsapp(message)
+        return message
+
     def post_handler(self, orig_resp):
         try:
-            resp_json = json.loads(orig_resp)
+            resp_json_orig = json.loads(orig_resp)
+        except:
+            return orig_resp
+
+        try:
+            resp_json = resp_json_orig.copy()
             if self.pre_resp_code == MMDStatus.ReturnPostMerge:
+                if "/getServices/" in str(self.request.url):
+                    return Utils.merge_lists(resp_json, self.pre_resp, incremental_key="Row")
+                elif str(self.request.url).endswith('/salesOftheday'):
+                    resp_json["MessageSent"] = self.send_day_close(resp_json)
+                    return resp_json
                 resp_json = self.merge_json_numbers(resp_json, self.pre_resp)
                 for key in resp_json:
                     if type(resp_json[key]) is list:
@@ -451,5 +599,6 @@ class MMDHandler:
                                     id_count = id_count + 1
             return resp_json
         except Exception as e2:
-            logging.error(e2)
-            return orig_resp
+            self.logger.error(e2)
+            resp_json_orig["SCA_Exception"] = str(e2)
+            return resp_json_orig

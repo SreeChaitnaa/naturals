@@ -32,7 +32,7 @@ connection.create_connection = patched_create_connection
 # Configure Flask logging
 app.logger.setLevel(logging.DEBUG)  # Set log level to INFO
 handler = logging.FileHandler('app.log')  # Log to a file
-handler.setLevel(logging.INFO)
+handler.setLevel(logging.WARNING)
 app.logger.addHandler(handler)
 session = requests.session()
 
@@ -40,7 +40,7 @@ session = requests.session()
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>', methods=["GET", "POST", "OPTIONS", "PUT", "DELETE", "PATCH"])
 def mmd(path):
-    mmd_handler = MMDHandler(request, settings)
+    mmd_handler = MMDHandler(request, settings, app.logger)
 
     if mmd_handler.pre_resp_code == MMDStatus.NoServerCall:
         return mmd_handler.pre_resp

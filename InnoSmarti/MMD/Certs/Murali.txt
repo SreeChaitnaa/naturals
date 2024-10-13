@@ -1,0 +1,69 @@
+Sub Button1_Click()
+    Dim lr As Long
+    Dim i As Integer
+    Dim msg As String
+    If Sheets("Invoice").Cells(8, 2) = "" Then
+        MsgBox "Please provide Customer Name"
+        Application.Goto Sheets("Invoice").Cells(8, 2)
+        Exit Sub
+    End If
+    
+    If Sheets("Invoice").Cells(8, 5) = "" Then
+        MsgBox "Please provide Customer Phone Number"
+        Application.Goto Sheets("Invoice").Cells(8, 5)
+        Exit Sub
+    End If
+    
+    For i = 12 To 23
+        If Sheets("Invoice").Cells(i, 1) <> "" Then
+            If Sheets("Invoice").Cells(i, 4) = "" Then
+                msg = "Please Select provider for " & Sheets("Invoice").Cells(i, 1)
+                MsgBox msg
+                Application.Goto Sheets("Invoice").Cells(i, 4)
+                Exit Sub
+            End If
+        End If
+    Next i
+    
+    Sheets("Invoice").Range("B9") = Date
+    Sheets("Invoice").Range("E9") = Time
+    
+    
+    lr = Sheets("Bills").Cells(Rows.Count, 1).End(xlUp).Row + 1
+    For i = 12 To 23
+        If Sheets("Invoice").Cells(i, 1) <> "" Then
+            Sheets("Bills").Cells(lr, 1).Value = Sheets("Invoice").Range("E10").Value
+            Sheets("Bills").Cells(lr, 2).Value = Sheets("Invoice").Range("B9").Value
+            Sheets("Bills").Cells(lr, 3).Value = Sheets("Invoice").Range("E9").Value
+            Sheets("Bills").Cells(lr, 4).Value = Sheets("Invoice").Range("B8").Value
+            Sheets("Bills").Cells(lr, 5).Value = Sheets("Invoice").Range("E8").Value
+            Sheets("Bills").Cells(lr, 6).Value = Sheets("Invoice").Cells(i, 1).Value
+            Sheets("Bills").Cells(lr, 7).Value = Sheets("Invoice").Cells(i, 4).Value
+            Sheets("Bills").Cells(lr, 8).Value = Sheets("Invoice").Cells(i, 5).Value
+            Sheets("Bills").Cells(lr, 9).Value = Sheets("Invoice").Range("D25").Value
+            lr = lr + 1
+        End If
+    Next i
+    
+    
+    Sheets("Invoice").Range("A1:E29").PrintOut
+    
+    
+    Sheets("Invoice").Range("E10").Value = Sheets("Invoice").Range("E10").Value + 1
+    Sheets("Invoice").Range("B8:C9").ClearContents
+    Sheets("Invoice").Range("E8:E9").ClearContents
+    Sheets("Invoice").Range("A12:D23").ClearContents
+    
+End Sub
+
+Sub Protect_Sheets()
+    Dim pwd As String
+    pwd = "Mayur@3234"
+    Sheets("Invoice").Protect pwd, UserInterfaceOnly:=True
+    Sheets("MasterData").Protect pwd, UserInterfaceOnly:=True
+    Sheets("Bills").Protect pwd, UserInterfaceOnly:=True
+End Sub
+
+Sub Dummy()
+    
+End Sub

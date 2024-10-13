@@ -6,6 +6,7 @@ import time
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.keys import Keys
 from subprocess import CREATE_NO_WINDOW
 from Settings import Settings
 
@@ -52,6 +53,8 @@ class Launcher:
                 if element_setting["value"] == "click":
                     element.click()
                 else:
+                    element.send_keys(Keys.CONTROL + "a")
+                    element.send_keys(Keys.DELETE)
                     element.send_keys(element_setting["value"])
                 return True
         except Exception:
@@ -59,18 +62,18 @@ class Launcher:
         return False
 
     @staticmethod
-    def clear_apps():
+    def clear_flask():
         for proc in psutil.process_iter():
             # check whether the process to kill name matches
             try:
-                cmd_line_params = " ".join(proc.cmdline()).lower()
-                if "flask" in cmd_line_params or "innosmarti" in cmd_line_params:
+                cmd_line = " ".join(proc.cmdline()).lower()
+                if "flask" in cmd_line or "innosmarti" in cmd_line:
                     proc.kill()
             except:
                 pass
 
     def process(self):
-        self.clear_apps()
+        self.clear_flask()
 
         if self.is_mmd:
             os.chdir(self.settings.app_path)
@@ -98,5 +101,5 @@ class Launcher:
                 break
             time.sleep(1)
 
-        self.clear_apps()
+        self.clear_flask()
         self.set_hosts()
