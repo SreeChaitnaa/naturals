@@ -11,10 +11,11 @@ from Settings import Settings
 
 
 class Launcher:
-    def __init__(self, is_mmd=False, show_invoices=False, is_mac=False):
+    def __init__(self, is_mmd=False, show_invoices=False, is_mac=False, store_id="1526"):
         self.driver = None
         self.is_mmd = is_mmd
         self.is_mac = is_mac
+        self.store_id = store_id
         settings = Settings()
 
         self.service = Service(executable_path=settings.chrome_driver)
@@ -34,6 +35,7 @@ class Launcher:
 
         settings.set("show_invoices", show_invoices)
         settings.set("is_mac", self.is_mac)
+        settings.set("store_id", store_id)
         settings.save()
         self.chrome_options = chrome_options
         self.settings = settings
@@ -55,14 +57,25 @@ class Launcher:
             if element:
                 if element_setting["value"] == "click":
                     element.click()
+                elif element_setting["value"] == "set_reports":
+                    self.set_reports(element)
                 else:
                     element.send_keys(Keys.CONTROL + "a")
                     element.send_keys(Keys.DELETE)
                     element.send_keys(element_setting["value"])
                 return True
-        except Exception:
+        except Exception as e2:
+            logging.error(e2)
             pass
         return False
+
+    def set_reports(self, element):
+        self.driver.execute_script("arguments[0].setAttribute('href', arguments[1]);", element,
+                                   "https://sreechaitnaa.github.io/naturals/InnoSmarti/js/Reports.html")
+        self.driver.execute_script(
+            "arguments[0].parentElement.parentElement.parentElement.innerHTML = arguments[0].parentElement.outerHTML;",
+            element)
+
 
     @staticmethod
     def clear_flask():
@@ -102,6 +115,8 @@ class Launcher:
         while True:
             try:
                 _ = self.driver.current_url
+                if self.settings.show_invoices:
+                    self.set_element(self.settings.reports_link)
             except Exception as exc1:
                 logging.info("Browser closed - {}".format(exc1))
                 break

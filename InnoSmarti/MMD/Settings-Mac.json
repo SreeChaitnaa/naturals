@@ -10,25 +10,31 @@
             "url": "https://innosmartisca-d3db.restdb.io/rest",
             "x-apikey": "9d98a5bb50be2daaa7f2ba0209cabcca93bd0",
             "content-type": "application/json",
-            "cache-control": "no-cache"
+            "cache-control": "no-cache",
+            "username": "naturals.thanisandra@gmail.com",
+            "password": "admin123"
         }
     },
     "flask_command": "export FLASK_ENV=development; sudo flask run -p 443 --cert Certs/server2.crt --key Certs/server2.key &",
     "user": {
         "by": "name",
-        "selector": "email",
-        "value": "naturals.thanisandra@gmail.com"
+        "selector": "email"
     },
     "password": {
         "by": "xpath",
-        "selector": "//input[@type='password']",
-        "value": "admin123"
+        "selector": "//input[@type='password']"
     },
     "login": {
         "by": "xpath",
         "selector": "//button[@type='submit']",
         "value": "click"
     },
+    "reports_link": {
+        "by": "css selector",
+        "selector": "[href='#/User/Reporthomepage']",
+        "value": "set_reports"
+    },
     "hosts_file": "/etc/hosts",
-    "is_mac": true
+    "is_mac": true,
+    "store_id": "1526"
 }
