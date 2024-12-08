@@ -306,7 +306,8 @@ class MMDHandler:
             "Tax": "sumGst",
             "Total": "sumNet",
             "servicedesc": "ServiceName",
-            "Created_Date": "timemark"
+            "Created_Date": "timemark",
+            "ChangeAmt": "changeAmt"
         }
         bill_struct = {
             "Advance": 0,
@@ -325,7 +326,8 @@ class MMDHandler:
             "TicketID": 0,
             "Total": 0,
             "id": 0,
-            "servicedesc": ""
+            "servicedesc": "",
+            "ChangeAmt": 0
         }
         sum_keys = ["Mem_disc", "Oth_Disc", "servicedesc"]
         resp_bill_map = {
@@ -380,7 +382,7 @@ class MMDHandler:
             bill_to_add.update(bill_struct)
             services = bill["bill_data"]
             clntname, clntphone = Utils.get_name_and_ph_no(services[0]['clntid'])
-            bill_to_add["ClientID"] = " ".join([clntname, clntphone])
+            bill_to_add["ClientID"] = clntname + clntphone
             bill_to_add["FirstName"] = clntname
             bill_to_add["TicketID"] = "{0}{1}".format(self.settings.bill_prefix, bill["id"])
             bill_to_add["StoreID"] = self.rest_db.store_id
@@ -413,6 +415,7 @@ class MMDHandler:
                     resp["ewalletsum"] += amt
                 elif tender["paytype"] == "Cash":
                     resp["cash"] += amt - services[0]["changeAmt"]
+
                 else:
                     resp["card"] += amt
 
