@@ -7,18 +7,20 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.keys import Keys
-from subprocess import CREATE_NO_WINDOW
 from Settings import Settings
 
 
 class Launcher:
-    def __init__(self, is_mmd=False, show_invoices=False):
+    def __init__(self, is_mmd=False, show_invoices=False, is_mac=False):
         self.driver = None
         self.is_mmd = is_mmd
+        self.is_mac = is_mac
         settings = Settings()
 
         self.service = Service(executable_path=settings.chrome_driver)
-        self.service.creation_flags = CREATE_NO_WINDOW
+        if not self.is_mac:
+            from subprocess import CREATE_NO_WINDOW
+            self.service.creation_flags = CREATE_NO_WINDOW
         chrome_options = Options()
         chrome_options.add_argument('--ignore-certificate-errors')
         chrome_options.add_argument("--user-data-dir={0}".format(settings.chrome_user_data))
@@ -31,6 +33,7 @@ class Launcher:
         chrome_options.add_experimental_option("detach", True)
 
         settings.set("show_invoices", show_invoices)
+        settings.set("is_mac", self.is_mac)
         settings.save()
         self.chrome_options = chrome_options
         self.settings = settings
@@ -77,9 +80,12 @@ class Launcher:
 
         if self.is_mmd:
             os.chdir(self.settings.app_path)
-            startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            subprocess.Popen(self.settings.flask_command, startupinfo=startupinfo)
+            if not self.is_mac:
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                subprocess.Popen(self.settings.flask_command, startupinfo=startupinfo)
+            else:
+                os.system(self.settings.flask_command)
 
         self.set_hosts(self.is_mmd)
 

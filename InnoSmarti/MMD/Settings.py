@@ -24,6 +24,7 @@ class Settings:
         self.hosts_file = self.settings["hosts_file"]
         self.rest_api_host = self.settings["rest_api_host"]
         self.chrome_user_data = self.settings["chrome_user_data"]
+        self.is_mac = self.settings["is_mac"]
 
     def set(self, key, value):
         self.settings[key] = value

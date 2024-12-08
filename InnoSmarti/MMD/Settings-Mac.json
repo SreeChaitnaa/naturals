@@ -1,8 +1,8 @@
 {
-    "show_invoices": false,
+    "show_invoices": true,
     "bill_prefix": "MMD",
-    "chrome_driver": "D:\\Murali\\Komprise\\chromedriver-win64\\chromedriver.exe",
-    "chrome_user_data": "D:\\Murali\\Komprise\\chrome_user_data",
+    "chrome_driver": "/Users/muralidharmaram/Downloads/Komprise/chromedriver-mac-x64/chromedriver",
+    "chrome_user_data": "/Users/muralidharmaram/Downloads/Komprise/chrome_user_data",
     "bill_url": "https://naturals.innosmarti.com/",
     "rest_api_host": "ntlivewebapi.innosmarti.com",
     "rest_db_data": {
@@ -13,7 +13,7 @@
             "cache-control": "no-cache"
         }
     },
-    "flask_command": "python -m flask run --debug -p 443 --cert Certs\\server2.crt --key Certs\\server2.key",
+    "flask_command": "export FLASK_ENV=development; sudo flask run -p 443 --cert Certs/server2.crt --key Certs/server2.key &",
     "user": {
         "by": "name",
         "selector": "email",
@@ -29,6 +29,6 @@
         "selector": "//button[@type='submit']",
         "value": "click"
     },
-    "hosts_file": "C:\\Windows\\System32\\drivers\\etc\\hosts",
-    "is_mac": false
+    "hosts_file": "/etc/hosts",
+    "is_mac": true
 }
