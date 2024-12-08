@@ -14,6 +14,7 @@ redirect_server = "https://naturals2.innosmarti.com/"
 
 _orig_create_connection = connection.create_connection
 settings = Settings()
+last_auth = None
 
 
 def patched_create_connection(address, *args, **kwargs):
@@ -40,13 +41,20 @@ session = requests.session()
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>', methods=["GET", "POST", "OPTIONS", "PUT", "DELETE", "PATCH"])
 def mmd(path):
+    global last_auth
     mmd_handler = MMDHandler(request, settings, app.logger)
 
     if mmd_handler.pre_resp_code == MMDStatus.NoServerCall:
         return mmd_handler.pre_resp
+    headers = request.headers
+    if "Authorization" in headers:
+        if headers["Authorization"] == "UseLast":
+            headers = {"Accept": "*/*", "Authorization": last_auth}
+        else:
+            last_auth = headers["Authorization"]
 
     resp = session.request(request.method, request.url, data=request.data,
-                           headers=request.headers).text
+                           headers=headers).text
 
     return mmd_handler.post_handler(resp)
 

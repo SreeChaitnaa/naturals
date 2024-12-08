@@ -47,7 +47,7 @@ class Utils:
 
         main_list.extend(merge_list)
         return main_list
-    
+
     @staticmethod
     def send_whatsapp(text="", phone_num=None):
         wa_cmd = "cmd /C start whatsapp://send?"
@@ -113,13 +113,17 @@ class MMDHandler:
                 self.merge_keys["data"] = "EmpID"
                 self.treat_as_int = ["TotalProductCount", "TotalServiceCount"]
 
-        elif self.settings.show_invoices:
+        elif self.settings.show_invoices and request.method == "GET":
             if "/getTodayTicket/" in request.url or "/getTicketByDate/" in request.url:
                 handler = self.get_tickets_handler
                 store_id = self.get_store_id_from_url()
                 code_on_resp = MMDStatus.ReturnPostMerge
                 self.merge_types["bills"] = MMDStatus.Extend
                 self.post_merge_sort_keys["bills"] = ["Created_Date"]
+
+            if "/viewTicketNew/" in request.url:
+                handler = self.view_ticket_handler
+                store_id = self.get_store_id_from_url()
 
         if handler and store_id:
             logger.info("Handling URL is {0}-{1}".format(request.method, str(request.url)))
@@ -173,15 +177,19 @@ class MMDHandler:
                     all_emp_sales[emp_id] = emp_record.copy()
                     all_emp_sales[emp_id]["EmpID"] = service["empid"]
                     all_emp_sales[emp_id]["FirstName"] = service["empname"]
-                net_value = service["NormalPrice"] - service["DiscountAmount"]
-                all_emp_sales[emp_id]["NetSalesForServices"] += net_value
-                all_emp_sales[emp_id]["NetSalesForServicesAdjusted"] += net_value
+                net_value = service["NormalPrice"] * service["Qty"] - service["DiscountAmount"]
+                if service["ServiceID"].startswith("SCAP"):
+                    all_emp_sales[emp_id]["ProductSales"] += net_value
+                    all_emp_sales[emp_id]["TotalProductCount"] += 1
+                else:
+                    all_emp_sales[emp_id]["NetSalesForServices"] += net_value
+                    all_emp_sales[emp_id]["NetSalesForServicesAdjusted"] += net_value
+                    all_emp_sales[emp_id]["TotalServiceCount"] += 1
                 all_emp_sales[emp_id]["TotalDiscount"] += service["DiscountAmount"]
                 all_emp_sales[emp_id]["TotalMemDiscount"] += service["MemDisc"]
                 all_emp_sales[emp_id]["TotalOtherDiscount"] += service["OthDisc"]
                 all_emp_sales[emp_id]["TotalTax"] += (service["Total"] - net_value)
                 all_emp_sales[emp_id]["TotalTicketValue"] += service["Total"]
-                all_emp_sales[emp_id]["TotalServiceCount"] += 1
 
             for emp_id in emp_ids_in_bill:
                 all_emp_sales[emp_id]["TicketCount"] += 1
@@ -200,6 +208,76 @@ class MMDHandler:
         if bills_today is None:
             bills_today = {}
         return bills_today
+
+    def view_ticket_handler(self):
+        bill_id = str(self.get_store_id_from_url(2)).lower()
+        is_mmd = self.settings.bill_prefix.lower() in bill_id
+        if is_mmd:
+            tickets = []
+            mmd_bill = self.rest_db.get_bills(bill_id.replace(self.settings.bill_prefix.lower(), ""))[0]
+            services = mmd_bill["bill_data"]
+            client_id = services[0]['clntid']
+            clntname, clntphone = Utils.get_name_and_ph_no(client_id)
+            ticket_id = "{0}{1}".format(self.settings.bill_prefix, mmd_bill["id"])
+            payment = {
+                "ChangeAmt": services[0]["changeAmt"],
+                "ModeofPayment": "",
+                "PayType": "Cash",
+                "PaytypeCardno": "",
+                "Remarks": "",
+                "Tender": services[0]["sumTotal"]
+            }
+            for service in services:
+                ticket = {
+                      "AdvanceAmount": 0,
+                      "Comments": None,
+                      "Created_Date": service["timemark"] + ":00",
+                      "DiscID": None,
+                      "DiscPer": None,
+                      "DiscValue": None,
+                      "DiscountAmount": 50,
+                      "DiscountName": None,
+                      "ID": client_id,
+                      "MemDisc": 50,
+                      "MembershipCardNo": None,
+                      "Name": clntname,
+                      "OrganisationID": 1001,
+                      "OthDisc": 0,
+                      "Phone": clntphone,
+                      "Price": 275,
+                      "PrivelageCardNo": "000000000000",
+                      "Qty": 1,
+                      "Referral": "Request",
+                      "ServiceID": "GS00000001",
+                      "ServiceName": "HAIR CUT",
+                      "Serviceslipno": "0",
+                      "Sex": "1",
+                      "StoreID": self.rest_db.store_id,
+                      "Taxamount": 18,
+                      "TicketID": ticket_id,
+                      "TimeMark": service["timemark"] + ":00",
+                      "Total": 265.5,
+                      "VoucherNo": "",
+                      "WalletAdvance": None,
+                      "clntid": "Prateek9363238467",
+                      "currentmemcardno": None,
+                      "currentmemcheck": 1,
+                      "deldisable": 1,
+                      "empid": "700950",
+                      "empname": "Meenakshi",
+                      "fullname": "{0} - {1}".format(clntphone, clntname),
+                      "member_check": 1,
+                      "pricedisable": 1,
+                      "type": "S"
+                }
+                for tkey in ticket:
+                    if tkey in service:
+                        ticket[tkey] = service[tkey]
+                tickets.append(ticket)
+            view_resp = {"payment": [payment], "ticket": tickets}
+            return view_resp
+        else:
+            return None
 
     def get_tickets_handler(self):
         start_date = date.today().__format__("%Y%m%d")
@@ -228,23 +306,23 @@ class MMDHandler:
             "Created_Date": "timemark"
         }
         bill_struct = {
-                        "Advance": 0,
-                        "Billstatus": "Closed",
-                        "ClientID": "",
-                        "Created_Date": "",
-                        "Discount": 0,
-                        "FirstName": "",
-                        "Gross": 0,
-                        "Mem_disc": 0,
-                        "Oth_Disc": 0,
-                        "Referral": "Live",
-                        "Sex": "1",
-                        "StoreID": "1526",
-                        "Tax": 0,
-                        "TicketID": 0,
-                        "Total": 0,
-                        "id": 0,
-                        "servicedesc": ""
+            "Advance": 0,
+            "Billstatus": "Closed",
+            "ClientID": "",
+            "Created_Date": "",
+            "Discount": 0,
+            "FirstName": "",
+            "Gross": 0,
+            "Mem_disc": 0,
+            "Oth_Disc": 0,
+            "Referral": "Live",
+            "Sex": "1",
+            "StoreID": "1526",
+            "Tax": 0,
+            "TicketID": 0,
+            "Total": 0,
+            "id": 0,
+            "servicedesc": ""
         }
         sum_keys = ["Mem_disc", "Oth_Disc", "servicedesc"]
         resp_bill_map = {
@@ -459,7 +537,7 @@ class MMDHandler:
                             if keys_map[k] in service:
                                 print_svc[k] = service[keys_map[k]]
                         if k == "Created_Date":
-                            print_svc[k] = print_svc[k]+":00"
+                            print_svc[k] = print_svc[k] + ":00"
                         if k == "TicketID":
                             print_svc[k] = bill_id
 
@@ -518,7 +596,7 @@ class MMDHandler:
         for key in main_json:
             if key in merge_json:
                 if type(main_json[key]) is int or type(main_json[key]) is float:
-                    main_json[key] = main_json[key] + merge_json[key]
+                    main_json[key] = round(main_json[key] + merge_json[key], 2)
                 elif key in self.treat_as_int:
                     main_json[key] = str(int(main_json[key]) + int(merge_json[key]))
         return main_json
@@ -526,6 +604,7 @@ class MMDHandler:
     def send_day_close(self, orig_resp):
         def get_sum(key):
             return orig_resp[key] + self.pre_resp.get(key, 0)
+
         day_close_data = OrderedDict()
         day_close_data["Date"] = date.today().__format__("*%d-%B-%Y*")
         day_close_data["NewLine1"] = 1

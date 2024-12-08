@@ -60,7 +60,7 @@ class RestDB:
     def get_bills(self, bill_id=None, phone_num=None, date_start=None, date_end=None):
         query = None
         if bill_id:
-            query = {"id": bill_id}
+            query = {"id": int(bill_id)}
         elif date_start and date_end:
             query = {"bill_date": {"$bt": [int(date_start), int(date_end)]}}
         if query is None:
