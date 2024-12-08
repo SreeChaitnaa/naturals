@@ -99,3 +99,72 @@ Response -
     }
   ]
 }
+
+
+=========================
+
+{
+  "payment": [
+    {
+      "ChangeAmt": 0,
+      "ModeofPayment": "Cash",
+      "PayType": null,
+      "PaytypeCardno": null,
+      "Remarks": "",
+      "Tender": 1
+    },
+    {
+      "ChangeAmt": 0,
+      "ModeofPayment": "Visa",
+      "PayType": "ABN",
+      "PaytypeCardno": "1456",
+      "Remarks": "",
+      "Tender": 1.36
+    }
+  ],
+  "ticket": [
+    {
+      "AdvanceAmount": 0,
+      "Comments": "nygnjhrtf",
+      "Created_Date": "2024-12-08 00:00:00",
+      "DiscID": "0",
+      "DiscPer": "0",
+      "DiscValue": 597,
+      "DiscountAmount": 597,
+      "DiscountName": "dbfbdfb",
+      "ID": "MURALI9591312316",
+      "MemDisc": 0,
+      "MembershipCardNo": "1",
+      "Name": "MURALI",
+      "OrganisationID": 1001,
+      "OthDisc": 597,
+      "Phone": "9591312316",
+      "Price": 599,
+      "PrivelageCardNo": null,
+      "Qty": 1,
+      "Referral": "Request",
+      "ServiceID": "GEXPOFF001",
+      "ServiceName": "Haircut + Detan- Face & Neck + Head massage",
+      "Serviceslipno": "0",
+      "Sex": "1",
+      "StoreID": "1526",
+      "Taxamount": 18,
+      "TicketID": 7303,
+      "TimeMark": "2024-12-08 10:39:56",
+      "Total": 2.36,
+      "VoucherNo": null,
+      "WalletAdvance": null,
+      "clntid": "MURALI9591312316",
+      "currentmemcardno": "1",
+      "currentmemcheck": 1,
+      "deldisable": 1,
+      "empid": "700946",
+      "empname": "Raghunath",
+      "fullname": "9591312316 - MURALI",
+      "member_check": 1,
+      "pricedisable": 1,
+      "type": "S"
+    }
+  ]
+}
+

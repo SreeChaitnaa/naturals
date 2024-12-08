@@ -214,19 +214,22 @@ class MMDHandler:
         is_mmd = self.settings.bill_prefix.lower() in bill_id
         if is_mmd:
             tickets = []
+            payments = []
             mmd_bill = self.rest_db.get_bills(bill_id.replace(self.settings.bill_prefix.lower(), ""))[0]
             services = mmd_bill["bill_data"]
             client_id = services[0]['clntid']
             clntname, clntphone = Utils.get_name_and_ph_no(client_id)
             ticket_id = "{0}{1}".format(self.settings.bill_prefix, mmd_bill["id"])
-            payment = {
-                "ChangeAmt": services[0]["changeAmt"],
-                "ModeofPayment": "",
-                "PayType": "Cash",
-                "PaytypeCardno": "",
-                "Remarks": "",
-                "Tender": services[0]["sumTotal"]
-            }
+            for tender in services[0]["tender"]:
+                payment = {
+                    "ChangeAmt": services[0]["changeAmt"] if tender["paytype"] == "Cash" else 0,
+                    "ModeofPayment": tender["paytype"],
+                    "PayType": tender["paybank"] if tender["paytype"] != "Cash" else None,
+                    "PaytypeCardno": tender["paycrd"] if tender["paytype"] not in ["Cash", "EWallet"] else None,
+                    "Remarks": tender["finremark"],
+                    "Tender": tender["paytender"]
+                }
+                payments.append(payment)
             for service in services:
                 ticket = {
                       "AdvanceAmount": 0,
@@ -274,7 +277,7 @@ class MMDHandler:
                     if tkey in service:
                         ticket[tkey] = service[tkey]
                 tickets.append(ticket)
-            view_resp = {"payment": [payment], "ticket": tickets}
+            view_resp = {"payment": payments, "ticket": tickets}
             return view_resp
         else:
             return None
@@ -409,7 +412,7 @@ class MMDHandler:
                     resp["UPI"] += amt
                     resp["ewalletsum"] += amt
                 elif tender["paytype"] == "Cash":
-                    resp["cash"] += amt
+                    resp["cash"] += amt - services[0]["changeAmt"]
                 else:
                     resp["card"] += amt
 

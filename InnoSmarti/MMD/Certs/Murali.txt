@@ -1,69 +1,439 @@
-Sub Button1_Click()
+Sub Button1_Click(Optional ByVal print_bill_flag As Boolean = True)
+
+    Protect_Sheets
+    If Not (Verify_Input) Then
+        Exit Sub
+    End If
+
     Dim lr As Long
     Dim i As Integer
+    Dim serviceCount As Integer
+
+    Sheets("Invoice").Range("B9") = Date
+    Sheets("Invoice").Range("E9") = Time
+
+    serviceCount = 0
+    For i = 12 To 23
+        If Sheets("Invoice").Cells(i, 1) <> "" Then
+            serviceCount = serviceCount + 1
+        End If
+    Next i
+
+    Dim dp As Double
+    dp = Sheets("Invoice").Range("D25").Value
+    If Sheets("Invoice").Range("C25").Value > 0 Then
+        dp = Sheets("Invoice").Range("C25").Value / Sheets("Invoice").Range("E24").Value
+        Sheets("Invoice").Range("D25").ClearContents
+    End If
+
+    Dim gross As Double
+    gross = Sheets("Invoice").Range("E29").Value
+
+     If Sheets("Invoice").Range("b29").Value = "Wallet" Then
+        dp = 0.3
+        gross = Sheets("Invoice").Range("E24").Value * (1 - dp) * 1.18
+        Sheets("Invoice").Range("D25").ClearContents
+        Sheets("Invoice").Range("C25").ClearContents
+    End If
+
+    lr = NextFreeRowNumber("Services")
+    For i = 12 To 23
+        If Sheets("Invoice").Cells(i, 1) <> "" Then
+            Sheets("Services").Cells(lr, 1).Value = Sheets("Invoice").Range("E10").Value
+            Sheets("Services").Cells(lr, 2).Value = Sheets("Invoice").Range("B9").Value
+            Sheets("Services").Cells(lr, 3).Value = Sheets("Invoice").Range("E9").Value
+            Sheets("Services").Cells(lr, 4).Value = Sheets("Invoice").Range("B8").Value
+            Sheets("Services").Cells(lr, 5).Value = Sheets("Invoice").Range("E8").Value
+            Sheets("Services").Cells(lr, 6).Value = Sheets("Invoice").Cells(i, 1).Value
+            Sheets("Services").Cells(lr, 7).Value = Sheets("Invoice").Cells(i, 4).Value
+            Sheets("Services").Cells(lr, 8).Value = Sheets("Invoice").Cells(i, 5).Value
+            Sheets("Services").Cells(lr, 9).Value = dp
+            Sheets("Services").Cells(lr, 11).Value = Sheets("Invoice").Range("B29").Value
+            lr = lr + 1
+        End If
+    Next i
+
+    CreateContactIfNew
+
+    lr = NextFreeRowNumber("Bills")
+    Sheets("Bills").Cells(lr, 1).Value = Sheets("Invoice").Range("E10").Value
+    Sheets("Bills").Cells(lr, 2).Value = Sheets("Invoice").Range("B9").Value
+    Sheets("Bills").Cells(lr, 3).Value = Sheets("Invoice").Range("E9").Value
+    Sheets("Bills").Cells(lr, 4).Value = Sheets("Invoice").Range("B8").Value
+    Sheets("Bills").Cells(lr, 5).Value = Sheets("Invoice").Range("E8").Value
+    Sheets("Bills").Cells(lr, 6).Value = serviceCount
+    Sheets("Bills").Cells(lr, 7).Value = Sheets("Invoice").Range("E24").Value
+    Sheets("Bills").Cells(lr, 8).Value = dp
+    Sheets("Bills").Cells(lr, 10).Value = gross
+    Sheets("Bills").Cells(lr, 11).Value = Sheets("Invoice").Range("B29").Value
+
+    If print_bill_flag Then
+        Just_Print
+    End If
+
+    SendReviewAfterSale Sheets("Invoice").Range("E8").Value
+
+    Sheets("Invoice").Range("E10").Value = Sheets("Invoice").Range("E10").Value + 1
+    Reset_Bill
+
+    Refresh_Pivot_Tables
+    Save_Workbook
+
+End Sub
+Sub Submit_Without_Print()
+    Button1_Click False
+End Sub
+
+
+Sub Just_Print()
+    Sheets("Invoice").Range("A1:E30").PrintOut
+End Sub
+
+Sub Check_User()
+    Dim lr As Long
+    lr = 1
+    While Sheets("Bills").Cells(lr, 5).Value <> ""
+        If Sheets("Invoice").Range("E8").Value = Sheets("Bills").Cells(lr, 5).Value Then
+            Sheets("Invoice").Range("B8:C8").Value = Sheets("Bills").Cells(lr, 4).Value
+            Exit Sub
+        End If
+        lr = lr + 1
+    Wend
+    MsgBox "User with Phone number - '" & Sheets("Invoice").Range("E8").Value & "' Not found"
+End Sub
+
+Sub Send_whatsAppToThis()
+    SendReviewAfterSale Sheets("Bills").Range("N6").Value
+End Sub
+
+Sub SendReviewAfterSale(PhoneNum As String)
+
+    Dim BillMsg As String
+    BillMsg = "Thank you for using our Services at Naturals NXT Jakkur. "
+    BillMsg = BillMsg & "%0a%0aWe hope you liked our services%0aPlease review us at https%3A%2F%2Fbit.ly%2FReviewNXT"
+
+    'BillMsg = BillMsg & "&phone=91" & PhoneNum
+
+    BillMsg = "text=" & BillMsg & "^&phone=91" & PhoneNum
+
+    SendWhatsapp BillMsg
+End Sub
+Sub Reset_Bill()
+    Protect_Sheets
+    Sheets("Invoice").Range("B8:C9").ClearContents
+    Sheets("Invoice").Range("C25").ClearContents
+    Sheets("Invoice").Range("E8:E9").ClearContents
+    Sheets("Invoice").Range("D25").ClearContents
+    Sheets("Invoice").Range("A12:D23").ClearContents
+    Sheets("Invoice").Range("B29:C29").ClearContents
+    Sheets("Invoice").Range("A30:E30").ClearContents
+    Sheets("Invoice").Range("E25").Formula = "=IF(C25 > 0, C25, E24*D25)"
+End Sub
+
+
+Public Function NextFreeRowNumber(SheetName As String) As Long
+    Dim lr As Long
+    lr = 1
+    While Sheets(SheetName).Cells(lr, 1).Value <> ""
+        lr = lr + 1
+    Wend
+    NextFreeRowNumber = lr
+End Function
+
+Sub Protect_Sheets()
+    Dim pwd As String
+    pwd = "Mayur@3234"
+    Sheets("Invoice").Protect pwd, UserInterfaceOnly:=True
+    Sheets("Services").Protect pwd, UserInterfaceOnly:=True
+    Sheets("Bills").Protect pwd, UserInterfaceOnly:=True
+    Sheets("DayWise").Protect pwd, UserInterfaceOnly:=True
+    Sheets("EmpSale").Protect pwd, UserInterfaceOnly:=True
+    Sheets("VIP Members").Protect pwd, UserInterfaceOnly:=True
+
+End Sub
+Sub UnProtect_Sheets()
+
+    Dim pwd As String
+    pwd = "Mayur@3234"
+    Sheets("Invoice").Unprotect pwd
+    Sheets("Services").Unprotect pwd
+    Sheets("Bills").Unprotect pwd
+    Sheets("DayWise").Unprotect pwd
+    Sheets("EmpSale").Unprotect pwd
+    Sheets("VIP Members").Unprotect pwd
+
+End Sub
+Sub DayClose()
+
+    Protect_Sheets
+    Refresh_Pivot_Tables
+
+    Dim dr As Integer
+    Dim today_date As Date
+
+    dr = 1
+    today_date = Date
+    Dim DCMsg As String
+    DCMsg = "text=Date - " & today_date
+
+    While Sheets("DayWise").Cells(dr, 1).Value <> today_date
+        If Sheets("DayWise").Cells(dr, 1).Value = "Grand Total" Then
+            DCMsg = DCMsg & "%0a%0aNo Sale for the Day.%0a%0aSorry :( :( %0a%0aClosing now, Good Night!!!"
+            SendWhatsapp DCMsg
+            Exit Sub
+        End If
+        dr = dr + 1
+    Wend
+
+    cash_value = 0
+    While Sheets("DayWise").Cells(dr, 2).Value <> "Cash" And Sheets("DayWise").Cells(dr, 2).Value <> ""
+        dr = dr + 1
+    Wend
+
+    If Sheets("DayWise").Cells(dr, 2).Value = "Cash" Then
+        cash_value = Sheets("DayWise").Cells(dr, 6).Value
+        dr = dr + 1
+        While Sheets("DayWise").Cells(dr, 2).Value <> ""
+            dr = dr + 1
+        Wend
+    End If
+
+    DCMsg = DCMsg & "%0aNo of Clients - " & Sheets("DayWise").Cells(dr, 3).Value
+    DCMsg = DCMsg & "%0aNo of Services - " & Sheets("DayWise").Cells(dr, 4).Value
+    DCMsg = DCMsg & "%0a%0aTotal Sales - " & Sheets("DayWise").Cells(dr, 5).Value
+    DCMsg = DCMsg & "%0a%0aCash - " & cash_value
+    DCMsg = DCMsg & "%0aABV - " & Sheets("DayWise").Cells(dr, 7).Value & "%0a%0aClosing now, Good Night!!!"
+
+    Unprotect_WorkBook
+    ActiveWorkbook.Save
+    SendWhatsapp DCMsg
+    Application.Quit
+End Sub
+Sub TestWhatsapp()
+    Dim mnsg As String
+    mnsg = "text=Date2 - now%0aNewLine^&phone=9591312316"
+    SendWhatsapp mnsg
+End Sub
+Sub WhatsAppAll()
+    Dim idx As Integer
+    idx = 71
+    While Sheets("Bills").Cells(idx, 5).Value <> ""
+        SendReviewAfterSale Sheets("Bills").Cells(idx, 5).Value
+        MsgBox "Sent to " & Sheets("Bills").Cells(idx, 5).Value
+        idx = idx + 1
+    Wend
+End Sub
+Sub CreateAllContacts()
+    Dim idx As Integer
+    idx = 71
+    While Sheets("Bills").Cells(idx, 5).Value <> ""
+        CreateContact Sheets("Bills").Cells(idx, 4).Value, Sheets("Bills").Cells(idx, 5).Value
+        MsgBox "Saved User - " & Sheets("Bills").Cells(idx, 4).Value
+        idx = idx + 1
+    Wend
+End Sub
+
+Sub CreateContactIfNew()
+    Dim idx As Integer
+    idx = 2
+    While Sheets("Bills").Cells(idx, 5).Value <> ""
+        If Sheets("Invoice").Range("E8").Value = Sheets("Bills").Cells(idx, 5).Value Then
+            Exit Sub
+        End If
+        idx = idx + 1
+    Wend
+
+    CreateContact Sheets("Invoice").Range("B8").Value, Sheets("Invoice").Range("E8").Value
+    MsgBox "Please save user in Google Contact - " & Sheets("Invoice").Range("B8").Value
+    idx = idx + 1
+End Sub
+
+Sub CreateContact(CName As String, CPhone As String)
+    Dim URL As String
+    URL = "https://contacts.google.com/u/0/new?hl=en&givenname=" & CName & "&phone=" & CPhone & "&familyname=Client"
+    ActiveWorkbook.FollowHyperlink URL
+End Sub
+
+
+
+Sub SendWhatsapp(WaMsg As String)
+    Shell "cmd /C start whatsapp://send?" & Replace(WaMsg, " ", "%20")
+    Windows("Billing.xlsm").Activate
+    MsgBox "Sending Message in Whatsapp, please confirm..."
+    Shell "cmd /C start whatsapp://send?" & Replace(WaMsg, " ", "%20")
+    'ActiveWorkbook.FollowHyperlink "http://api.whatsapp.com/send?" & WaMsg
+End Sub
+
+
+Sub Refresh_Pivot_Tables()
+    Protect_Sheets
+    Sheets("DayWise").PivotTables("PivotTable4").RefreshTable
+    Sheets("DayWise").PivotTables("PivotTable1").RefreshTable
+    Sheets("EmpSale").PivotTables("PivotTable1").RefreshTable
+    Sheets("EmpSale").PivotTables("PivotTable2").RefreshTable
+    Sheets("EmpSale").PivotTables("PivotTable3").RefreshTable
+    Sheets("EmpSale").PivotTables("PivotTable6").RefreshTable
+    Sheets("DayWise Sales").PivotTables("PivotTable4").RefreshTable
+
+
+End Sub
+
+Public Function CashBack_address() As Range
+    Set CashBack_address = Sheets("VIP Members").Range("B:B").Find(Sheets("Invoice").Range("E8").Value)
+End Function
+
+Sub Create_Cashback()
+    Protect_Sheets
+    Dim CashBack_Range As Range
+    Set CashBack_Range = CashBack_address
+    If Not (CashBack_Range Is Nothing) Then
+        MsgBox "Already user have 300% Cashback"
+        Exit Sub
+    End If
+
+
+    If Not (Verify_Input) Then
+        Exit Sub
+    End If
+    Dim lr As Long
+    lr = NextFreeRowNumber("VIP Members")
+
+    Sheets("VIP Members").Cells(lr, 1).Value = Sheets("Invoice").Range("B8").Value
+    Sheets("VIP Members").Cells(lr, 2).Value = Sheets("Invoice").Range("E8").Value
+    Sheets("VIP Members").Cells(lr, 3).Value = Sheets("Invoice").Range("E10").Value
+    Sheets("VIP Members").Cells(lr, 4).Value = Sheets("Invoice").Range("E26").Value
+    Sheets("VIP Members").Cells(lr, 5).Value = Sheets("Invoice").Range("E26").Value * 3
+    Sheets("VIP Members").Cells(lr, 6).Value = Date
+    Sheets("VIP Members").Cells(lr, 7).Value = Sheets("VIP Members").Cells(lr, 6).Value + 365
+
     Dim msg As String
+    msg = "Added Cash back of Rs." & Sheets("VIP Members").Cells(lr, 5).Value & vbNewLine & "Valid Till: " & Sheets("VIP Members").Cells(lr, 7).Value
+    Sheets("Invoice").Range("A30").Value = msg
+    MsgBox msg
+End Sub
+
+Sub Check_And_Apply_Cashback()
+    Protect_Sheets
+    Dim CashBack_Range As Range
+    Set CashBack_Range = CashBack_address
+
+    If CashBack_Range Is Nothing Then
+        MsgBox "User Donot have this Cachback offer"
+        Exit Sub
+    End If
+
+    If Not (Verify_Input) Then
+        Exit Sub
+    End If
+
+    Dim Cbr As Long
+    Cbr = CashBack_Range.Row
+
+    Dim visitCount As Long
+    visitCount = 8
+
+    While Sheets("VIP Members").Cells(Cbr, visitCount).Value <> "" And visitCount < 20
+        visitCount = visitCount + 1
+    Wend
+
+    If visitCount = 20 Then
+        MsgBox "All 12 Visits Completed"
+        Exit Sub
+    End If
+
+    If Sheets("VIP Members").Cells(Cbr, 20).Value < 1 Then
+        MsgBox "Cash back balance is Empty"
+        Exit Sub
+    Else
+        Sheets("Invoice").Range("D25").Value = 0.25
+    End If
+
+    Dim msg As String
+    msg = "Applied 25% cashback on your on your visit: " & (visitCount - 6)
+    Sheets("Invoice").Range("A30").Value = msg
+    Sheets("VIP Members").Cells(Cbr, visitCount).Value = Sheets("Invoice").Range("E25").Value
+    MsgBox msg
+End Sub
+
+
+Public Function Verify_Input() As Boolean
+    Dim i As Integer
+    Dim msg As String
+
     If Sheets("Invoice").Cells(8, 2) = "" Then
         MsgBox "Please provide Customer Name"
         Application.Goto Sheets("Invoice").Cells(8, 2)
-        Exit Sub
+        Verify_Input = False
+        Exit Function
     End If
-    
+
     If Sheets("Invoice").Cells(8, 5) = "" Then
         MsgBox "Please provide Customer Phone Number"
         Application.Goto Sheets("Invoice").Cells(8, 5)
-        Exit Sub
+        Verify_Input = False
+        Exit Function
     End If
-    
+
     For i = 12 To 23
         If Sheets("Invoice").Cells(i, 1) <> "" Then
             If Sheets("Invoice").Cells(i, 4) = "" Then
                 msg = "Please Select provider for " & Sheets("Invoice").Cells(i, 1)
                 MsgBox msg
                 Application.Goto Sheets("Invoice").Cells(i, 4)
-                Exit Sub
+                Verify_Input = False
+                Exit Function
             End If
         End If
     Next i
-    
-    Sheets("Invoice").Range("B9") = Date
-    Sheets("Invoice").Range("E9") = Time
-    
-    
-    lr = Sheets("Bills").Cells(Rows.Count, 1).End(xlUp).Row + 1
-    For i = 12 To 23
-        If Sheets("Invoice").Cells(i, 1) <> "" Then
-            Sheets("Bills").Cells(lr, 1).Value = Sheets("Invoice").Range("E10").Value
-            Sheets("Bills").Cells(lr, 2).Value = Sheets("Invoice").Range("B9").Value
-            Sheets("Bills").Cells(lr, 3).Value = Sheets("Invoice").Range("E9").Value
-            Sheets("Bills").Cells(lr, 4).Value = Sheets("Invoice").Range("B8").Value
-            Sheets("Bills").Cells(lr, 5).Value = Sheets("Invoice").Range("E8").Value
-            Sheets("Bills").Cells(lr, 6).Value = Sheets("Invoice").Cells(i, 1).Value
-            Sheets("Bills").Cells(lr, 7).Value = Sheets("Invoice").Cells(i, 4).Value
-            Sheets("Bills").Cells(lr, 8).Value = Sheets("Invoice").Cells(i, 5).Value
-            Sheets("Bills").Cells(lr, 9).Value = Sheets("Invoice").Range("D25").Value
-            lr = lr + 1
-        End If
-    Next i
-    
-    
-    Sheets("Invoice").Range("A1:E29").PrintOut
-    
-    
-    Sheets("Invoice").Range("E10").Value = Sheets("Invoice").Range("E10").Value + 1
-    Sheets("Invoice").Range("B8:C9").ClearContents
-    Sheets("Invoice").Range("E8:E9").ClearContents
-    Sheets("Invoice").Range("A12:D23").ClearContents
-    
+
+    If Sheets("Invoice").Cells(29, 2) = "" Then
+        MsgBox "Please provide Payment Type"
+        Application.Goto Sheets("Invoice").Cells(29, 2)
+        Verify_Input = False
+        Exit Function
+    End If
+
+
+Verify_Input = True
+End Function
+
+Sub Protect_WorkBook()
+    If Not (Sheets("Services").Visible) Then
+        Exit Sub
+    End If
+    Sheets("Services").Visible = False
+    Sheets("Bills").Visible = False
+    Sheets("DayWise").Visible = False
+    Sheets("EmpSale").Visible = False
+    Sheets("VIP Members").Visible = False
+    Sheets("DayWise Sales").Visible = False
+    Sheets("Wallet").Visible = False
+    ActiveWorkbook.Protect Password:="JSR@123", Structure:=True, Windows:=True
 End Sub
 
-Sub Protect_Sheets()
-    Dim pwd As String
-    pwd = "Mayur@3234"
-    Sheets("Invoice").Protect pwd, UserInterfaceOnly:=True
-    Sheets("MasterData").Protect pwd, UserInterfaceOnly:=True
-    Sheets("Bills").Protect pwd, UserInterfaceOnly:=True
+
+Sub Unprotect_WorkBook()
+    If Sheets("Services").Visible Then
+        Exit Sub
+    End If
+    ActiveWorkbook.Unprotect Password:="JSR@123"
+    Sheets("Services").Visible = True
+    Sheets("Bills").Visible = True
+    Sheets("DayWise").Visible = True
+    Sheets("EmpSale").Visible = True
+    Sheets("VIP Members").Visible = True
+    Sheets("DayWise Sales").Visible = True
+    Sheets("Wallet").Visible = True
 End Sub
 
-Sub Dummy()
-    
+Sub Save_Workbook()
+    Unprotect_WorkBook
+    ActiveWorkbook.Save
+    Protect_WorkBook
 End Sub
+
+Sub SaveNormalExcelCopy()
+    ActiveWorkbook.SaveCopyAs Filename:="C:\Users\NXT\OneDrive\Sheets\JKR\Billing_ReadOnly.xlsm"
+
+End Sub
+
