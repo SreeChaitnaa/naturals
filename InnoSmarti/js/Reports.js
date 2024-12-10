@@ -1,7 +1,8 @@
 latestData = null
 table_columns = {
     "Bills" : ["TicketID", "Created_Date", "Phone", "Name", "Discount", "Total", "Tax", "Gross", "Sex", "servicedesc"],
-    "DayWise" : ["Date", "Bills", "Discount", "Net Sale", "Tax", "Gross"]
+    "DayWise" : ["Date", "Bills", "Discount", "Net Sale", "Tax", "Gross"],
+    "EmpSale": ["FirstName", "TicketCount", "TotalServiceCount", "NetSalesForServices", "ProductSales", "MembershipCardSales"]
 }
 function show_reports()
 {
