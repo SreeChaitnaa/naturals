@@ -649,7 +649,7 @@ class MMDHandler:
             resp_json = resp_json_orig.copy()
             if self.pre_resp_code == MMDStatus.ReturnPostMerge:
                 if "/getServices/" in str(self.request.url):
-                    return Utils.merge_lists(resp_json, self.pre_resp, incremental_key="Row")
+                    return json.dumps(Utils.merge_lists(resp_json, self.pre_resp, incremental_key="Row"))
                 elif str(self.request.url).endswith('/salesOftheday'):
                     resp_json["MessageSent"] = self.send_day_close(resp_json)
                     return resp_json
@@ -682,7 +682,7 @@ class MMDHandler:
                                 for item in resp_json[key]:
                                     item["id"] = id_count
                                     id_count = id_count + 1
-            return resp_json
+            return json.dumps(resp_json)
         except Exception as e2:
             self.logger.error(e2)
             resp_json_orig["SCA_Exception"] = str(e2)
