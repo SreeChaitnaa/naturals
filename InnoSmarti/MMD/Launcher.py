@@ -112,11 +112,14 @@ class Launcher:
         if not self.is_mmd:
             return
 
+        prev_url = self.driver.current_url
+
         while True:
             try:
-                _ = self.driver.current_url
-                if self.settings.show_invoices:
+                current_url = self.driver.current_url
+                if self.settings.show_invoices and current_url != prev_url:
                     self.set_element(self.settings.reports_link)
+                prev_url = current_url
             except Exception as exc1:
                 logging.info("Browser closed - {}".format(exc1))
                 break
