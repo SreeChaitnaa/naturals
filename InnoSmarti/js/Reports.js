@@ -24,6 +24,14 @@ function show_reports()
     api = api + branch + ",1001," + fromDate + "," +toDate
 
     if(reportType == "EmpSale"){
+        requestOptions["method"] = "POST"
+        requestOptions["body"] = JSON.stringify({
+            "SoreID": branch,
+            "OrganisationID": "1001",
+            "fDate": fromDate,
+            "tDate": toDate
+        })
+        api = "https://ntlivewebapi.innosmarti.com/api/auth/employeewisesales"
     }
 
     fetch(api, requestOptions).then(response => response.json())
@@ -62,6 +70,10 @@ function format_data(data, reportType)
                 bill["Phone"] = bill["ClientID"].slice(-10)
                 bill["Name"] = bill["ClientID"].replace(bill["Phone Number"], "")
             })
+            break
+        case "EmpSale":
+            response = data["data"]
+            break
     }
     return response
 }
