@@ -49,9 +49,11 @@ def mmd(path):
     headers = request.headers
     if "Authorization" in headers:
         if headers["Authorization"] == "UseLast":
-            headers = {"Accept": "*/*", "Authorization": last_auth}
+            headers = dict(headers)
+            headers["Authorization"] = last_auth
         else:
             last_auth = headers["Authorization"]
+        app.logger.info("Headers - {}".format(headers))
 
     resp = session.request(request.method, request.url, data=request.data,
                            headers=headers).text
