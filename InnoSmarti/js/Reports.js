@@ -49,8 +49,14 @@ function format_data(data, reportType)
     switch(reportType)
     {
         case "DayWise":
+        case "DayWiseSplit":
             data["bills"].forEach(bill => {
                 bill_date = bill["Created_Date"].split(" ")[0]
+                if("DayWiseSplit" == reportType){
+                    if(bill[TicketID].startsWith("MMD")){
+                        bill_date = bill_date + "-SCA"
+                    }
+                }
                 if(!(bill_date in response))
                 {
                     response[bill_date] = {}
