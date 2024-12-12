@@ -53,7 +53,7 @@ function format_data(data, reportType)
             data["bills"].forEach(bill => {
                 bill_date = bill["Created_Date"].split(" ")[0]
                 if("DayWiseSplit" == reportType){
-                    if(bill[TicketID].startsWith("MMD")){
+                    if(bill["TicketID"].startsWith("MMD")){
                         bill_date = bill_date + "-SCA"
                     }
                 }
