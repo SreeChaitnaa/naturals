@@ -52,16 +52,16 @@ function format_data(data, reportType)
         case "DayWiseSplit":
         case "DayWiseNRSOnly":
             data["bills"].forEach(bill => {
+				add_bill = true
+				is_mmd = bill["TicketID"].toString().startsWith("MMD") 
                 bill_date = bill["Created_Date"].split(" ")[0]
                 if("DayWiseSplit" == reportType){
-                    if(bill["TicketID"].toString().startsWith("MMD")){
+                    if(is_mmd){
                         bill_date = bill_date + "-SCA"
                     }
                 }
                 if("DayWiseNRSOnly" == reportType){
-                    if(bill["TicketID"].toString().startsWith("MMD")){
-                        continue
-                    }
+                    add_bill = !is_mmd
                 }
                 if(!(bill_date in response))
                 {
@@ -69,11 +69,13 @@ function format_data(data, reportType)
                     table_columns["DayWise"].forEach(tk => {response[bill_date][tk] = 0})
                     response[bill_date]["Date"] = bill_date
                 }
-                response[bill_date]["Bills"] += 1
-                response[bill_date]["Discount"] += bill["Discount"]
-                response[bill_date]["Net Sale"] += bill["Total"]
-                response[bill_date]["Tax"] += bill["Tax"]
-                response[bill_date]["Gross"] += bill["Gross"]
+				if(add_bill){
+					response[bill_date]["Bills"] += 1
+					response[bill_date]["Discount"] += bill["Discount"]
+					response[bill_date]["Net Sale"] += bill["Total"]
+					response[bill_date]["Tax"] += bill["Tax"]
+					response[bill_date]["Gross"] += bill["Gross"]
+				}
             })
             response = Object.values(response).sort((a, b) => a.Date - b.Date);
             break
