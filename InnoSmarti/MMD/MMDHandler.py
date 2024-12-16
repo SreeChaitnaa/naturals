@@ -307,6 +307,7 @@ class MMDHandler:
             "Total": "sumNet",
             "servicedesc": "ServiceName",
             "Created_Date": "timemark",
+            "empname": "empname",
             "ChangeAmt": "changeAmt"
         }
         bill_struct = {
@@ -327,9 +328,10 @@ class MMDHandler:
             "Total": 0,
             "id": 0,
             "servicedesc": "",
-            "ChangeAmt": 0
+            "ChangeAmt": 0,
+            "empname": ""
         }
-        sum_keys = ["Mem_disc", "Oth_Disc", "servicedesc"]
+        sum_keys = ["Mem_disc", "Oth_Disc", "servicedesc", "empname"]
         resp_bill_map = {
             "Net": "Total",
             "servicebillsalesnet": "Total",
