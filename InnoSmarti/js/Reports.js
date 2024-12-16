@@ -1,8 +1,8 @@
 latestData = null
 table_columns = {
-    "Bills" : ["TicketID", "Created_Date", "Phone", "Name", "Discount", "Total", "Tax", "Gross", "Sex", "servicedesc"],
+    "Bills" : ["TicketID", "Created_Date", "Phone", "Name", "Discount", "Total", "Tax", "Gross", "Sex", "servicedesc", "empname"],
     "DayWise" : ["Date", "Bills", "Discount", "Net Sale", "Tax", "Gross"],
-    "EmpSale": ["FirstName", "TicketCount", "TotalServiceCount", "NetSalesForServices", "ProductSales", "MembershipCardSales"]
+    "EmpSale": ["FirstName", , "TicketCount", "TotalServiceCount", "NetSalesForServices",	"ProductSales",	"MembershipCardSales"]
 }
 function show_reports()
 {
@@ -49,33 +49,19 @@ function format_data(data, reportType)
     switch(reportType)
     {
         case "DayWise":
-        case "DayWiseSplit":
-        case "DayWiseNRSOnly":
             data["bills"].forEach(bill => {
-				add_bill = true
-				is_mmd = bill["TicketID"].toString().startsWith("MMD") 
                 bill_date = bill["Created_Date"].split(" ")[0]
-                if("DayWiseSplit" == reportType){
-                    if(is_mmd){
-                        bill_date = bill_date + "-SCA"
-                    }
-                }
-                if("DayWiseNRSOnly" == reportType){
-                    add_bill = !is_mmd
-                }
                 if(!(bill_date in response))
                 {
                     response[bill_date] = {}
                     table_columns["DayWise"].forEach(tk => {response[bill_date][tk] = 0})
                     response[bill_date]["Date"] = bill_date
                 }
-				if(add_bill){
-					response[bill_date]["Bills"] += 1
-					response[bill_date]["Discount"] += bill["Discount"]
-					response[bill_date]["Net Sale"] += bill["Total"]
-					response[bill_date]["Tax"] += bill["Tax"]
-					response[bill_date]["Gross"] += bill["Gross"]
-				}
+                response[bill_date]["Bills"] += 1
+                response[bill_date]["Discount"] += bill["Discount"]
+                response[bill_date]["Net Sale"] += bill["Total"]
+                response[bill_date]["Tax"] += bill["Tax"]
+                response[bill_date]["Gross"] += bill["Gross"]
             })
             response = Object.values(response).sort((a, b) => a.Date - b.Date);
             break
@@ -83,7 +69,7 @@ function format_data(data, reportType)
             response = data["bills"].sort((a, b) => b.Created_Date - a.Created_Date);
             response.forEach(bill => {
                 bill["Phone"] = bill["ClientID"].slice(-10)
-                bill["Name"] = bill["ClientID"].replace(bill["Phone Number"], "")
+                bill["Name"] = bill["ClientID"].replace(bill["Phone"], "")
             })
             break
         case "EmpSale":
