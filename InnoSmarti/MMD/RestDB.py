@@ -13,11 +13,15 @@ class DBStrings:
     Table_Bills = "bills"
     Table_Services = "services"
     Table_Products = "products"
+    Table_DaySales = "daysales"
+    Table_config = "config"
     REST_id = "_id"
     Services_Prefix = "SCAS0"
     Products_Prefix = "SCAP0"
     ServiceID = "ServiceID"
     ProductID = "ProductID"
+    ConfigName = "config_name"
+    ConfigValue = "config_value"
     Bill_Data = "bill_data"
 
 
@@ -57,12 +61,14 @@ class RestDB:
         resp[DBStrings.Bill_Data] = json.loads(resp[DBStrings.Bill_Data])
         return resp
 
-    def get_bills(self, bill_id=None, phone_num=None, date_start=None, date_end=None):
+    def get_bills(self, bill_id=None, phone_num=None, date_start=None, date_end=None, bill_start=None, bill_end=None):
         query = None
         if bill_id:
             query = {"id": int(bill_id)}
         elif date_start and date_end:
             query = {"bill_date": {"$bt": [int(date_start), int(date_end)]}}
+        elif bill_start and bill_end:
+            query = {"id": {"$bt": [int(bill_start), int(bill_end)]}}
         if query is None:
             raise Exception("Invalid input params")
         url_params = 'q={}'.format(json.dumps(query))
@@ -93,4 +99,21 @@ class RestDB:
         bill["Qty"] -= qty
         method = DBStrings.DELETE if bill["Qty"] <= 0 else DBStrings.PUT
         self.do_rest_call(method, bill, table=DBStrings.Table_Products)
+
+    def get_all_dates_sales(self):
+        self.do_rest_call(table=DBStrings.Table_DaySales)
+
+    def get_config(self, config_name):
+        url_params = 'q={}'.format(json.dumps({DBStrings.ConfigName: config_name}))
+        config = self.do_rest_call(url_params=url_params, table=DBStrings.Table_config)[0]
+        return config
+
+    def get_config_value(self, config_name):
+        return self.get_config(config_name)[DBStrings.ConfigValue]
+
+    def update_config_value(self, config_name, config_value):
+        config = self.get_config(config_name)
+        config[DBStrings.ConfigValue] = str(config_value)
+        self.do_rest_call(DBStrings.PUT, config, table=DBStrings.Table_config)
+
 

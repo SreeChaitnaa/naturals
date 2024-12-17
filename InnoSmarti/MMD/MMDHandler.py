@@ -90,6 +90,10 @@ class MMDHandler:
                 handler = self.save_bill_handler
                 store_id = self.get_store_id_from_url()
 
+            if "updaterestdb" in request.url:
+                handler = self.update_rest_db_handler
+                store_id = self.get_store_id_from_payload()
+
             elif str(request.url).endswith('/printreceipt'):
                 handler = self.print_bill_handler
                 store_id = self.get_store_id_from_payload()
@@ -140,6 +144,9 @@ class MMDHandler:
         for k in key.split(";"):
             store_id = store_id[k]
         return store_id
+
+    def update_rest_db_handler(self):
+        current_bill = self.payload["current_bill"]
 
     def get_employee_sales_handler(self):
         start_date = self.payload["fDate"].replace("-", "")
@@ -209,13 +216,18 @@ class MMDHandler:
             bills_today = {}
         return bills_today
 
-    def view_ticket_handler(self):
-        bill_id = str(self.get_store_id_from_url(2)).lower()
-        is_mmd = self.settings.bill_prefix.lower() in bill_id
+    def view_ticket_handler(self, mmd_bill=None):
+        if mmd_bill:
+            is_mmd = True
+            bill_id = mmd_bill["id"]
+        else:
+            bill_id = str(self.get_store_id_from_url(2)).lower()
+            is_mmd = self.settings.bill_prefix.lower() in bill_id
         if is_mmd:
             tickets = []
             payments = []
-            mmd_bill = self.rest_db.get_bills(bill_id.replace(self.settings.bill_prefix.lower(), ""))[0]
+            if mmd_bill is None:
+                mmd_bill = self.rest_db.get_bills(bill_id.replace(self.settings.bill_prefix.lower(), ""))[0]
             services = mmd_bill["bill_data"]
             client_id = services[0]['clntid']
             clntname, clntphone = Utils.get_name_and_ph_no(client_id)
