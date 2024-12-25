@@ -1,0 +1,78 @@
+{
+  "_id": "676c0195fd314d0d00003331",
+  "datenum": "20241001",
+  "bills": [
+    {
+      "payment": [
+        {
+          "ChangeAmt": 0,
+          "ModeofPayment": "EWallet",
+          "Tender": 1947
+        }
+      ],
+      "ticket": [
+        {
+          "DiscountAmount": 77.84,
+          "Price": 720,
+          "Qty": 1,
+          "ServiceID": "LS00000322",
+          "ServiceName": "FLAVOURED WAXING - FULL LEGS",
+          "Sex": "1",
+          "Total": 757.75,
+          "empname": "Meenakshi"
+        },
+        {
+          "DiscountAmount": 51.89,
+          "Price": 480,
+          "Qty": 1,
+          "ServiceID": "LS00000320",
+          "ServiceName": "FLAVOURED WAXING - FULL ARMS",
+          "Sex": "1",
+          "Total": 505.17,
+          "empname": "Meenakshi"
+        },
+        {
+          "DiscountAmount": 54.05,
+          "Price": 500,
+          "Qty": 1,
+          "ServiceID": "LS00000404",
+          "ServiceName": "REFLEXOLOGY - NECK & SHOULDER",
+          "Sex": "1",
+          "Total": 526.22,
+          "empname": "Meenakshi"
+        },
+        {
+          "DiscountAmount": 5.41,
+          "Price": 50,
+          "Qty": 1,
+          "ServiceID": "LS00000302",
+          "ServiceName": "THREADING - EYEBROW",
+          "Sex": "1",
+          "Total": 52.62,
+          "empname": "Meenakshi"
+        },
+        {
+          "DiscountAmount": 10.81,
+          "Price": 100,
+          "Qty": 1,
+          "ServiceID": "LS00000363",
+          "ServiceName": "PEEL OFF - UPPER LIP",
+          "Sex": "1",
+          "Total": 105.24,
+          "empname": "Meenakshi"
+        }
+      ],
+      "mmd": true,
+      "Name": "ranjana",
+      "Phone": "9538833364",
+      "TicketID": "MMD1016",
+      "TimeMark": "2024-10-01 17:10:00",
+      "Comments": "raghummdlasya"
+    }
+  ],
+  "_created": "2024-12-25T12:59:01.906Z",
+  "_changed": "2024-12-25T12:59:01.906Z",
+  "_createdby": "api",
+  "_changedby": "api",
+  "_version": 0
+}

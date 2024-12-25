@@ -58,7 +58,7 @@ def mmd(path):
     resp = session.request(request.method, request.url, data=request.data,
                            headers=headers).text
 
-    return mmd_handler.post_handler(resp)
+    return mmd_handler.post_handler(resp, headers)
 
 
 if __name__ == '__main__':

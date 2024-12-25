@@ -116,4 +116,20 @@ class RestDB:
         config[DBStrings.ConfigValue] = str(config_value)
         self.do_rest_call(DBStrings.PUT, config, table=DBStrings.Table_config)
 
+    def update_bills_of_day(self, bill_date, bills):
+        query = {"datenum": str(bill_date)}
+        url_params = 'q={}'.format(json.dumps(query))
+        prev_day_sale = self.do_rest_call(url_params=url_params, table=DBStrings.Table_DaySales)
+        task_method = DBStrings.POST
+        query["bills"] = bills
+        if len(prev_day_sale) > 0:
+            prev_day_sale = prev_day_sale[0]
+            prev_day_sale["bills"].append(bills)
+            query = prev_day_sale
+            task_method = DBStrings.PUT
+        self.do_rest_call(task_method, query, table=DBStrings.Table_DaySales)
+
+
+
+
 

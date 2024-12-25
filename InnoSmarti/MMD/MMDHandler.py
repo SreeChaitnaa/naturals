@@ -2,9 +2,13 @@ import logging
 import json
 import operator
 from datetime import date
+
+import requests
+
 from RestDB import RestDB
 from collections import OrderedDict
 import subprocess
+import threading
 
 
 class Utils:
@@ -90,10 +94,6 @@ class MMDHandler:
                 handler = self.save_bill_handler
                 store_id = self.get_store_id_from_url()
 
-            if "updaterestdb" in request.url:
-                handler = self.update_rest_db_handler
-                store_id = self.get_store_id_from_payload()
-
             elif str(request.url).endswith('/printreceipt'):
                 handler = self.print_bill_handler
                 store_id = self.get_store_id_from_payload()
@@ -145,8 +145,58 @@ class MMDHandler:
             store_id = store_id[k]
         return store_id
 
-    def update_rest_db_handler(self):
-        current_bill = self.payload["current_bill"]
+    def update_rest_db(self, bill_number, is_mmd, headers):
+        bills_to_add = []
+        bills_per_day = {}
+        last_bill_key = "mmd_last_bill" if is_mmd else "nrs_last_bill"
+        last_bill_number = int(self.rest_db.get_config_value(last_bill_key))
+        next_bill_number = last_bill_number + 1
+        if int(bill_number) <= last_bill_number:
+            return
+        if is_mmd:
+            for mmd_bill in self.rest_db.get_bills(bill_start=next_bill_number, bill_end=bill_number):
+                bills_to_add.append(self.view_ticket_handler(mmd_bill))
+            next_bill_number = bill_number
+        else:
+            url_format = "https://ntlivewebapi.innosmarti.com/api/auth/viewTicketNew/{0},1001,{1}"
+            counter = 1
+            while next_bill_number <= bill_number:
+                url = url_format.format(self.rest_db.store_id, next_bill_number)
+                self.logger.info("Calling - {}".format(url))
+                resp = requests.request("GET", url, headers=headers)
+                self.logger.info("Resp is - {0} - {1}".format(resp.status_code, resp.text))
+                bills_to_add.append(json.loads(resp.text))
+                counter += 1
+                self.logger.info("Counter is - {}".format(counter))
+                if counter > 25:
+                    break
+                next_bill_number += 1
+        for bill_to_add in bills_to_add:
+            bill = {"payment": [], "ticket": [], "mmd": is_mmd}
+            bill_date = bill_to_add["ticket"][0]["Created_Date"].split(" ")[0].replace("-", "")
+            if bill_date not in bills_per_day:
+                bills_per_day[bill_date] = []
+
+            for k in ["Name", "Phone", "TicketID", "TimeMark", "Comments"]:
+                bill[k] = bill_to_add["ticket"][0][k]
+
+            for payment in bill_to_add["payment"]:
+                np = {}
+                for k in ["ChangeAmt", "ModeofPayment", "Tender"]:
+                    np[k] = payment[k]
+                bill["payment"].append(np)
+
+            for ticket in bill_to_add["ticket"]:
+                nt = {}
+                for k in ["DiscountAmount", "Price", "Qty", "ServiceID", "ServiceName", "Sex", "Total", "empname"]:
+                    nt[k] = ticket[k]
+                bill["ticket"].append(nt)
+            bills_per_day[bill_date].append(bill)
+
+        for bill_date, bills in bills_per_day.items():
+            self.rest_db.update_bills_of_day(bill_date, bills)
+
+        self.rest_db.update_config_value(last_bill_key, next_bill_number)
 
     def get_employee_sales_handler(self):
         start_date = self.payload["fDate"].replace("-", "")
@@ -473,6 +523,7 @@ class MMDHandler:
             try:
                 _, ph_no = Utils.get_name_and_ph_no(self.payload[0]['clntid'])
                 saved_bill = self.rest_db.save_bill(self.payload, ph_no)
+                self.update_rest_db(saved_bill["id"], True, None)
                 return {
                     "TicketID": "{0}{1}".format(self.settings.bill_prefix, saved_bill["id"]),
                     # "TicketID": 5868,
@@ -653,7 +704,7 @@ class MMDHandler:
         Utils.send_whatsapp(message)
         return message
 
-    def post_handler(self, orig_resp):
+    def post_handler(self, orig_resp, headers):
         try:
             resp_json_orig = json.loads(orig_resp)
         except:
@@ -661,6 +712,11 @@ class MMDHandler:
 
         try:
             resp_json = resp_json_orig.copy()
+            if self.request.method == "POST" and "/savebill/" in self.request.url:
+                self.logger.info(resp_json)
+                self.logger.info(headers)
+                if resp_json["message"] == "SUCCESS":
+                    self.update_rest_db(resp_json["TicketID"], False, headers)
             if self.pre_resp_code == MMDStatus.ReturnPostMerge:
                 if "/getServices/" in str(self.request.url):
                     return json.dumps(Utils.merge_lists(resp_json, self.pre_resp, incremental_key="Row"))
