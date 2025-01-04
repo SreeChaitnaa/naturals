@@ -1,77 +1,45 @@
 latestData = null
-full_data = null
 table_columns = {
-    "Bills" : ["TicketID", "Date Time", "Phone", "Name", "Discount", "Total", "Tax", "Gross", "Sex", "Services"],
-    "DayWise" : ["Date", "Bills", "Services", "Price", "Discount", "Net Sale", "Tax", "Gross"],
+    "Bills" : ["TicketID", "Created_Date", "Phone", "Name", "Discount", "Total", "Tax", "Gross", "Sex", "servicedesc", "empname"],
+    "DayWise" : ["Date", "Bills", "Discount", "Net Sale", "Tax", "Gross"],
     "EmpSale": ["FirstName", "TicketCount", "TotalServiceCount", "NetSalesForServices", "ProductSales", "MembershipCardSales"]
-}
-
-rest_db_data = {"1526": {
-                            "db": new restdb_1526("670b471a318721cce98dcab2"),
-                            "password": "929495"
-                        }
-                }
-
-function login(){
-    branch = $('#branch')[0].value
-    login_password = rest_db_data[branch]["password"]
-    if($('#ip_pwd')[0].value == login_password){
-        $('#lbl_loading')[0].innerText = "Login Success, Loading Data..."
-        show_reports_div()
-    }
-    else{
-        $('#lbl_err')[0].innerText = "Access Denied!!!"
-    }
-    $('#ip_pwd')[0].value = ""
-}
-
-function show_reports_div(){
-    branch = $('#branch')[0].value
-    rest_db_data[branch]['db'].daysales.find({}, {}, function(err, response){
-        if(err != null){
-            console.log(err)
-            $('#lbl_err')[0].innerText = err
-        }
-        else{
-            full_data = response
-            $('#report_div')[0].style.display = "block"
-            $('#pwd_div')[0].style.display = "none"
-        }
-    })
 }
 
 function show_reports()
 {
-    bills_to_use = []
-    fromDate = $('#fromDatePicker')[0].value.replaceAll("-", "")
-    toDate = $('#toDatePicker')[0].value.replaceAll("-", "")
+    const myHeaders = new Headers();
+    myHeaders.append("Authorization", "UseLast");
+    myHeaders.append("Content-Type", "application/json");
+
+    const requestOptions = {
+      method: "GET",
+      headers: myHeaders,
+      redirect: "follow"
+    };
+
+    branch = $('#branch')[0].value
+    fromDate = $('#fromDatePicker')[0].value
+    toDate = $('#toDatePicker')[0].value
     reportType = $('#reportType')[0].value
-    full_data.forEach(daySale => {
-        if(fromDate <= daySale["datenum"] && daySale["datenum"] <= toDate){
-            daySale["bills"].forEach(bill_or_bills => {
-                if(Array.isArray(bill_or_bills)){
-                    bills_to_use.push(...bill_or_bills)
-                }
-                else{
-                    bills_to_use.push(bill_or_bills)
-                }
-            })
-        }
-    })
 
-    fill_table_with_data(bills_to_use, reportType)
-}
+    api = "https://ntlivewebapi.innosmarti.com/api/auth/getTicketByDate/"
+    api = api + branch + ",1001," + fromDate + "," +toDate
 
-function get_bill_sums(bill){
-    bill_data = {"Discount":0, "Price": 0}
-    bill["ticket"].forEach(service => {
-        bill_data["Discount"] += service["DiscountAmount"]
-        bill_data["Price"] += service["Price"]
-                        net_sale = service["Price"] - service["DiscountAmount"]
-                        response[bill_date]["Net Sale"] += net_sale
-                        response[bill_date]["Tax"] += (service["Total"] - net_sale)
-                        response[bill_date]["Gross"] += service["Total"]
-                        response[bill_date]["Services"] += 1
+    if(reportType == "EmpSale"){
+        requestOptions["method"] = "POST"
+        requestOptions["body"] = JSON.stringify({
+            "SoreID": branch,
+            "OrganisationID": "1001",
+            "fDate": fromDate,
+            "tDate": toDate
+        })
+        api = "https://ntlivewebapi.innosmarti.com/api/auth/employeewisesales"
+    }
+
+    fetch(api, requestOptions).then(response => response.json())
+    .then(data => {fill_table_with_data(data, reportType)}).catch(error => {
+      console.error('Error fetching data:', error);
+    });
 }
 
 function format_data(data, reportType)
@@ -84,11 +52,10 @@ function format_data(data, reportType)
         case "DayWise":
         case "DayWiseSplit":
         case "DayWiseNRSOnly":
-            data.forEach(bill => {
+            data["bills"].forEach(bill => {
 				add_bill = true
-				console.log(bill)
-				is_mmd = bill["mmd"]
-                bill_date = bill["TimeMark"].split(" ")[0]
+				is_mmd = bill["TicketID"].toString().startsWith("MMD") 
+                bill_date = bill["Created_Date"].split(" ")[0]
                 if("DayWiseSplit" == reportType){
                     if(is_mmd){
                         bill_date = bill_date + "-SCA"
@@ -105,19 +72,13 @@ function format_data(data, reportType)
                 }
 				if(add_bill){
 					response[bill_date]["Bills"] += 1
-					bill["ticket"].forEach(service => {
-                        response[bill_date]["Discount"] += service["DiscountAmount"]
-                        response[bill_date]["Price"] += service["Price"]
-                        net_sale = service["Price"] - service["DiscountAmount"]
-                        response[bill_date]["Net Sale"] += net_sale
-                        response[bill_date]["Tax"] += (service["Total"] - net_sale)
-                        response[bill_date]["Gross"] += service["Total"]
-                        response[bill_date]["Services"] += 1
-					})
+					response[bill_date]["Discount"] += bill["Discount"]
+					response[bill_date]["Net Sale"] += bill["Total"]
+					response[bill_date]["Tax"] += bill["Tax"]
+					response[bill_date]["Gross"] += bill["Gross"]
 				}
             })
             response = Object.values(response).sort((a, b) => a.Date - b.Date);
-            response = response.sort((a, b) => a.Date - b.Date);
             break
         case "Bills":
             response = data["bills"].sort((a, b) => b.Created_Date - a.Created_Date);

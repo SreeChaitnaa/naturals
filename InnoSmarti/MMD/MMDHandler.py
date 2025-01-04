@@ -60,6 +60,74 @@ class Utils:
         wa_cmd = wa_cmd + "text=" + text.replace(" ", "%20").replace("\n", "%0a")
         subprocess.Popen(wa_cmd)
 
+    @staticmethod
+    def get_bill_view_resp(mmd_bill, settings):
+        tickets = []
+        payments = []
+        services = mmd_bill["bill_data"]
+        client_id = services[0]['clntid']
+        clntname, clntphone = Utils.get_name_and_ph_no(client_id)
+        ticket_id = "{0}{1}".format(settings.bill_prefix, mmd_bill["id"])
+        for tender in services[0]["tender"]:
+            payment = {
+                "ChangeAmt": services[0]["changeAmt"] if tender["paytype"] == "Cash" else 0,
+                "ModeofPayment": tender["paytype"],
+                "PayType": tender["paybank"] if tender["paytype"] != "Cash" else None,
+                "PaytypeCardno": tender["paycrd"] if tender["paytype"] not in ["Cash", "EWallet"] else None,
+                "Remarks": tender["finremark"],
+                "Tender": tender["paytender"]
+            }
+            payments.append(payment)
+        for service in services:
+            ticket = {
+                "AdvanceAmount": 0,
+                "Comments": None,
+                "Created_Date": service["timemark"] + ":00",
+                "DiscID": None,
+                "DiscPer": None,
+                "DiscValue": None,
+                "DiscountAmount": 50,
+                "DiscountName": None,
+                "ID": client_id,
+                "MemDisc": 50,
+                "MembershipCardNo": None,
+                "Name": clntname,
+                "OrganisationID": 1001,
+                "OthDisc": 0,
+                "Phone": clntphone,
+                "Price": 275,
+                "PrivelageCardNo": "000000000000",
+                "Qty": 1,
+                "Referral": "Request",
+                "ServiceID": "GS00000001",
+                "ServiceName": "HAIR CUT",
+                "Serviceslipno": "0",
+                "Sex": "1",
+                "StoreID": settings.store_id,
+                "Taxamount": 18,
+                "TicketID": ticket_id,
+                "TimeMark": service["timemark"] + ":00",
+                "Total": 265.5,
+                "VoucherNo": "",
+                "WalletAdvance": None,
+                "clntid": "Prateek9363238467",
+                "currentmemcardno": None,
+                "currentmemcheck": 1,
+                "deldisable": 1,
+                "empid": "700950",
+                "empname": "Meenakshi",
+                "fullname": "{0} - {1}".format(clntphone, clntname),
+                "member_check": 1,
+                "pricedisable": 1,
+                "type": "S"
+            }
+            for tkey in ticket:
+                if tkey in service:
+                    ticket[tkey] = service[tkey]
+            tickets.append(ticket)
+        view_resp = {"payment": payments, "ticket": tickets}
+        return view_resp
+
 
 class MMDStatus:
     NoServerCall = "NoServerCall"
@@ -89,6 +157,10 @@ class MMDHandler:
         store_id = None
 
         if request.method == "POST":
+
+            if "/updaterest/" in request.url:
+                handler = self.update_rest_db_handler
+                store_id = self.get_store_id_from_url()
 
             if "/savebill/" in request.url:
                 handler = self.save_bill_handler
@@ -145,58 +217,67 @@ class MMDHandler:
             store_id = store_id[k]
         return store_id
 
+    def update_rest_db_handler(self):
+        bill_number = self.payload["bill_number"]
+        is_mmd = self.payload["is_mmd"]
+        return self.update_rest_db(bill_number, is_mmd, self.request.headers)
+
     def update_rest_db(self, bill_number, is_mmd, headers):
-        bills_to_add = []
-        bills_per_day = {}
-        last_bill_key = "mmd_last_bill" if is_mmd else "nrs_last_bill"
-        last_bill_number = int(self.rest_db.get_config_value(last_bill_key))
-        next_bill_number = last_bill_number + 1
-        if int(bill_number) <= last_bill_number:
-            return
-        if is_mmd:
-            for mmd_bill in self.rest_db.get_bills(bill_start=next_bill_number, bill_end=bill_number):
-                bills_to_add.append(self.view_ticket_handler(mmd_bill))
-            next_bill_number = bill_number
-        else:
-            url_format = "https://ntlivewebapi.innosmarti.com/api/auth/viewTicketNew/{0},1001,{1}"
-            counter = 1
-            while next_bill_number <= bill_number:
-                url = url_format.format(self.rest_db.store_id, next_bill_number)
-                self.logger.info("Calling - {}".format(url))
-                resp = requests.request("GET", url, headers=headers)
-                self.logger.info("Resp is - {0} - {1}".format(resp.status_code, resp.text))
-                bills_to_add.append(json.loads(resp.text))
-                counter += 1
-                self.logger.info("Counter is - {}".format(counter))
-                if counter > 25:
-                    break
-                next_bill_number += 1
-        for bill_to_add in bills_to_add:
-            bill = {"payment": [], "ticket": [], "mmd": is_mmd}
-            bill_date = bill_to_add["ticket"][0]["Created_Date"].split(" ")[0].replace("-", "")
-            if bill_date not in bills_per_day:
-                bills_per_day[bill_date] = []
+        try:
+            bills_to_add = []
+            bills_per_day = {}
+            last_bill_key = "mmd_last_bill" if is_mmd else "nrs_last_bill"
+            last_bill_number = int(self.rest_db.get_config_value(last_bill_key))
+            next_bill_number = last_bill_number + 1
+            if int(bill_number) <= last_bill_number:
+                return
+            if is_mmd:
+                for mmd_bill in self.rest_db.get_bills(bill_start=next_bill_number, bill_end=bill_number):
+                    bills_to_add.append(Utils.get_bill_view_resp(mmd_bill, self.settings))
+                next_bill_number = bill_number
+            else:
+                url_format = "https://ntlivewebapi.innosmarti.com/api/auth/viewTicketNew/{0},1001,{1}"
+                counter = 1
+                while next_bill_number <= bill_number:
+                    url = url_format.format(self.rest_db.store_id, next_bill_number)
+                    self.logger.info("Calling - {}".format(url))
+                    resp = requests.request("GET", url, headers=headers)
+                    self.logger.info("Resp is - {0} - {1}".format(resp.status_code, resp.text))
+                    bills_to_add.append(json.loads(resp.text))
+                    counter += 1
+                    self.logger.info("Counter is - {}".format(counter))
+                    if counter > 25:
+                        break
+                    next_bill_number += 1
+            for bill_to_add in bills_to_add:
+                bill = {"payment": [], "ticket": [], "mmd": is_mmd}
+                bill_date = bill_to_add["ticket"][0]["Created_Date"].split(" ")[0].replace("-", "")
+                if bill_date not in bills_per_day:
+                    bills_per_day[bill_date] = []
 
-            for k in ["Name", "Phone", "TicketID", "TimeMark", "Comments"]:
-                bill[k] = bill_to_add["ticket"][0][k]
+                for k in ["Name", "Phone", "TicketID", "TimeMark", "Comments"]:
+                    bill[k] = bill_to_add["ticket"][0][k]
 
-            for payment in bill_to_add["payment"]:
-                np = {}
-                for k in ["ChangeAmt", "ModeofPayment", "Tender"]:
-                    np[k] = payment[k]
-                bill["payment"].append(np)
+                for payment in bill_to_add["payment"]:
+                    np = {}
+                    for k in ["ChangeAmt", "ModeofPayment", "Tender"]:
+                        np[k] = payment[k]
+                    bill["payment"].append(np)
 
-            for ticket in bill_to_add["ticket"]:
-                nt = {}
-                for k in ["DiscountAmount", "Price", "Qty", "ServiceID", "ServiceName", "Sex", "Total", "empname"]:
-                    nt[k] = ticket[k]
-                bill["ticket"].append(nt)
-            bills_per_day[bill_date].append(bill)
+                for ticket in bill_to_add["ticket"]:
+                    nt = {}
+                    for k in ["DiscountAmount", "Price", "Qty", "ServiceID", "ServiceName", "Sex", "Total", "empname"]:
+                        nt[k] = ticket[k]
+                    bill["ticket"].append(nt)
+                bills_per_day[bill_date].append(bill)
 
-        for bill_date, bills in bills_per_day.items():
-            self.rest_db.update_bills_of_day(bill_date, bills)
+            for bill_date, bills in bills_per_day.items():
+                self.rest_db.update_bills_of_day(bill_date, bills)
 
-        self.rest_db.update_config_value(last_bill_key, next_bill_number)
+            self.rest_db.update_config_value(last_bill_key, next_bill_number)
+            return "Success - {}".format(next_bill_number)
+        except Exception as e1:
+            return str(e1)
 
     def get_employee_sales_handler(self):
         start_date = self.payload["fDate"].replace("-", "")
@@ -274,73 +355,9 @@ class MMDHandler:
             bill_id = str(self.get_store_id_from_url(2)).lower()
             is_mmd = self.settings.bill_prefix.lower() in bill_id
         if is_mmd:
-            tickets = []
-            payments = []
             if mmd_bill is None:
                 mmd_bill = self.rest_db.get_bills(bill_id.replace(self.settings.bill_prefix.lower(), ""))[0]
-            services = mmd_bill["bill_data"]
-            client_id = services[0]['clntid']
-            clntname, clntphone = Utils.get_name_and_ph_no(client_id)
-            ticket_id = "{0}{1}".format(self.settings.bill_prefix, mmd_bill["id"])
-            for tender in services[0]["tender"]:
-                payment = {
-                    "ChangeAmt": services[0]["changeAmt"] if tender["paytype"] == "Cash" else 0,
-                    "ModeofPayment": tender["paytype"],
-                    "PayType": tender["paybank"] if tender["paytype"] != "Cash" else None,
-                    "PaytypeCardno": tender["paycrd"] if tender["paytype"] not in ["Cash", "EWallet"] else None,
-                    "Remarks": tender["finremark"],
-                    "Tender": tender["paytender"]
-                }
-                payments.append(payment)
-            for service in services:
-                ticket = {
-                      "AdvanceAmount": 0,
-                      "Comments": None,
-                      "Created_Date": service["timemark"] + ":00",
-                      "DiscID": None,
-                      "DiscPer": None,
-                      "DiscValue": None,
-                      "DiscountAmount": 50,
-                      "DiscountName": None,
-                      "ID": client_id,
-                      "MemDisc": 50,
-                      "MembershipCardNo": None,
-                      "Name": clntname,
-                      "OrganisationID": 1001,
-                      "OthDisc": 0,
-                      "Phone": clntphone,
-                      "Price": 275,
-                      "PrivelageCardNo": "000000000000",
-                      "Qty": 1,
-                      "Referral": "Request",
-                      "ServiceID": "GS00000001",
-                      "ServiceName": "HAIR CUT",
-                      "Serviceslipno": "0",
-                      "Sex": "1",
-                      "StoreID": self.rest_db.store_id,
-                      "Taxamount": 18,
-                      "TicketID": ticket_id,
-                      "TimeMark": service["timemark"] + ":00",
-                      "Total": 265.5,
-                      "VoucherNo": "",
-                      "WalletAdvance": None,
-                      "clntid": "Prateek9363238467",
-                      "currentmemcardno": None,
-                      "currentmemcheck": 1,
-                      "deldisable": 1,
-                      "empid": "700950",
-                      "empname": "Meenakshi",
-                      "fullname": "{0} - {1}".format(clntphone, clntname),
-                      "member_check": 1,
-                      "pricedisable": 1,
-                      "type": "S"
-                }
-                for tkey in ticket:
-                    if tkey in service:
-                        ticket[tkey] = service[tkey]
-                tickets.append(ticket)
-            view_resp = {"payment": payments, "ticket": tickets}
-            return view_resp
+            return Utils.get_bill_view_resp(mmd_bill, self.settings)
         else:
             return None
 

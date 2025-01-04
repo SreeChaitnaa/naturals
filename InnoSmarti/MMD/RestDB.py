@@ -1,4 +1,5 @@
 import logging
+import time
 
 import requests
 import json
@@ -101,7 +102,7 @@ class RestDB:
         self.do_rest_call(method, bill, table=DBStrings.Table_Products)
 
     def get_all_dates_sales(self):
-        self.do_rest_call(table=DBStrings.Table_DaySales)
+        return self.do_rest_call(table=DBStrings.Table_DaySales)
 
     def get_config(self, config_name):
         url_params = 'q={}'.format(json.dumps({DBStrings.ConfigName: config_name}))
@@ -128,6 +129,7 @@ class RestDB:
             query = prev_day_sale
             task_method = DBStrings.PUT
         self.do_rest_call(task_method, query, table=DBStrings.Table_DaySales)
+        time.sleep(1)
 
 
 
