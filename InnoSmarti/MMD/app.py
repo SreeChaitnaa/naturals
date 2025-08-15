@@ -34,6 +34,13 @@ connection.create_connection = patched_create_connection
 app.logger.setLevel(logging.DEBUG)  # Set log level to INFO
 handler = logging.FileHandler('app.log')  # Log to a file
 handler.setLevel(logging.WARNING)
+# Formatter with date, time, and log level
+formatter = logging.Formatter(
+    '%(asctime)s [%(levelname)s] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
+handler.setFormatter(formatter)
 app.logger.addHandler(handler)
 session = requests.session()
 
@@ -44,21 +51,25 @@ def mmd(path):
     global last_auth
     mmd_handler = MMDHandler(request, settings, app.logger)
 
+    resp = None
     if mmd_handler.pre_resp_code == MMDStatus.NoServerCall:
-        return mmd_handler.pre_resp
-    headers = request.headers
-    if "Authorization" in headers:
-        if headers["Authorization"] == "UseLast":
-            headers = dict(headers)
-            headers["Authorization"] = last_auth
-        else:
-            last_auth = headers["Authorization"]
-        app.logger.info("Headers - {}".format(headers))
+        resp = mmd_handler.pre_resp
+    else:
+        headers = request.headers
+        if "Authorization" in headers:
+            if headers["Authorization"] == "UseLast":
+                headers = dict(headers)
+                headers["Authorization"] = last_auth
+            elif request.method in ["GET", "POST"]:
+                last_auth = headers["Authorization"]
+            app.logger.info("Headers - {}".format(headers))
 
-    resp = session.request(request.method, request.url, data=request.data,
-                           headers=headers).text
+        resp = session.request(request.method, request.url, data=request.data,
+                               headers=headers).text
 
-    return mmd_handler.post_handler(resp, headers)
+        resp = mmd_handler.post_handler(resp, headers)
+    mmd_handler.post_task(resp)
+    return resp
 
 
 if __name__ == '__main__':
