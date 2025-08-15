@@ -1,8 +1,10 @@
 import json
 import operator
+import time
 from datetime import date
 
 import requests
+from multiprocessing.connection import Client
 
 from RestDB import RestDB
 from collections import OrderedDict
@@ -126,6 +128,56 @@ class Utils:
         view_resp = {"payment": payments, "ticket": tickets}
         return view_resp
 
+    @staticmethod
+    def update_rest_db(store_id, bill_number, logger, settings, rest_db):
+        logger.info("update_rest_db started...")
+        try:
+            bill_number = str(bill_number).lower()
+            is_mmd = settings.bill_prefix.lower() in bill_number
+            bill_number = int(bill_number.replace(settings.bill_prefix.lower(), ""))
+            bills_to_add = []
+            last_bill_key = "mmd_last_bill" if is_mmd else "nrs_last_bill"
+            last_bill_number = int(rest_db.get_config_value(last_bill_key))
+            next_bill_number = last_bill_number + 1
+            if int(bill_number) <= last_bill_number:
+                logger.info(f"Already {bill_number} is updated as last updated is {last_bill_number}")
+                return
+            if is_mmd:
+                for mmd_bill in rest_db.get_bills(bill_start=next_bill_number, bill_end=bill_number):
+                    bills_to_add.append(Utils.get_bill_view_resp(mmd_bill, settings))
+                next_bill_number = bill_number
+            else:
+                ddos_wait = 5
+                url_format = "https://ntlivewebapi.innosmarti.com/api/auth/viewTicketNew/{0},1001,{1}"
+                while next_bill_number <= bill_number:
+                    url = url_format.format(store_id, next_bill_number)
+                    logger.info("Calling - {}".format(url))
+                    resp = requests.request("GET", url, headers={"Authorization": "UseLast"}, verify=False)
+                    if "Too Many Requests" in resp.text:
+                        logger.info(f"Too many requests response came, wait for {ddos_wait}sec")
+                        time.sleep(ddos_wait)
+                        ddos_wait += ddos_wait
+                        continue
+                    ddos_wait = 5
+                    if '"ticket"' in resp.text:
+                        parsed_resp = json.loads(resp.text)
+                        if len(parsed_resp["ticket"]) > 0:
+                            bills_to_add.append(parsed_resp)
+                    else:
+                        logger.info("Resp is - {0} - {1}".format(resp.status_code, resp.text))
+                    time.sleep(1)
+                    if len(bills_to_add) > 24:
+                        rest_db.update_bills(bills_to_add, is_mmd, last_bill_key, next_bill_number)
+                        bills_to_add = []
+                    next_bill_number += 1
+                next_bill_number -= 1
+            rest_db.update_bills(bills_to_add, is_mmd, last_bill_key, next_bill_number)
+            logger.info("update_rest_db completed.")
+            return "Success - {}".format(next_bill_number)
+        except Exception as e1:
+            logger.error(f"Exception while adding bills - {e1}")
+            return str(e1)
+
 
 class MMDStatus:
     NoServerCall = "NoServerCall"
@@ -155,11 +207,6 @@ class MMDHandler:
         store_id = None
 
         if request.method == "POST":
-
-            if "/updaterest/" in request.url:
-                handler = self.update_rest_db_handler
-                store_id = self.get_store_id_from_url()
-
             if "/savebill/" in request.url:
                 handler = self.save_bill_handler
                 store_id = self.get_store_id_from_url()
@@ -214,68 +261,6 @@ class MMDHandler:
         for k in key.split(";"):
             store_id = store_id[k]
         return store_id
-
-    def update_rest_db_handler(self):
-        bill_number = self.payload["bill_number"]
-        is_mmd = self.payload["is_mmd"]
-        return self.update_rest_db(bill_number, is_mmd, self.request.headers)
-
-    def update_rest_db(self, bill_number, is_mmd, headers):
-        try:
-            bills_to_add = []
-            bills_per_day = {}
-            last_bill_key = "mmd_last_bill" if is_mmd else "nrs_last_bill"
-            last_bill_number = int(self.rest_db.get_config_value(last_bill_key))
-            next_bill_number = last_bill_number + 1
-            if int(bill_number) <= last_bill_number:
-                return
-            if is_mmd:
-                for mmd_bill in self.rest_db.get_bills(bill_start=next_bill_number, bill_end=bill_number):
-                    bills_to_add.append(Utils.get_bill_view_resp(mmd_bill, self.settings))
-                next_bill_number = bill_number
-            else:
-                url_format = "https://ntlivewebapi.innosmarti.com/api/auth/viewTicketNew/{0},1001,{1}"
-                counter = 1
-                while next_bill_number <= bill_number:
-                    url = url_format.format(self.rest_db.store_id, next_bill_number)
-                    self.logger.info("Calling - {}".format(url))
-                    resp = requests.request("GET", url, headers=headers)
-                    self.logger.info("Resp is - {0} - {1}".format(resp.status_code, resp.text))
-                    bills_to_add.append(json.loads(resp.text))
-                    counter += 1
-                    self.logger.info("Counter is - {}".format(counter))
-                    if counter > 25:
-                        break
-                    next_bill_number += 1
-            for bill_to_add in bills_to_add:
-                bill = {"payment": [], "ticket": [], "mmd": is_mmd}
-                bill_date = bill_to_add["ticket"][0]["Created_Date"].split(" ")[0].replace("-", "")
-                if bill_date not in bills_per_day:
-                    bills_per_day[bill_date] = []
-
-                for k in ["Name", "Phone", "TicketID", "TimeMark", "Comments"]:
-                    bill[k] = bill_to_add["ticket"][0][k]
-
-                for payment in bill_to_add["payment"]:
-                    np = {}
-                    for k in ["ChangeAmt", "ModeofPayment", "Tender"]:
-                        np[k] = payment[k]
-                    bill["payment"].append(np)
-
-                for ticket in bill_to_add["ticket"]:
-                    nt = {}
-                    for k in ["DiscountAmount", "Price", "Qty", "ServiceID", "ServiceName", "Sex", "Total", "empname"]:
-                        nt[k] = ticket[k]
-                    bill["ticket"].append(nt)
-                bills_per_day[bill_date].append(bill)
-
-            for bill_date, bills in bills_per_day.items():
-                self.rest_db.update_bills_of_day(bill_date, bills)
-
-            self.rest_db.update_config_value(last_bill_key, next_bill_number)
-            return "Success - {}".format(next_bill_number)
-        except Exception as e1:
-            return str(e1)
 
     def get_employee_sales_handler(self):
         start_date = self.payload["fDate"].replace("-", "")
@@ -538,7 +523,6 @@ class MMDHandler:
             try:
                 _, ph_no = Utils.get_name_and_ph_no(self.payload[0]['clntid'])
                 saved_bill = self.rest_db.save_bill(self.payload, ph_no)
-                self.update_rest_db(saved_bill["id"], True, None)
                 return {
                     "TicketID": "{0}{1}".format(self.settings.bill_prefix, saved_bill["id"]),
                     # "TicketID": 5868,
@@ -727,11 +711,6 @@ class MMDHandler:
 
         try:
             resp_json = resp_json_orig.copy()
-            if self.request.method == "POST" and "/savebill/" in self.request.url:
-                self.logger.info(resp_json)
-                self.logger.info(headers)
-                if resp_json["message"] == "SUCCESS":
-                    self.update_rest_db(resp_json["TicketID"], False, headers)
             if self.pre_resp_code == MMDStatus.ReturnPostMerge:
                 if "/getServices/" in str(self.request.url):
                     return json.dumps(Utils.merge_lists(resp_json, self.pre_resp, incremental_key="Row"))
@@ -774,4 +753,15 @@ class MMDHandler:
             return resp_json_orig
 
     def post_task(self, resp):
-        pass
+        # Fire the DB update in background
+        try:
+            if "/savebill/" in self.request.url and self.request.method == "POST":
+                self.logger.warn(f"New Bill - {type(resp)} - {resp}")
+                if type(resp) is str:
+                    resp = json.loads(resp)
+                self.logger.warn(f"New Bill After parse - {type(resp)} - {resp}")
+                conn = Client(('localhost', 6000), authkey=b'secret123')
+                conn.send(f"update_rest_db;{self.settings.store_id};{resp['TicketID']}")
+                conn.close()
+        except Exception as e1:
+            self.logger.error(f"exception in post task - {e1}")
