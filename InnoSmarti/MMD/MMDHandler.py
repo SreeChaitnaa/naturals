@@ -1,4 +1,3 @@
-import logging
 import json
 import operator
 from datetime import date
@@ -8,7 +7,6 @@ import requests
 from RestDB import RestDB
 from collections import OrderedDict
 import subprocess
-import threading
 
 
 class Utils:
@@ -203,7 +201,7 @@ class MMDHandler:
 
         if handler and store_id:
             logger.info("Handling URL is {0}-{1}".format(request.method, str(request.url)))
-            self.rest_db = RestDB(store_id, self.settings, logger)
+            self.rest_db = RestDB(str(store_id), self.settings, logger)
             self.pre_resp = handler()
             if self.pre_resp is not None:
                 self.pre_resp_code = code_on_resp
@@ -401,7 +399,7 @@ class MMDHandler:
             "Oth_Disc": 0,
             "Referral": "Live",
             "Sex": "1",
-            "StoreID": "1526",
+            "StoreID": self.settings.store_id,
             "Tax": 0,
             "TicketID": 0,
             "Total": 0,
@@ -774,3 +772,6 @@ class MMDHandler:
             self.logger.error(e2)
             resp_json_orig["SCA_Exception"] = str(e2)
             return resp_json_orig
+
+    def post_task(self, resp):
+        pass
