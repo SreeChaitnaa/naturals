@@ -1,4 +1,3 @@
-import logging
 import time
 
 import requests
@@ -117,6 +116,41 @@ class RestDB:
         config[DBStrings.ConfigValue] = str(config_value)
         self.do_rest_call(DBStrings.PUT, config, table=DBStrings.Table_config)
 
+    def update_bills(self, bills_to_add, is_mmd, last_bill_key, next_bill_number):
+        bills_per_day = {}
+        if len(bills_to_add) == 0:
+            self.logger.info("Got 0 Bills, returning...")
+            return
+        self.logger.info(f"Adding {len(bills_to_add)} bills for MMD:{is_mmd}, {last_bill_key}: {next_bill_number}")
+        for bill_to_add in bills_to_add:
+            bill = {"payment": [], "ticket": [], "mmd": is_mmd}
+            bill_date = bill_to_add["ticket"][0]["Created_Date"].split(" ")[0].replace("-", "")
+            if bill_date not in bills_per_day:
+                bills_per_day[bill_date] = []
+
+            for k in ["Name", "Phone", "TicketID", "TimeMark", "Comments"]:
+                bill[k] = bill_to_add["ticket"][0][k]
+
+            for payment in bill_to_add["payment"]:
+                np = {}
+                for k in ["ChangeAmt", "ModeofPayment", "Tender"]:
+                    np[k] = payment[k]
+                bill["payment"].append(np)
+
+            for ticket in bill_to_add["ticket"]:
+                nt = {}
+                for k in ["DiscountAmount", "Price", "Qty", "ServiceID", "ServiceName", "Sex", "Total",
+                          "empname"]:
+                    nt[k] = ticket[k]
+                bill["ticket"].append(nt)
+            bills_per_day[bill_date].append(bill)
+
+        for bill_date, bills in bills_per_day.items():
+            self.update_bills_of_day(bill_date, bills)
+
+        self.update_config_value(last_bill_key, next_bill_number)
+        self.logger.info(f"Added {len(bills_to_add)} bills for MMD:{is_mmd}, {last_bill_key}: {next_bill_number}")
+
     def update_bills_of_day(self, bill_date, bills):
         query = {"datenum": str(bill_date)}
         url_params = 'q={}'.format(json.dumps(query))
@@ -125,13 +159,8 @@ class RestDB:
         query["bills"] = bills
         if len(prev_day_sale) > 0:
             prev_day_sale = prev_day_sale[0]
-            prev_day_sale["bills"].append(bills)
+            prev_day_sale["bills"].extend(bills)
             query = prev_day_sale
             task_method = DBStrings.PUT
         self.do_rest_call(task_method, query, table=DBStrings.Table_DaySales)
         time.sleep(1)
-
-
-
-
-
