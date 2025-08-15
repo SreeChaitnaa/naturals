@@ -247,11 +247,20 @@ class MMDHandler:
                 store_id = self.get_store_id_from_url()
 
         if handler and store_id:
-            logger.info("Handling URL is {0}-{1}".format(request.method, str(request.url)))
-            self.rest_db = RestDB(str(store_id), self.settings, logger)
-            self.pre_resp = handler()
-            if self.pre_resp is not None:
-                self.pre_resp_code = code_on_resp
+            try:
+                logger.info("Handling URL is {0}-{1}".format(request.method, str(request.url)))
+                self.rest_db = RestDB(str(store_id), self.settings, logger)
+                self.pre_resp = handler()
+                if self.pre_resp is not None:
+                    self.pre_resp_code = code_on_resp
+            except Exception as e1:
+                self.logger.error(e1)
+                if "too many requests in time window for free plan" in str(e1):
+                    self.logger.error("RESTDB is fully used, Need to wait for some time")
+                    self.pre_resp = None
+                else:
+                    self.pre_resp = {"SCA_Exception": str(e1)}
+                    self.pre_resp_code = MMDStatus.NoServerCall
 
     def get_store_id_from_url(self, position=0):
         return self.request.url.split("/")[-1].split(",")[position]
@@ -703,7 +712,7 @@ class MMDHandler:
         Utils.send_whatsapp(message)
         return message
 
-    def post_handler(self, orig_resp, headers):
+    def post_handler(self, orig_resp):
         try:
             resp_json_orig = json.loads(orig_resp)
         except:
