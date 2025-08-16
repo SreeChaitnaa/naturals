@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shop Sales Report</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #dataDiv { display: none; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f4f4f4; }
+  </style>
+</head>
+<body>
+  <!-- Login Section -->
+  <div id="loginDiv">
+    <h2>Shop Login</h2>
+    <label for="shopSelect">Select Shop:</label>
+    <select id="shopSelect"></select>
+    <br><br>
+    <label for="password">Password:</label>
+    <input type="password" id="password">
+    <br><br>
+    <button onclick="login()">Login</button>
+    <p id="loginError" style="color:red;"></p>
+  </div>
+
+  <!-- Data Section -->
+  <div id="dataDiv">
+    <h2 id="shopName"></h2>
+    <table id="dataTable">
+      <thead><tr id="tableHead"></tr></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- CryptoJS + App Script -->
+  <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js"></script>
+  <script src="reports.js"></script>
+</body>
+</html>
