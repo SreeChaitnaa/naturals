@@ -124,9 +124,9 @@ class RestDB:
         self.logger.info(f"Adding {len(bills_to_add)} bills for MMD:{is_mmd}, {last_bill_key}: {next_bill_number}")
         for bill_to_add in bills_to_add:
             bill = {"payment": [], "ticket": [], "mmd": is_mmd}
-            bill_date = bill_to_add["ticket"][0]["Created_Date"].split(" ")[0].replace("-", "")
+            bill_date = int(bill_to_add["ticket"][0]["Created_Date"].split(" ")[0].replace("-", ""))
             if bill_date not in bills_per_day:
-                bills_per_day[bill_date] = {"datenum": int(bill_date), "bills": []}
+                bills_per_day[bill_date] = {"datenum": bill_date, "bills": []}
 
             for k in ["Name", "Phone", "TicketID", "TimeMark", "Comments"]:
                 bill[k] = bill_to_add["ticket"][0][k]
@@ -151,7 +151,7 @@ class RestDB:
         self.logger.info(f"Added {len(bills_to_add)} bills for MMD:{is_mmd}, {last_bill_key}: {next_bill_number}")
 
     def update_bills_of_days(self, bills_per_day):
-        query = {"datenum": {"$in": [int(bill_date) for bill_date in bills_per_day]}}
+        query = {"datenum": {"$in": list(bills_per_day.keys())}}
         url_params = 'q={}'.format(json.dumps(query))
         prev_records = self.do_rest_call(DBStrings.GET, None, url_params, DBStrings.Table_DaySales)
         prev_ids = []
@@ -163,7 +163,7 @@ class RestDB:
         self.bulk_insert(DBStrings.Table_DaySales, list(bills_per_day.values()))
 
     def update_bills_of_day(self, bill_date, bills):
-        query = {"datenum": int(bill_date)}
+        query = {"datenum": bill_date}
         url_params = 'q={}'.format(json.dumps(query))
         prev_day_sale = self.do_rest_call(url_params=url_params, table=DBStrings.Table_DaySales)
         task_method = DBStrings.POST
