@@ -151,6 +151,9 @@ class RestDB:
         self.logger.info(f"Added {len(bills_to_add)} bills for MMD:{is_mmd}, {last_bill_key}: {next_bill_number}")
 
     def update_bills_of_days(self, bills_per_day):
+        if len(bills_per_day) == 1:
+            bill_date = list(bills_per_day.keys())[0]
+            return self.update_bills_of_day(bill_date, bills_per_day[bill_date]["bills"])
         query = {"datenum": {"$in": list(bills_per_day.keys())}}
         url_params = 'q={}'.format(json.dumps(query))
         prev_records = self.do_rest_call(DBStrings.GET, None, url_params, DBStrings.Table_DaySales)
@@ -160,7 +163,7 @@ class RestDB:
             bills_per_day[prev_record["datenum"]]["bills"] = prev_record["bills"] + new_bills
             prev_ids.append(prev_record["_id"])
         self.do_rest_call(DBStrings.DELETE, prev_ids, None, DBStrings.Table_DaySales + "/*")
-        self.bulk_insert(DBStrings.Table_DaySales, list(bills_per_day.values()))
+        return self.bulk_insert(DBStrings.Table_DaySales, list(bills_per_day.values()))
 
     def update_bills_of_day(self, bill_date, bills):
         query = {"datenum": bill_date}
