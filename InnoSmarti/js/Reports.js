@@ -62,14 +62,15 @@ window.onload = function() {
   }
 
   const params = new URLSearchParams(window.location.search);
-  const shopParam = params.get("branch");
+  const shopParam = params.get("shop");
 
   if (shopParam) {
-    const shopSelect = document.getElementById("shop");
+    const shopSelect = document.getElementById("shopSelect");
     shopSelect.value = {"2339": "JKR", "1526": "TNS"}[shopParam];
-    shopSelect.disabled = true;
+    shopSelect.style.display = "none";
     console.log("🔹 Default shop set from URL:", shopParam);
-    document.getElementById('gotoInnosmarti').style.display = "block";
+    document.getElementById('gotoInnosmarti').style.display = "block"
+    document.getElementById('shopSelectLabel').style.display = "none"
   }
 };
 
