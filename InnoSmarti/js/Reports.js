@@ -341,7 +341,7 @@ async function fill_table_with_data(reportType)
             dk_value = item[dk]
             if (typeof dk_value === 'number' && !isNaN(dk_value)) {
                 sum_row[dk] += dk_value
-                dk_value = Math.round(dk_value);
+                dk_value = Number(dk_value.toFixed(2));
             }
             else{
                 sum_row[dk] = "-"
@@ -356,8 +356,14 @@ async function fill_table_with_data(reportType)
     row.innerHTML = ""
     data_keys.forEach(dk => {
         dk_value = sum_row[dk]
+        if (dk == "ABV") {
+            dk_value = sum_row["NetSale"] / sum_row["Bills"];
+        }
+        if (dk == "ASB") {
+            dk_value = sum_row["Services"] / sum_row["Bills"];
+        }
         if (typeof dk_value === 'number' && !isNaN(dk_value)) {
-            dk_value = Math.round(dk_value);
+            dk_value = Number(dk_value.toFixed(2));
         }
         row.innerHTML = row.innerHTML + "<td>" + dk_value + "</td>";
     });
