@@ -9,14 +9,16 @@ const shopConfig = {
 };
 
 table_columns = {
-    "bills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Price', 'Discount', 'NetSale', 'Tax', 'Gross', 'Sex', 'Services', 'ServiceDesc', 'EmpName', "PaymentType", 'Cash', 'UPI', 'Card'],
+    "detailsBills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Price', 'Discount', 'NetSale', 'Tax', 'Gross', 'Sex', 'Services', 'ServiceDesc', 'EmpName', "PaymentType", 'Cash', 'UPI', 'Card'],
+    "bills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Services', 'Price', 'Discount', 'NetSale', 'Gross', "PaymentType"],
     "services" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'ServiceName', 'EmpName', 'Price', 'Discount', 'NetSale', "PaymentType"],
     "daywiseSales" : ["Date", "Bills", "Services", 'Price', "Discount", "NetSale", "Tax", "Gross", "ABV", "ASB", "Cash", "UPI", "Card"],
     "employeeSales": ["EmployeeName", "Bills", "Services", "Price", "Discount", "NetSale", "ABV", "ASB"]
 }
 table_columns["daywiseSplit"] = table_columns["daywiseSales"]
 table_columns["daywiseNRSOnly"] = table_columns["daywiseSales"]
-non_group_reports = ["bills", "services"]
+bill_reports = ["bills", "detailsBills"]
+non_group_reports = ["services", "bills", "detailsBills"]
 
 let db_config = {}
 let db_url = "";
@@ -201,7 +203,7 @@ async function formatReportData(rawData, reportType) {
                 };
                 direct_rows.push(row)
             });
-        } else if (reportType === "bills") {
+        } else if (bill_reports.includes(reportType)) {
           const { servicesCount, priceSum, discountSum, netSalesSum, serviceNames, empNamesSet } = calcTickets(bill.ticket);
 
           row = {
