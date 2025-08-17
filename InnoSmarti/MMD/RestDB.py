@@ -126,7 +126,7 @@ class RestDB:
             bill = {"payment": [], "ticket": [], "mmd": is_mmd}
             bill_date = bill_to_add["ticket"][0]["Created_Date"].split(" ")[0].replace("-", "")
             if bill_date not in bills_per_day:
-                bills_per_day[bill_date] = []
+                bills_per_day[bill_date] = {"datenum": int(bill_date), "bills": []}
 
             for k in ["Name", "Phone", "TicketID", "TimeMark", "Comments"]:
                 bill[k] = bill_to_add["ticket"][0][k]
@@ -143,16 +143,27 @@ class RestDB:
                           "empname"]:
                     nt[k] = ticket[k]
                 bill["ticket"].append(nt)
-            bills_per_day[bill_date].append(bill)
+            bills_per_day[bill_date]["bills"].append(bill)
 
-        for bill_date, bills in bills_per_day.items():
-            self.update_bills_of_day(bill_date, bills)
-
+        self.update_bills_of_days(bills_per_day)
         self.update_config_value(last_bill_key, next_bill_number)
+
         self.logger.info(f"Added {len(bills_to_add)} bills for MMD:{is_mmd}, {last_bill_key}: {next_bill_number}")
 
+    def update_bills_of_days(self, bills_per_day):
+        query = {"datenum": {"$in": [int(bill_date) for bill_date in bills_per_day]}}
+        url_params = 'q={}'.format(json.dumps(query))
+        prev_records = self.do_rest_call(DBStrings.GET, None, url_params, DBStrings.Table_DaySales)
+        prev_ids = []
+        for prev_record in prev_records:
+            new_bills = bills_per_day[prev_record["datenum"]].pop("bills", [])
+            bills_per_day[prev_record["datenum"]]["bills"] = prev_record["bills"] + new_bills
+            prev_ids.append(prev_record["_id"])
+        self.do_rest_call(DBStrings.DELETE, prev_ids, None, DBStrings.Table_DaySales + "/*")
+        self.bulk_insert(DBStrings.Table_DaySales, list(bills_per_day.values()))
+
     def update_bills_of_day(self, bill_date, bills):
-        query = {"datenum": int(bill_date)}
+        query = {"datenum": str(bill_date)}
         url_params = 'q={}'.format(json.dumps(query))
         prev_day_sale = self.do_rest_call(url_params=url_params, table=DBStrings.Table_DaySales)
         task_method = DBStrings.POST
@@ -164,3 +175,39 @@ class RestDB:
             task_method = DBStrings.PUT
         self.do_rest_call(task_method, query, table=DBStrings.Table_DaySales)
         time.sleep(1)
+
+    def bulk_insert(self, table, rows):
+        """
+        Bulk insert rows into a table.
+        :param table: Table name (string)
+        :param rows: List of dicts (rows to insert)
+        """
+        if not rows:
+            self.logger.info("bulk_insert called with empty rows, returning...")
+            return []
+        self.logger.info(f"Bulk inserting {len(rows)} rows into {table}")
+        return self.do_rest_call(DBStrings.POST, body=rows, table=table)
+
+    def bulk_update(self, table, rows):
+        """
+        Bulk update rows in a table by deleting and reinserting.
+        Deletes rows with given _id, then inserts new rows without _id.
+        :param table: Table name (string)
+        :param rows: List of dicts (rows with _id)
+        """
+        if not rows:
+            self.logger.info("bulk_update called with empty rows, returning...")
+            return []
+
+        self.logger.info(f"Bulk updating {len(rows)} rows in {table}")
+
+        # 1. Collect IDs and delete those rows
+        ids_to_delete = [row[DBStrings.REST_id] for row in rows if DBStrings.REST_id in row]
+        if ids_to_delete:
+            self.do_rest_call("DELETE", body=ids_to_delete, table=table)
+
+        # 2. Prepare new rows without _id
+        cleaned_rows = [{k: v for k, v in row.items() if k != DBStrings.REST_id} for row in rows]
+
+        # 3. Bulk insert them
+        return self.bulk_insert(table, cleaned_rows)
