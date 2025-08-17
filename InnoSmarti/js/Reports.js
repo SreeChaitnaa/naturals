@@ -67,10 +67,9 @@ window.onload = function() {
   if (shopParam) {
     const shopSelect = document.getElementById("shopSelect");
     shopSelect.value = {"2339": "JKR", "1526": "TNS"}[shopParam];
-    shopSelect.style.display = "none";
     console.log("🔹 Default shop set from URL:", shopParam);
     document.getElementById('gotoInnosmarti').style.display = "block"
-    document.getElementById('shopSelectLabel').style.display = "none"
+    document.getElementById('shopSelectDiv').style.display = "none"
   }
 };
 
