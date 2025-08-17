@@ -10,7 +10,6 @@ from Settings import Settings
 
 app = Flask(__name__)
 CORS(app)
-redirect_server = "https://naturals2.innosmarti.com/"
 
 _orig_create_connection = connection.create_connection
 settings = Settings()
@@ -33,7 +32,7 @@ connection.create_connection = patched_create_connection
 # Configure Flask logging
 app.logger.setLevel(logging.DEBUG)  # Set log level to INFO
 handler = logging.FileHandler('app.log')  # Log to a file
-handler.setLevel(logging.WARNING)
+handler.setLevel(logging.INFO)
 # Formatter with date, time, and log level
 formatter = logging.Formatter(
     '%(asctime)s [%(levelname)s] %(message)s',
@@ -62,12 +61,12 @@ def mmd(path):
                 headers["Authorization"] = last_auth
             elif request.method in ["GET", "POST"]:
                 last_auth = headers["Authorization"]
-            app.logger.info("Headers - {}".format(headers))
+            app.logger.debug("Headers - {}".format(headers))
 
         resp = session.request(request.method, request.url, data=request.data,
                                headers=headers).text
 
-        resp = mmd_handler.post_handler(resp, headers)
+        resp = mmd_handler.post_handler(resp)
     mmd_handler.post_task(resp)
     return resp
 

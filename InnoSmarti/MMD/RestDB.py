@@ -152,7 +152,7 @@ class RestDB:
         self.logger.info(f"Added {len(bills_to_add)} bills for MMD:{is_mmd}, {last_bill_key}: {next_bill_number}")
 
     def update_bills_of_day(self, bill_date, bills):
-        query = {"datenum": str(bill_date)}
+        query = {"datenum": int(bill_date)}
         url_params = 'q={}'.format(json.dumps(query))
         prev_day_sale = self.do_rest_call(url_params=url_params, table=DBStrings.Table_DaySales)
         task_method = DBStrings.POST
