@@ -177,6 +177,7 @@ class RestDB:
             query = prev_day_sale
             task_method = DBStrings.PUT
         self.do_rest_call(task_method, query, table=DBStrings.Table_DaySales)
+        self.logger.info(f"Updated {bill_date} bills with latest by - {task_method}")
         time.sleep(1)
 
     def bulk_insert(self, table, rows):
