@@ -2,9 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reports</title>
+  <title>Shop Sales Report</title>
   <style>
+    #dataDiv { display: none; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f4f4f4; }
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
@@ -26,49 +29,57 @@
   <script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha256-KXn5puMvxCw+dAYznun+drMdG1IFl3agK0p/pqT9KAo= sha512-2e8qq0ETcfWRI4HJBzQiA3UoyFk6tbNyG+qSaIBZLyW9Xf3sWZHN/lxe9fTh1U45DpPf07yj94KsUHHWe4Yk1A==" crossorigin="anonymous"></script>
-  <script src="./Reports.js"></script>
+  <!-- CryptoJS + App Script -->
+  <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js"></script>
+  <script src="Reports.js"></script>
 </head>
 <body>
-  <a href="https://naturals.innosmarti.com/">Go Back to InnoSmarti</a>
-  <h1>Reports</h1>
-  <label for="branch">Branch:</label>
-  <select id="branch">
-    <option>1526</option>
-    <option>2339</option>
-  </select> &nbsp;&nbsp;&nbsp;
-  <label for="fromDatePicker">From:</label>
-  <input type="date" id="fromDatePicker" name="fromDatePicker">&nbsp;&nbsp;&nbsp;
-  <label for="toDatePicker">To:</label>
-  <input type="date" id="toDatePicker" name="toDatePicker">&nbsp;&nbsp;&nbsp;
-  <label for="reportType">Report:</label>
-  <select id="reportType">
-    <option>DayWise</option>
-    <option>Bills</option>
-    <option>EmpSale</option>
-    <option>DayWiseSplit</option>
-    <option>DayWiseNRSOnly</option>
-  </select>&nbsp;&nbsp;&nbsp;
-  <button id="fetchDataButton" onclick="show_reports()">Fetch Data</button>
-  <table id="dataTable">
-    <thead>
-      <tr><!-- Data will be dynamically inserted here --> </tr>
-    </thead>
-    <tbody>
-      <!-- Data will be dynamically inserted here -->
-    </tbody>
-  </table>
-  <script>
-    // Set the default date to today
-    const fromDatePicker = document.getElementById('fromDatePicker');
-    const toDatePicker = document.getElementById('toDatePicker');
-    const today = new Date();
+  <!-- Login Section -->
+  <div id="loginDiv">
+    <h2>Shop Login</h2>
+    <label for="shopSelect">Select Shop:</label>
+    <select id="shopSelect"></select>
+    <br><br>
+    <label for="password">Password:</label>
+    <input type="password" id="password">
+    <br><br>
+    <button onclick="login()">Login</button>
+    <p id="loginError" style="color:red;"></p>
+  </div>
 
-    // Format the date as YYYY-MM-DD
-    const formattedDate = today.toISOString().split('T')[0];
+  <!-- Data Section -->
+  <div id="dataDiv">
+    <h2 id="shopName"></h2>
+    <!-- Date Range Pickers -->
+    <label for="fromDatePicker">From Date:</label>
+    <input type="date" id="fromDatePicker">&nbsp;&nbsp;&nbsp;
+    <label for="toDatePicker">To Date:</label>
+    <input type="date" id="toDatePicker">&nbsp;&nbsp;&nbsp;
 
-    // Set the value of the date picker to the current date
-    fromDatePicker.value = formattedDate;
-    toDatePicker.value = formattedDate;
-  </script>
+    <!-- Report Type Dropdown -->
+    <label for="reportTypeSelector">Report:</label>
+    <select id="reportTypeSelector">
+      <option value="daywiseSales">Daywise Sales</option>
+      <option value="bills">Bills</option>
+      <option value="services">Services</option>
+      <option value="employeeSales">Employee Sales</option>
+      <option value="daywiseSplit">DayWise Split</option>
+      <option value="daywiseNRSOnly">DayWise NRSOnly</option>
+    </select>&nbsp;&nbsp;&nbsp;
+
+    <button onclick="fetchReport()">Show Report</button>
+
+    <hr>
+    <div id="reportOutput">
+      <table id="dataTable">
+        <thead>
+          <tr><!-- Data will be dynamically inserted here --> </tr>
+        </thead>
+        <tbody>
+          <!-- Data will be dynamically inserted here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
 </body>
 </html>
