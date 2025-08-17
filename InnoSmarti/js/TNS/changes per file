@@ -1,3 +1,9 @@
+Copy same Services and Products HTML files
+and then replace the restDB Name and also APIKey. Thats it.
+
+below are needed if we want to start from scratch
+......................................................................................................
+
 Add style -
 --------------
       table, th, td { border: 1px solid black; border-collapse: collapse; }
