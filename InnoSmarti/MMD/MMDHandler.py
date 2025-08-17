@@ -166,7 +166,7 @@ class Utils:
                     else:
                         logger.info("Resp is - {0} - {1}".format(resp.status_code, resp.text))
                     time.sleep(1)
-                    if len(bills_to_add) > 24:
+                    if len(bills_to_add) > 99:
                         rest_db.update_bills(bills_to_add, is_mmd, last_bill_key, next_bill_number)
                         bills_to_add = []
                     next_bill_number += 1
