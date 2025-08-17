@@ -9,8 +9,8 @@ const shopConfig = {
 };
 
 table_columns = {
-    "bills" : ['TicketID', 'Date', 'Time', 'Phone', 'Name', 'Price', 'Discount', 'NetSale', 'Tax', 'Gross', 'Sex', 'Services', 'ServiceDesc', 'EmpName', 'Cash', 'UPI', 'Card'],
-    "services" : ['TicketID', 'Date', 'Time', 'Phone', 'Name', 'ServiceID', 'ServiceName', 'Price', 'Discount', 'NetSale', 'Sex', 'EmpName'],
+    "bills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Price', 'Discount', 'NetSale', 'Tax', 'Gross', 'Sex', 'Services', 'ServiceDesc', 'EmpName', "PaymentType", 'Cash', 'UPI', 'Card'],
+    "services" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'ServiceName', 'EmpName', 'Price', 'Discount', 'NetSale', "PaymentType"],
     "daywiseSales" : ["Date", "Bills", "Services", 'Price', "Discount", "NetSale", "Tax", "Gross", "ABV", "ASB", "Cash", "UPI", "Card"],
     "employeeSales": ["EmployeeName", "Bills", "Services", "Price", "Discount", "NetSale", "ABV", "ASB"]
 }
@@ -132,17 +132,22 @@ function login() {
 
 function calcPayments(payments) {
   let cash = 0, upi = 0, card = 0;
+  const payment_types = new Set();
   payments.forEach(p => {
     const mode = (p.ModeofPayment || "").toLowerCase();
     if (mode === "cash") {
+      payment_types.add("Cash")
       cash += (p.Tender || 0) - (p.ChangeAmt || 0);
     } else if (mode === "ewallet") {
+      payment_types.add("UPI")
       upi += p.Tender || 0;
     } else {
+      payment_types.add("Card")
       card += p.Tender || 0;
     }
   });
-  return { cash, upi, card };
+  payment_type = Array.from(payment_types).join("/")
+  return { cash, upi, card, payment_type };
 }
 
 function calcTickets(tickets) {
@@ -174,6 +179,7 @@ async function formatReportData(rawData, reportType) {
       // Format date -> YYYY-MM-DD
       const [datePart, timePart] = bill.TimeMark.split(" ");
       if (reportType === "daywiseNRSOnly" && bill.mmd) return;
+      const { cash, upi, card, payment_type } = calcPayments(bill.payment);
 
       if (non_group_reports.includes(reportType)) {
         if (reportType === "services") {
@@ -190,13 +196,13 @@ async function formatReportData(rawData, reportType) {
                     Discount: service.DiscountAmount,
                     NetSale: service.Price - service.DiscountAmount,
                     Sex: bill.ticket[0]?.Sex || "",
-                    EmpName: service.empname
+                    EmpName: service.empname,
+                    PaymentType: payment_type
                 };
                 direct_rows.push(row)
             });
         } else if (reportType === "bills") {
           const { servicesCount, priceSum, discountSum, netSalesSum, serviceNames, empNamesSet } = calcTickets(bill.ticket);
-          const { cash, upi, card } = calcPayments(bill.payment);
 
           row = {
             TicketID: bill.TicketID,
@@ -213,6 +219,7 @@ async function formatReportData(rawData, reportType) {
             Services: servicesCount,
             ServiceDesc: serviceNames.join("/"),
             EmpName: Array.from(empNamesSet).join("/"),
+            PaymentType: payment_type,
             Cash: cash,
             UPI: upi,
             Card: card
@@ -273,7 +280,6 @@ async function formatReportData(rawData, reportType) {
 
           const row = grouped[key];
           const { servicesCount, priceSum, discountSum, netSalesSum } = calcTickets(bill.ticket);
-          const { cash, upi, card } = calcPayments(bill.payment);
 
           row.Bills += 1;
           row.Services += servicesCount;
