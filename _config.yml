@@ -1,0 +1,5 @@
+exclude:
+  - LSASCA/
+  - iServe/
+  - SCA/RNApp/
+  - InnoSmarti/MMD/
