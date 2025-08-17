@@ -163,7 +163,7 @@ class RestDB:
         self.bulk_insert(DBStrings.Table_DaySales, list(bills_per_day.values()))
 
     def update_bills_of_day(self, bill_date, bills):
-        query = {"datenum": str(bill_date)}
+        query = {"datenum": int(bill_date)}
         url_params = 'q={}'.format(json.dumps(query))
         prev_day_sale = self.do_rest_call(url_params=url_params, table=DBStrings.Table_DaySales)
         task_method = DBStrings.POST
