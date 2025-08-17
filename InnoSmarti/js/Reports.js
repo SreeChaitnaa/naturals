@@ -65,10 +65,11 @@ window.onload = function() {
   const shopParam = params.get("branch");
 
   if (shopParam) {
-    const shopSelect = document.getElementById("shopSelect");
-    shopSelect.value = shopParam;
+    const shopSelect = document.getElementById("shop");
+    shopSelect.value = {"2339": "JKR", "1526": "TNS"}[shopParam];
     shopSelect.disabled = true;
     console.log("🔹 Default shop set from URL:", shopParam);
+    document.getElementById('gotoInnosmarti').style.display = "block";
   }
 };
 
