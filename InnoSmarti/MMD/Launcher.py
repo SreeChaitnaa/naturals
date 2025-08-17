@@ -11,7 +11,7 @@ from Settings import Settings
 
 
 class Launcher:
-    def __init__(self, is_mmd=False, show_invoices=False, is_mac=False, store_id="1526"):
+    def __init__(self, is_mmd=False, show_invoices=False, is_mac=False, store_id="2339"):
         self.driver = None
         self.is_mmd = is_mmd
         self.is_mac = is_mac
@@ -71,7 +71,7 @@ class Launcher:
 
     def set_reports(self, element):
         self.driver.execute_script("arguments[0].setAttribute('href', arguments[1]);", element,
-                                   "https://sreechaitnaa.github.io/naturals/InnoSmarti/js/Reports.html")
+                                   f"https://sreechaitnaa.github.io/naturals/InnoSmarti/js/Reports.html?shop={self.store_id}")
         self.driver.execute_script(
             "arguments[0].parentElement.parentElement.parentElement.innerHTML = arguments[0].parentElement.outerHTML;",
             element)
