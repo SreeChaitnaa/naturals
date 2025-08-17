@@ -3,7 +3,7 @@
 // ==== SHOP CONFIG (paste encrypted keys from Python output) ====
 const shopConfig = {
   "TNS": { "url": "https://innosmartisca-d3db.restdb.io/rest/",
-    "encKey": "GpxOvxnQ5Zx+tP78Pzoq2vZWu8RgdRmzXvvODPpg9rDjKgxQbrf5PJ8sNfkajq9MKRSc2bxJd7AU+6W0d/FLGiY4WGGOvay4cvaSYfW6AxY=" },
+    "encKey": "ki62s6ktea89p72RjFNDDrqVjKrUUT9i7d78cup3kqCEK1KvuFaLDkY7PdjUrnT5S5eQzFF2/9FGDGrt3SflYA==" },
   "JKR": { "url": "https://innosmartiscajkr-30a7.restdb.io/rest/",
     "encKey": "Fr4R+Qu6i1p+hdfcmDrm4bywTHY/b863GlNnuA9p9uo3x5nnahlJqvssPOJRt1BcDXLw34a2rIrcT81DmMe7xQ==" }
 };
