@@ -8,11 +8,11 @@
     "rest_db_data": {
         "1526": {
             "url": "https://innosmartisca-d3db.restdb.io/rest",
-            "x-apikey": "9d98a5bb50be2daaa7f2ba0209cabcca93bd0",
+            "x-apikey": "ReplaceKeyHere",
             "content-type": "application/json",
             "cache-control": "no-cache",
             "username": "naturals.thanisandra@gmail.com",
-            "password": "admin123"
+            "password": "ReplacePasswordHere"
         }
     },
     "flask_command": "python -m flask run --debug -p 443 --cert Certs\\server2.crt --key Certs\\server2.key",
