@@ -72,6 +72,11 @@ window.onload = function() {
 
   const params = new URLSearchParams(window.location.search);
   const shopParam = params.get("shop");
+  const pswParam = params.get("psw");
+  if (pswParam) {
+    document.getElementById("loginDiv").style.display = "none"
+    document.getElementById("password").value = pswParam;
+  }
 
   if (shopParam) {
     const shopSelect = document.getElementById("shopSelect");
@@ -79,6 +84,9 @@ window.onload = function() {
     console.log("🔹 Default shop set from URL:", shopParam);
     document.getElementById('gotoInnosmarti').style.display = "block"
     document.getElementById('shopSelectDiv').style.display = "none"
+  }
+  if (pswParam) {
+    login();
   }
 };
 
