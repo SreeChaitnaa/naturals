@@ -210,7 +210,7 @@ async function formatReportData(rawData, reportType) {
                     Name: bill.Name,
                     ServiceID: service.ServiceID,
                     ServiceName: service.ServiceName,
-                    Qty: service.Qty
+                    Qty: service.Qty,
                     Price: service.Qty * service.Price,
                     Discount: service.DiscountAmount,
                     NetSale: (service.Qty * service.Price) - service.DiscountAmount,
