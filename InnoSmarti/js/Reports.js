@@ -11,7 +11,7 @@ const shopConfig = {
 table_columns = {
     "detailsBills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Price', 'Discount', 'NetSale', 'Tax', 'Gross', 'Sex', 'Services', 'ServiceDesc', 'EmpName', "PaymentType", 'Cash', 'UPI', 'Card'],
     "bills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Services', 'Price', 'Discount', 'NetSale', 'Gross', "PaymentType"],
-    "services" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'ServiceName', 'EmpName', 'Price', 'Discount', 'NetSale', "PaymentType"],
+    "services" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'ServiceName', 'EmpName', "Qty", 'Price', 'Discount', 'NetSale', "PaymentType"],
     "employeeSales": ["EmployeeName", "Bills", "Services", "Price", "Discount", "NetSale", "ABV", "ASB"]
 }
 
@@ -168,7 +168,7 @@ function calcPayments(payments) {
 }
 
 function calcTickets(tickets) {
-  let servicesCount = tickets.length;
+  let servicesCount = 0;
   let discountSum = 0;
   let priceSum = 0;
   const serviceNames = [];
@@ -176,7 +176,8 @@ function calcTickets(tickets) {
 
   tickets.forEach(item => {
     discountSum += item.DiscountAmount || 0;
-    priceSum += item.Price || 0;
+    priceSum += item.Qty * (item.Price || 0);
+    servicesCount += item.Qty || 0;
     serviceNames.push(item.ServiceName);
     if (item.empname) empNamesSet.add(item.empname);
   });
@@ -209,9 +210,10 @@ async function formatReportData(rawData, reportType) {
                     Name: bill.Name,
                     ServiceID: service.ServiceID,
                     ServiceName: service.ServiceName,
-                    Price: service.Price,
+                    Qty: service.Qty
+                    Price: service.Qty * service.Price,
                     Discount: service.DiscountAmount,
-                    NetSale: service.Price - service.DiscountAmount,
+                    NetSale: (service.Qty * service.Price) - service.DiscountAmount,
                     Sex: bill.ticket[0]?.Sex || "",
                     EmpName: service.empname,
                     PaymentType: payment_type
@@ -263,10 +265,10 @@ async function formatReportData(rawData, reportType) {
                 }
 
                 const row = grouped[key];
-                row.Services += 1;
-                row.Price += service.Price;
+                row.Services += service.Qty;
+                row.Price += service.Qty * service.Price;
                 row.Discount += service.DiscountAmount;
-                row.NetSale += service.Price - service.DiscountAmount;
+                row.NetSale += (service.Qty * service.Price) - service.DiscountAmount;
             });
             emp_in_bill.forEach(empName => {
                 grouped[empName].Bills += 1;
