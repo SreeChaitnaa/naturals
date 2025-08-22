@@ -11,7 +11,7 @@ const shopConfig = {
 table_columns = {
     "detailsBills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Price', 'Discount', 'NetSale', 'Tax', 'Gross', 'Sex', 'Services', 'ServiceDesc', 'EmpName', "PaymentType", 'Cash', 'UPI', 'Card'],
     "bills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Services', 'Price', 'Discount', 'NetSale', 'Gross', "PaymentType"],
-    "services" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'ServiceName', 'EmpName', "Qty", 'Price', 'Discount', 'NetSale', "PaymentType"],
+    "services" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'ServiceName', 'EmpName', 'Price', 'Discount', 'NetSale', "PaymentType"],
     "employeeSales": ["EmployeeName", "Bills", "Services", "Price", "Discount", "NetSale", "ABV", "ASB"]
 }
 
@@ -62,28 +62,26 @@ function decryptApiKey(encryptedKey, password) {
 
 // ==== POPULATE SHOP DROPDOWN ====
 window.onload = function() {
-  const select = document.getElementById("shopSelect");
   for (const shop in shopConfig) {
     let opt = document.createElement("option");
     opt.value = shop;
     opt.textContent = shop;
-    select.appendChild(opt);
+    shopSelect.appendChild(opt);
   }
 
   const params = new URLSearchParams(window.location.search);
   const shopParam = params.get("shop");
   const pswParam = params.get("psw");
   if (pswParam) {
-    document.getElementById("loginDiv").style.display = "none"
-    document.getElementById("password").value = pswParam;
+    loginDiv.style.display = "none"
+    password.value = pswParam;
   }
 
   if (shopParam) {
-    const shopSelect = document.getElementById("shopSelect");
     shopSelect.value = {"2339": "JKR", "1526": "TNS"}[shopParam];
     console.log("🔹 Default shop set from URL:", shopParam);
-    document.getElementById('gotoInnosmarti').style.display = "block"
-    document.getElementById('shopSelectDiv').style.display = "none"
+    gotoInnosmarti.style.display = "block"
+    shopSelectDiv.style.display = "none"
   }
   if (pswParam) {
     login();
@@ -91,24 +89,21 @@ window.onload = function() {
 };
 
 function reset_date_pickers(){
-    const fromDatePicker = document.getElementById('fromDatePicker');
-    const toDatePicker = document.getElementById('toDatePicker');
     const today = new Date();
-    const formattedDate = today.toISOString().split('T')[0];
-    fromDatePicker.value = formattedDate;
-    toDatePicker.value = formattedDate;
+    toDatePicker.value = (new Date()).toISOString().split('T')[0];
+    fromDatePicker.value = (new Date(Date.UTC(today.getFullYear(), today.getMonth(), 1))).toISOString().split('T')[0];
 }
 
 // ==== LOGIN HANDLER ====
 function login() {
-  const shop = document.getElementById("shopSelect").value;
-  const password = document.getElementById("password").value;
+  const shop = shopSelect.value;
+  const passwd = password.value;
 
   try {
     const encKey = shopConfig[shop].encKey;
     db_url = shopConfig[shop].url;
     const apiUrl = db_url + "config";
-    const db_apiKey = decryptApiKey(encKey, password);
+    const db_apiKey = decryptApiKey(encKey, passwd);
 
     if (!db_apiKey) throw "Bad password";
     console.log(db_apiKey)
@@ -129,21 +124,22 @@ function login() {
       return res.json();
     })
     .then(data => {
-      document.getElementById("loginDiv").style.display = "none";
-      document.getElementById("dataDiv").style.display = "block";
-      document.getElementById("shopName").textContent = "Reports for - " + shop;
+      loginDiv.style.display = "none";
+      dataDiv.style.display = "block";
+      shopName.textContent = "Reports for - " + shop;
 
       // Simple render for debugging
       console.log("✅ Data:", data);
-      db_config = data;
-      reset_date_pickers()
+      data.forEach(row => {db_config[row["config_name"]] = row["config_value"]})
+      reset_date_pickers();
+      fetchReport();
     })
     .catch(err => {
-      document.getElementById("loginError").textContent = `Invalid password or API key - ${err.message}`;
+      loginError.textContent = `Invalid password or API key - ${err.message}`;
     });
 
   } catch (e) {
-    document.getElementById("loginError").textContent = `Invalid password - ${e}`;
+    loginError.textContent = `Invalid password - ${e}`;
   }
 }
 
@@ -202,7 +198,8 @@ async function formatReportData(rawData, reportType) {
       if (non_group_reports.includes(reportType)) {
         if (reportType === "services") {
             bill.ticket.forEach(service => {
-                row = {
+                for (let i = 0; i < service.Qty; i++) {
+                  row = {
                     TicketID: bill.TicketID,
                     Date: datePart,
                     Time: timePart,
@@ -210,15 +207,15 @@ async function formatReportData(rawData, reportType) {
                     Name: bill.Name,
                     ServiceID: service.ServiceID,
                     ServiceName: service.ServiceName,
-                    Qty: service.Qty,
-                    Price: service.Qty * service.Price,
-                    Discount: service.DiscountAmount,
-                    NetSale: (service.Qty * service.Price) - service.DiscountAmount,
+                    Price: service.Price,
+                    Discount: (service.DiscountAmount / service.Qty),
+                    NetSale: service.Price - (service.DiscountAmount / service.Qty),
                     Sex: bill.ticket[0]?.Sex || "",
                     EmpName: service.empname,
                     PaymentType: payment_type
-                };
-                direct_rows.push(row)
+                  };
+                  direct_rows.push(row)
+                }
             });
         } else if (bill_reports.includes(reportType)) {
           const { servicesCount, priceSum, discountSum, netSalesSum, serviceNames, empNamesSet } = calcTickets(bill.ticket);
@@ -403,9 +400,9 @@ async function fill_table_with_data(reportType)
 
 
 async function fetchReport() {
-    const fromDate = document.getElementById("fromDatePicker").value;
-    const toDate = document.getElementById("toDatePicker").value;
-    const reportType = document.getElementById("reportTypeSelector").value;
+    const fromDate = fromDatePicker.value;
+    const toDate = toDatePicker.value;
+    const reportType = reportTypeSelector.value;
 
     if (!fromDate || !toDate) {
         alert("Please select both start and end dates");
@@ -435,14 +432,138 @@ async function fetchReport() {
 
             data = await response.json();
             console.log(`Fetched Daysales Data:`, data);
-            last_data = JSON.parse(JSON.stringify(data))
-            last_from_date = startDateNum
-            last_to_date = endDateNum
+            last_data = JSON.parse(JSON.stringify(data));
+            last_from_date = startDateNum;
+            last_to_date = endDateNum;
         }
-        await fill_table_with_data(reportType)
+        await fill_table_with_data(reportType);
+        await fill_charts(reportType);
 
     } catch (error) {
         console.error(`Failed to fetch data:`, error);
         alert(`Could not fetch report. Please try again.`);
     }
+}
+
+async function fill_charts(reportType){
+    report_to_use = reportType.endsWith("NRSOnly") ? "daywiseNRSOnly" : "daywiseSales";
+    current_day_wise = await formatReportData(last_data, report_to_use);
+    labels = [];
+    daily_chart_expected = [];
+    daily_chart_actual = [];
+    growth_chart_expected = [];
+    growth_chart_actual = [];
+    growth_expected = 0;
+    growth_actual = 0;
+    last_date_pushed = null;
+    current_day_wise.forEach(day_sale => {
+        labels.push(formatToMonthDay(day_sale.Date));
+        last_date_pushed = day_sale.Date;
+        exp_value = parseInt(db_config[getDayOfWeek(day_sale.Date)], 10);
+        if(reportType.endsWith("NRSOnly")){
+            exp_value = exp_value / 2;
+        }
+        daily_chart_expected.push(exp_value);
+        daily_chart_actual.push(day_sale.NetSale);
+        growth_expected += exp_value
+        growth_actual += day_sale.NetSale
+        growth_chart_expected.push(growth_expected);
+        growth_chart_actual.push(growth_actual);
+    });
+    getRemainingDates(last_date_pushed).forEach(remaining_day => {
+        labels.push(formatToMonthDay(remaining_day));
+        exp_value = parseInt(db_config[getDayOfWeek(remaining_day)], 10);
+        if(reportType.endsWith("NRSOnly")){
+            exp_value = exp_value / 2;
+        }
+        daily_chart_expected.push(exp_value);
+//        daily_chart_actual.push(day_sale.NetSale);
+        growth_expected += exp_value
+//        growth_actual += day_sale.NetSale
+        growth_chart_expected.push(growth_expected);
+//        growth_chart_actual.push(growth_actual);
+    });
+
+    createReportChart('dailyChart', labels, daily_chart_expected, daily_chart_actual, "Day wise Target");
+    createReportChart('growthChart', labels, growth_chart_expected, growth_chart_actual, "Target");
+}
+
+function getDayOfWeek(dateString) {
+  const date = new Date(dateString);
+  let day = date.getDay(); // Sunday = 0, Monday = 1, ..., Saturday = 6
+
+  // shift so Monday = 1, ..., Sunday = 7
+  return "day_" + (day === 0 ? 7 : day);
+}
+
+function formatToMonthDay(dateStr) {
+  const [year, month, day] = dateStr.split("-").map(Number);
+
+  // Local date, no UTC shift
+  const date = new Date(year, month - 1, day);
+
+  const options = { month: "short" }; // "Jan", "Feb", ...
+  const monthName = date.toLocaleString("en-US", options);
+
+  return `${monthName}-${String(day).padStart(2, "0")}`;
+}
+
+function getRemainingDates(dateStr) {
+  // Parse manually to avoid UTC shift
+  const [year, month, day] = dateStr.split("-").map(Number);
+
+  const givenDate = new Date(year, month - 1, day); // local date
+  const lastDay = new Date(year, month, 0).getDate(); // last day of this month
+
+  const remainingDates = [];
+
+  // Start from the NEXT day
+  for (let d = day + 1; d <= lastDay; d++) {
+    const current = new Date(year, month - 1, d);
+    remainingDates.push(
+      `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, "0")}-${String(current.getDate()).padStart(2, "0")}`
+    );
+  }
+
+  return remainingDates;
+}
+
+function createReportChart(canvasId, labels, series1, series2, title) {
+  const existingChart = Chart.getChart(canvasId); // use canvas ID here
+
+  if (existingChart) {
+    existingChart.destroy(); // destroy old chart
+  }
+
+  const ctx = document.getElementById(canvasId).getContext("2d");
+
+  return new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Expected",
+          data: series1,
+          borderColor: "blue",
+          backgroundColor: "rgba(0,0,255,0.1)",
+          fill: true,
+        },
+        {
+          label: "Actual",
+          data: series2,
+          borderColor: "green",
+          backgroundColor: "rgba(0,255,0,0.1)",
+          fill: true,
+        },
+      ],
+    },
+    options: {
+      responsive: false,
+      plugins: {
+        legend: { position: "top" },
+        title: { display: true, text: title },
+      },
+    }
+  });
 }

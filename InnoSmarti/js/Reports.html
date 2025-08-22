@@ -27,6 +27,7 @@
     }
   </style>
   <script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha256-KXn5puMvxCw+dAYznun+drMdG1IFl3agK0p/pqT9KAo= sha512-2e8qq0ETcfWRI4HJBzQiA3UoyFk6tbNyG+qSaIBZLyW9Xf3sWZHN/lxe9fTh1U45DpPf07yj94KsUHHWe4Yk1A==" crossorigin="anonymous"></script>
   <!-- CryptoJS + App Script -->
@@ -53,7 +54,6 @@
   <!-- Data Section -->
   <div id="dataDiv">
     <h2 id="shopName"></h2>
-    <!-- Date Range Pickers -->
     <label for="fromDatePicker">From Date:</label>
     <input type="date" id="fromDatePicker">&nbsp;&nbsp;&nbsp;
     <label for="toDatePicker">To Date:</label>
@@ -75,9 +75,13 @@
     </select>&nbsp;&nbsp;&nbsp;
 
     <button onclick="fetchReport()">Show Report</button>
-
     <hr>
+
     <div id="reportOutput">
+      <div style="display: flex; gap: 20px;">
+        <canvas id="dailyChart" width="600" height="300"></canvas>
+        <canvas id="growthChart" width="600" height="300"></canvas>
+      </div>
       <table id="dataTable">
         <thead>
           <tr><!-- Data will be dynamically inserted here --> </tr>
