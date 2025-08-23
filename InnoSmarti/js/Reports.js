@@ -15,6 +15,19 @@ table_columns = {
     "employeeSales": ["EmployeeName", "Bills", "Services", "Price", "Discount", "NetSale", "ABV", "ASB"]
 }
 
+employee_name_map = {
+    "Guru": "Guru prasad",
+    "Komati": "Komathi",
+    "Shajid": "Javed",
+    "Nandini": "Ritika",
+    "Lokeshwari": "Sarita",
+    "Ritu": "Ritika"
+}
+
+function get_emp_name(emp_name){
+    return employee_name_map[emp_name] || emp_name
+}
+
 range_columns = ["Bills", "Services", 'Price', "Discount", "NetSale", "Tax", "Gross", "ABV", "ASB", "Cash", "UPI", "Card"]
 daywise_reports = ["daywiseSales", "daywiseSplit", "daywiseNRSOnly"]
 monthly_reports = ["monthlySales", "monthlySplit", "monthlyNRSOnly"]
@@ -34,6 +47,7 @@ let last_from_date = "";
 let last_to_date = "";
 let last_data = [];
 let data = [];
+
 
 // ==== CRYPTO DECRYPT FUNCTION ====
 function decryptApiKey(encryptedKey, password) {
@@ -175,7 +189,7 @@ function calcTickets(tickets) {
     priceSum += item.Qty * (item.Price || 0);
     servicesCount += item.Qty || 0;
     serviceNames.push(item.ServiceName);
-    if (item.empname) empNamesSet.add(item.empname);
+    if (item.empname) empNamesSet.add(get_emp_name(item.empname));
   });
   netSalesSum = priceSum - discountSum
 
@@ -211,7 +225,7 @@ async function formatReportData(rawData, reportType) {
                     Discount: (service.DiscountAmount / service.Qty),
                     NetSale: service.Price - (service.DiscountAmount / service.Qty),
                     Sex: bill.ticket[0]?.Sex || "",
-                    EmpName: service.empname,
+                    EmpName: get_emp_name(service.empname),
                     PaymentType: payment_type
                   };
                   direct_rows.push(row)
@@ -246,7 +260,7 @@ async function formatReportData(rawData, reportType) {
             const emp_in_bill = new Set();
             bill.ticket.forEach(service => {
 
-                let key = service.empname;
+                let key = get_emp_name(service.empname);
                 emp_in_bill.add(key)
                 if (!grouped[key]) {
                     grouped[key] = {
