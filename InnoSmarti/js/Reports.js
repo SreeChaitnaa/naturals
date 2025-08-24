@@ -43,10 +43,8 @@ non_group_reports = ["services", "bills", "detailsBills"]
 let db_config = {}
 let db_url = "";
 let db_headers = {};
-let last_from_date = "";
-let last_to_date = "";
 let last_data = [];
-let data = [];
+let full_data = [];
 
 
 // ==== CRYPTO DECRYPT FUNCTION ====
@@ -110,6 +108,7 @@ function reset_date_pickers(){
 
 // ==== LOGIN HANDLER ====
 function login() {
+  spinnerOverlay.style.display = "flex";
   const shop = shopSelect.value;
   const passwd = password.value;
 
@@ -139,22 +138,32 @@ function login() {
     })
     .then(data => {
       loginDiv.style.display = "none";
-      dataDiv.style.display = "block";
       shopName.textContent = "Reports for - " + shop;
 
       // Simple render for debugging
       console.log("✅ Data:", data);
-      data.forEach(row => {db_config[row["config_name"]] = row["config_value"]})
+      data.forEach(row => {db_config[row["config_name"]] = row["config_value"]});
       reset_date_pickers();
-      fetchReport();
+      fetch(db_url + "daysales", db_headers).then(data_res => {
+        return data_res.json();
+      }).then(data_response => {
+          full_data = data_response;
+          fetchReport();
+          dataDiv.style.display = "block";
+          spinnerOverlay.style.display = "none";
+      });
     })
     .catch(err => {
       loginError.textContent = `Invalid password or API key - ${err.message}`;
+      spinnerOverlay.style.display = "none";
     });
 
   } catch (e) {
     loginError.textContent = `Invalid password - ${e}`;
+    spinnerOverlay.style.display = "none";
   }
+
+
 }
 
 function calcPayments(payments) {
@@ -196,7 +205,7 @@ function calcTickets(tickets) {
   return { servicesCount, priceSum, discountSum, netSalesSum, serviceNames, empNamesSet };
 }
 
-async function formatReportData(rawData, reportType) {
+function formatReportData(rawData, reportType) {
   const grouped = {};
   const direct_rows = []
 
@@ -355,17 +364,13 @@ async function formatReportData(rawData, reportType) {
 }
 
 
-async function fill_table_with_data(reportType)
+function fill_table_with_data(reportType)
 {
-    rows = await formatReportData(last_data, reportType)
+    rows = formatReportData(last_data, reportType)
     const tableHeader = document.querySelector('#dataTable thead tr');
     tableHeader.innerHTML = ''; // Clear existing data
-    data_keys = Object.keys(data[0]);
     sum_row = {}
-    if(reportType in table_columns)
-    {
-        data_keys = table_columns[reportType]
-    }
+    data_keys = table_columns[reportType]
     data_keys.forEach(dk => {
         tableHeader.innerHTML = tableHeader.innerHTML + "<th>" + dk + "</th>";
         sum_row[dk] = 0
@@ -413,7 +418,7 @@ async function fill_table_with_data(reportType)
 }
 
 
-async function fetchReport() {
+function fetchReport() {
     const fromDate = fromDatePicker.value;
     const toDate = toDatePicker.value;
     const reportType = reportTypeSelector.value;
@@ -427,31 +432,14 @@ async function fetchReport() {
     const endDateNum = parseInt(toDate.replace(/-/g, ""), 10);
 
     try {
-        if (last_from_date == startDateNum && last_to_date == endDateNum){
-            data = JSON.parse(JSON.stringify(last_data))
-            console.log(`Using last fetched Daysales Data:`, data);
-        }
-        else{
-            const query = { "datenum": { "$bt": [startDateNum, endDateNum] } };
-//            const query = { "datenum": startDateNum };
-            const queryString = JSON.stringify(query);
-
-            const url = `${db_url}daysales?q=${queryString}`;
-
-            const response = await fetch(url, db_headers);
-
-            if (!response.ok) {
-                throw new Error(`Error fetching data: ${response.status}`);
+        last_data = [];
+        full_data.forEach(date_entry => {
+            if(startDateNum <= date_entry["datenum"] && date_entry["datenum"] <= endDateNum){
+                last_data.push(date_entry);
             }
-
-            data = await response.json();
-            console.log(`Fetched Daysales Data:`, data);
-            last_data = JSON.parse(JSON.stringify(data));
-            last_from_date = startDateNum;
-            last_to_date = endDateNum;
-        }
-        await fill_table_with_data(reportType);
-        await fill_charts(reportType);
+        });
+        fill_table_with_data(reportType);
+        fill_charts(reportType);
 
     } catch (error) {
         console.error(`Failed to fetch data:`, error);
@@ -459,9 +447,9 @@ async function fetchReport() {
     }
 }
 
-async function fill_charts(reportType){
+function fill_charts(reportType){
     report_to_use = reportType.endsWith("NRSOnly") ? "daywiseNRSOnly" : "daywiseSales";
-    current_day_wise = await formatReportData(last_data, report_to_use);
+    current_day_wise = formatReportData(last_data, report_to_use);
     labels = [];
     daily_chart_expected = [];
     daily_chart_actual = [];
@@ -491,11 +479,8 @@ async function fill_charts(reportType){
             exp_value = exp_value / 2;
         }
         daily_chart_expected.push(exp_value);
-//        daily_chart_actual.push(day_sale.NetSale);
         growth_expected += exp_value
-//        growth_actual += day_sale.NetSale
         growth_chart_expected.push(growth_expected);
-//        growth_chart_actual.push(growth_actual);
     });
 
     createReportChart('dailyChart', labels, daily_chart_expected, daily_chart_actual, "Day wise Target");
