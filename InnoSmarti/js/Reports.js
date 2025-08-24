@@ -45,6 +45,7 @@ let db_url = "";
 let db_headers = {};
 let last_data = [];
 let full_data = [];
+let current_rows = [];
 
 
 // ==== CRYPTO DECRYPT FUNCTION ====
@@ -367,6 +368,8 @@ function formatReportData(rawData, reportType) {
 function fill_table_with_data(reportType)
 {
     rows = formatReportData(last_data, reportType)
+    current_rows = []
+    current_rows.push(...rows)
     const tableHeader = document.querySelector('#dataTable thead tr');
     tableHeader.innerHTML = ''; // Clear existing data
     sum_row = {}
@@ -410,11 +413,22 @@ function fill_table_with_data(reportType)
         if (typeof dk_value === 'number' && !isNaN(dk_value)) {
             dk_value = Number(dk_value.toFixed(2));
         }
+        sum_row[dk] = dk_value
         row.innerHTML = row.innerHTML + "<td>" + dk_value + "</td>";
     });
+    current_rows.push(sum_row)
     row.style.fontWeight = 'bold';
     row.style.background = "grey"
     tableBody.appendChild(row);
+}
+
+function send_whatsapp(text, phone_num=null){
+    wa_link = "https://api.whatsapp.com/send/?";
+        if(phone_num != null){
+            wa_link = wa_link + "phone=91" + phone_num + "&";
+        }
+    wa_link = wa_link + "text=" + text.replace(" ", "%20").replace("\n", "%0a");
+    window.open(wa_link, '_blank');
 }
 
 
@@ -565,4 +579,26 @@ function createReportChart(canvasId, labels, series1, series2, title) {
       },
     }
   });
+}
+
+function send_update(nrs_only=false, is_update=true){
+    formatReportData(last_data, nrs_only ? "daywiseNRSOnly": "daywiseSales");
+    mtd = current_rows.pop();
+    today = current_rows.pop();
+    summary =  "Date: *" + today.Date + "*\n";
+    summary += "Salon: *Jakkur\n";
+    summary += "Sales: " + today.NetSale + "\n";
+    summary += "Bills: " + today.Bills + "\n";
+    summary += "ABV: " + today.ABV + "\n\n";
+    date_num = parseInt(today.Date.split("-")[2], 10)
+
+    if(nrs_only){
+        summary += "MTD:\n  Sales: " + mtd.NetSale + "\n";
+        summary += "  Bills: " + mtd.Bills + "\n";
+        summary += "  ABV: " + mtd.ABV + "\n\n";
+        projection = mtd.NetSale / date_num * 30
+        summary += "Projection: " + projection + "\n";
+    }
+
+    send_whatsapp(summary)
 }
