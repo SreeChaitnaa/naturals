@@ -8,20 +8,17 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.keys import Keys
 from Settings import Settings
+from subprocess import CREATE_NO_WINDOW
 
 
 class Launcher:
-    def __init__(self, is_mmd=False, show_invoices=False, is_mac=False, store_id="2339"):
+    def __init__(self, is_mmd=False, show_invoices=False, store_id=None):
         self.driver = None
         self.is_mmd = is_mmd
-        self.is_mac = is_mac
-        self.store_id = store_id
-        settings = Settings()
+        settings = Settings(store_id=store_id)
 
         self.service = Service(executable_path=settings.chrome_driver)
-        if not self.is_mac:
-            from subprocess import CREATE_NO_WINDOW
-            self.service.creation_flags = CREATE_NO_WINDOW
+        self.service.creation_flags = CREATE_NO_WINDOW
         chrome_options = Options()
         chrome_options.add_argument('--ignore-certificate-errors')
         chrome_options.add_argument("--user-data-dir={0}".format(settings.chrome_user_data))
@@ -34,8 +31,6 @@ class Launcher:
         chrome_options.add_experimental_option("detach", True)
 
         settings.set("show_invoices", show_invoices)
-        settings.set("is_mac", self.is_mac)
-        settings.set("store_id", store_id)
         settings.save()
         self.chrome_options = chrome_options
         self.settings = settings
@@ -71,7 +66,8 @@ class Launcher:
 
     def set_reports(self, element):
         self.driver.execute_script("arguments[0].setAttribute('href', arguments[1]);", element,
-                                   f"https://sreechaitnaa.github.io/naturals/InnoSmarti/js/Reports.html?shop={self.store_id}")
+                                   f"https://sreechaitnaa.github.io/naturals/InnoSmarti/js/Reports.html?"
+                                   f"shop={self.settings.store_id}&psw={self.settings.rep_password}&from_store=true")
         self.driver.execute_script(
             "arguments[0].parentElement.parentElement.parentElement.innerHTML = arguments[0].parentElement.outerHTML;",
             element)
@@ -93,12 +89,9 @@ class Launcher:
 
         if self.is_mmd:
             os.chdir(self.settings.app_path)
-            if not self.is_mac:
-                startupinfo = subprocess.STARTUPINFO()
-                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-                subprocess.Popen(self.settings.flask_command, startupinfo=startupinfo)
-            else:
-                os.system(self.settings.flask_command)
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            subprocess.Popen(self.settings.flask_command, startupinfo=startupinfo)
 
         self.set_hosts(self.is_mmd)
 

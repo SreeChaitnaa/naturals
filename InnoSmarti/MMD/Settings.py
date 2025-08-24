@@ -21,16 +21,17 @@ class Settings:
         self.store_id = store_id or self.settings["store_id"]
         self.user = self.settings["user"]
         self.password = self.settings["password"]
+        self.rep_password = ""
         if self.store_id:
             self.user["value"] = self.RestDBData[self.store_id]["username"]
             self.password["value"] = self.RestDBData[self.store_id]["password"]
+            self.rep_password = self.RestDBData[self.store_id]["ReportPassword"]
         self.login = self.settings["login"]
         self.reports_link = self.settings["reports_link"]
         self.show_invoices = self.settings["show_invoices"]
         self.hosts_file = self.settings["hosts_file"]
         self.rest_api_host = self.settings["rest_api_host"]
         self.chrome_user_data = self.settings["chrome_user_data"]
-        self.is_mac = self.settings["is_mac"]
 
     def set(self, key, value):
         self.settings[key] = value

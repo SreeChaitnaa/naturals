@@ -6,23 +6,35 @@
     "bill_url": "https://naturals.innosmarti.com/",
     "rest_api_host": "ntlivewebapi.innosmarti.com",
     "rest_db_data": {
-        "1526": {
-            "url": "https://innosmartisca-d3db.restdb.io/rest",
-            "x-apikey": "ReplaceKeyHere",
+        "Branch1ID": {
+            "url": "https://Branch1DBName-d3db.restdb.io/rest",
+            "x-apikey": "Branch1DB XAPI KEY",
             "content-type": "application/json",
             "cache-control": "no-cache",
-            "username": "naturals.thanisandra@gmail.com",
-            "password": "ReplacePasswordHere"
+            "username": "naturals.branch1@gmail.com",
+            "password": "branch1_innosmarti_password",
+            "ReportPassword": "Branch1_Reports@Password"
+        },
+        "Branch2ID": {
+            "url": "https://Branch2DBName-d3db.restdb.io/rest",
+            "x-apikey": "Branch2DB XAPI KEY",
+            "content-type": "application/json",
+            "cache-control": "no-cache",
+            "username": "naturals.branch2@gmail.com",
+            "password": "branch2_innosmarti_password",
+            "ReportPassword": "Branch2_Reports@Password"
         }
     },
     "flask_command": "python -m flask run --debug -p 443 --cert Certs\\server2.crt --key Certs\\server2.key",
     "user": {
         "by": "name",
-        "selector": "email"
+        "selector": "email",
+        "value": ""
     },
     "password": {
         "by": "xpath",
-        "selector": "//input[@type='password']"
+        "selector": "//input[@type='password']",
+        "value": ""
     },
     "login": {
         "by": "xpath",
@@ -35,6 +47,5 @@
         "value": "set_reports"
     },
     "hosts_file": "C:\\Windows\\System32\\drivers\\etc\\hosts",
-    "is_mac": false,
-    "store_id": "1526"
+    "store_id": "BranchID"
 }
