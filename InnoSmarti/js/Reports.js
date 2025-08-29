@@ -353,8 +353,8 @@ function formatReportData(rawData, reportType) {
       rows.forEach(row => {
           row.Tax = row.NetSale * 0.18;
           row.Gross = row.NetSale + row.Tax;
-          row.ABV = row.Bills > 0 ? row.NetSale / row.Bills : 0;
-          row.ASB = row.Bills > 0 ? row.Services / row.Bills : 0;
+          row.ABV = row.Bills > 0 ? parseFloat((row.NetSale / row.Bills).toFixed(2)) : 0;
+          row.ASB = row.Bills > 0 ? parseFloat((row.Services / row.Bills).toFixed(2)) : 0;
       });
       if (reportType === "employeeSales") {
         rows.sort((a, b) => (a.EmployeeName > b.EmployeeName ? 1 : -1));
@@ -407,10 +407,10 @@ function fill_table_with_data(reportType)
     data_keys.forEach(dk => {
         dk_value = sum_row[dk]
         if (dk == "ABV") {
-            dk_value = sum_row["NetSale"] / sum_row["Bills"];
+            dk_value = parseFloat((sum_row["NetSale"] / sum_row["Bills"]).toFixed(2));
         }
         if (dk == "ASB") {
-            dk_value = sum_row["Services"] / sum_row["Bills"];
+            dk_value = parseFloat((sum_row["Services"] / sum_row["Bills"]).toFixed(2));
         }
         if (typeof dk_value === 'number' && !isNaN(dk_value)) {
             dk_value = Number(dk_value.toFixed(2));
@@ -607,13 +607,13 @@ function send_update(nrs_only=false, is_update=true){
     summary += "Salon: *" + shops_map[shopSelect.value] + "*\n\n";
     summary += "Sales: " + today.NetSale + "\n";
     summary += "Bills: " + today.Bills + "\n";
-    summary += "ABV: " + today.ABV + "\n";
+    summary += "ABV: " + today.ABV.toFixed(2) + "\n";
     date_num = parseInt(today.Date.split("-")[2], 10)
 
     if(nrs_only) {
         summary += "\nMTD:\n  Sales: " + mtd.NetSale + "\n";
         summary += "  Bills: " + mtd.Bills + "\n";
-        summary += "  ABV: " + mtd.ABV + "\n\n";
+        summary += "  ABV: " + mtd.ABV.toFixed(2) + "\n\n";
         projection = parseInt(mtd.NetSale / date_num * daysInThisMonth());
         summary += "Projection: " + projection + "\n";
     }
