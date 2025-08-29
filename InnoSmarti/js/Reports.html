@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Shop Sales Report</title>
   <style>
-    #dataDiv { display: none; padding: 20px;}
+    #dataDiv { display: none;}
     table { border-collapse: collapse; width: 100%; margin-top: 20px; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
     th { background: #f4f4f4; }
@@ -24,6 +24,9 @@
     }
     th {
       background-color: #f4f4f4;
+    }
+    h2, h3 {
+      margin: 0;   /* removes top and bottom margin */
     }
 
     /* Fullscreen overlay */
@@ -65,10 +68,108 @@
       gap: 10px;
     }
 
-    #updateDiv {
+    .myModal {
+      display: none; /* hidden by default */
+      position: fixed;
+      z-index: 1;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.4);
+    }
+
+    .modalContent {
+      background: #fff;
+      margin: 15% auto;
+      padding: 20px;
+      border-radius: 8px;
+      width: 300px;
+      text-align: center;
+    }
+
+    .spacy-input {
+      margin: 8px 0;
+      padding: 6px;
+    }
+
+    .buttonRow {
       display: flex;
-      align-items: center;
-      gap: 10px;
+      justify-content: flex-end; /* right aligned */
+      gap: 10px; /* space between buttons */
+      margin-top: 12px;
+    }
+
+    button {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 10px; /* rounded edges */
+      cursor: pointer;
+      font-size: 14px;
+      background-color: #4CAF50;
+    }
+
+    button:hover {
+      opacity: 0.9;
+      background-color: #ccc;
+      color: #000;
+    }
+
+    .gray-button {
+      background-color: #ccc;
+      color: white;
+    }
+
+    .menu {
+      position: relative;
+      display: inline-block;
+    }
+
+    .menu-button {
+      font-size: 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      border-radius: 0px;
+    }
+
+    .menu-content {
+      display: none;
+      position: absolute;
+      right: 0;
+      background: #fff;
+      min-width: 140px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      border-radius: 6px;
+      z-index: 1;
+    }
+
+    .menu-content button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      background: none;
+      text-align: left;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 0px;
+    }
+
+    .menu-content button:hover {
+      background: #eee;
+    }
+
+    .show {
+      display: block;
+    }
+
+    .noBorderTable,
+    .noBorderTable th,
+    .noBorderTable td {
+      border: none;
+      border-collapse: collapse;
+    }
+
+    .noBorderTable td {
+      padding: 15px;
     }
 
   </style>
@@ -102,6 +203,21 @@
     <div class="spinner"></div>
   </div>
 
+  <!-- Update Send Modal -->
+  <div id="updateModel" class="myModal">
+    <div id="updateModelContent" class="modalContent">
+      <h3 style="text-align:left">Current Status: </h3>
+      <label for="noOfClients">No of Clients: </label>
+      <input type="text" class="spacy-input" id="noOfClients"><br />
+      <label for="appointments">Appointments: </label>
+      <input type="text" class="spacy-input" id="appointments"><br />
+      <div class="buttonRow">
+        <button onclick="closeUpdate()" class="gray-button">Cancel</button>
+        <button onclick="submitUpdate()">Submit</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Data Section -->
   <div id="dataDiv">
     <h2 id="shopName"></h2>
@@ -109,14 +225,15 @@
     <div class="filterRow">
       <div class="leftFilters">
         <label for="fromDatePicker">From Date:</label>
-        <input type="date" id="fromDatePicker">&nbsp;&nbsp;&nbsp;
+        <input type="date" id="fromDatePicker" class="report-trigger">&nbsp;&nbsp;&nbsp;
 
         <label for="toDatePicker">To Date:</label>
-        <input type="date" id="toDatePicker">&nbsp;&nbsp;&nbsp;
+        <input type="date" id="toDatePicker" class="report-trigger">&nbsp;&nbsp;&nbsp;
 
         <!-- Report Type Dropdown -->
         <label for="reportTypeSelector">Report:</label>
-        <select id="reportTypeSelector">
+        <select id="reportTypeSelector" class="report-trigger">
+          <option value="summary">Summary</option>
           <option value="bills">Bills</option>
           <option value="services">Services</option>
           <option value="employeeSales">Employee Sales</option>
@@ -127,29 +244,29 @@
           <option value="monthlySplit">Monthly Split</option>
           <option value="daywiseNRSOnly">DayWise NRSOnly</option>
           <option value="monthlyNRSOnly">Monthly NRSOnly</option>
-        </select>&nbsp;&nbsp;&nbsp;
-
-        <button onclick="fetchReport()">Show Report</button>
+          <option value="summaryNRSOnly">Summary NRSOnly</option>
+        </select>
       </div>
 
-      <!-- Update Div (right aligned) -->
-      <div id="updateDiv">
-        <select id="updateSelector">
-          <option value="update">Update</option>
-          <option value="nrs_day_close">NRS Day Close</option>
-          <option value="day_close">Day Close</option>
-        </select>&nbsp;
-
-        <button onclick="sendUpdate()">Send</button>
+      <div class="menu">
+        <button class="menu-button" onclick="toggleMenu()">⋮</button>
+        <div id="dropdownMenu" class="menu-content">
+          <button onclick="openUpdateDialog()">Send Update</button>
+          <button onclick="send_update(true, false)">NRS DayClose</button>
+          <button onclick="send_update(false, false)">SCA DayClose</button>
+        </div>
       </div>
     </div>
     <hr>
 
     <div id="reportOutput">
-      <div style="display: flex; gap: 20px;">
-        <canvas id="dailyChart" width="600" height="300"></canvas>
-        <canvas id="growthChart" width="600" height="300"></canvas>
-      </div>
+      <table id="chartsDiv" class="noBorderTable">
+        <tr>
+          <td><canvas id="dailyChart" width="600" height="300"></canvas></td>
+          <td><canvas id="growthChart" width="600" height="300"></canvas></td>
+          <td><canvas id="clientsChart" width="600" height="300"></canvas></td>
+        </tr>
+      </table>
       <table id="dataTable">
         <thead>
           <tr><!-- Data will be dynamically inserted here --> </tr>

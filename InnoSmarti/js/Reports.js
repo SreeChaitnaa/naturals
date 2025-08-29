@@ -85,10 +85,16 @@ window.onload = function() {
     opt.textContent = shop;
     shopSelect.appendChild(opt);
   }
+  resizeCanvas();
+
+  document.querySelectorAll(".report-trigger").forEach(trigger_element => {
+    trigger_element.addEventListener("change", fetchReport);
+  });
 
   const params = new URLSearchParams(window.location.search);
   const shopParam = params.get("shop");
   const pswParam = params.get("psw");
+  const fromStore = params.get("from_store");
   if (pswParam) {
     loginDiv.style.display = "none"
     password.value = pswParam;
@@ -99,6 +105,9 @@ window.onload = function() {
     console.log("🔹 Default shop set from URL:", shopParam);
     gotoInnosmarti.style.display = "block"
     shopSelectDiv.style.display = "none"
+  }
+  if(fromStore) {
+    gotoInnosmarti.outerHTML = ""
   }
   if (pswParam) {
     login();
@@ -383,16 +392,18 @@ function formatReportData(rawData, reportType) {
 
 function fill_table_with_data(reportType)
 {
-    rows = formatReportData(last_data, reportType)
-    current_rows = []
-    current_rows.push(...rows)
+    dataTable.style.display = 'block';
+    chartsDiv.style.display = 'none';
+    rows = formatReportData(last_data, reportType);
+    current_rows = [];
+    current_rows.push(...rows);
     const tableHeader = document.querySelector('#dataTable thead tr');
     tableHeader.innerHTML = ''; // Clear existing data
-    sum_row = {}
-    data_keys = table_columns[reportType]
+    sum_row = {};
+    data_keys = table_columns[reportType];
     data_keys.forEach(dk => {
         tableHeader.innerHTML = tableHeader.innerHTML + "<th>" + dk + "</th>";
-        sum_row[dk] = 0
+        sum_row[dk] = 0;
     });
 
     const tableBody = document.querySelector('#dataTable tbody');
@@ -404,22 +415,22 @@ function fill_table_with_data(reportType)
         data_keys.forEach(dk => {
             dk_value = item[dk]
             if (typeof dk_value === 'number' && !isNaN(dk_value)) {
-                sum_row[dk] += dk_value
+                sum_row[dk] += dk_value;
                 dk_value = Number(dk_value.toFixed(2));
             }
             else{
-                sum_row[dk] = "-"
+                sum_row[dk] = "-";
             }
             row.innerHTML = row.innerHTML + "<td>" + dk_value + "</td>";
         });
         tableBody.appendChild(row);
     });
 
-    sum_row[data_keys[0]] = "Total"
+    sum_row[data_keys[0]] = "Total";
     const row = document.createElement('tr');
-    row.innerHTML = ""
+    row.innerHTML = "";
     data_keys.forEach(dk => {
-        dk_value = sum_row[dk]
+        dk_value = sum_row[dk];
         if (dk == "ABV") {
             dk_value = parseFloat((sum_row["NetSale"] / sum_row["Bills"]).toFixed(2));
         }
@@ -429,12 +440,12 @@ function fill_table_with_data(reportType)
         if (typeof dk_value === 'number' && !isNaN(dk_value)) {
             dk_value = Number(dk_value.toFixed(2));
         }
-        sum_row[dk] = dk_value
+        sum_row[dk] = dk_value;
         row.innerHTML = row.innerHTML + "<td>" + dk_value + "</td>";
     });
-    current_rows.push(sum_row)
+    current_rows.push(sum_row);
     row.style.fontWeight = 'bold';
-    row.style.background = "grey"
+    row.style.background = "grey";
     tableBody.appendChild(row);
 }
 
@@ -454,7 +465,6 @@ function fetchReport() {
     const reportType = reportTypeSelector.value;
 
     if (!fromDate || !toDate) {
-        alert("Please select both start and end dates");
         return;
     }
 
@@ -468,8 +478,11 @@ function fetchReport() {
                 last_data.push(date_entry);
             }
         });
-        fill_table_with_data(reportType);
-        fill_charts(reportType);
+        if (reportType.includes("summary")){
+            fill_charts(reportType);
+        } else {
+            fill_table_with_data(reportType);
+        }
 
     } catch (error) {
         console.error(`Failed to fetch data:`, error);
@@ -478,6 +491,8 @@ function fetchReport() {
 }
 
 function fill_charts(reportType){
+    dataTable.style.display = 'none';
+    chartsDiv.style.display = 'block';
     report_to_use = reportType.endsWith("NRSOnly") ? "daywiseNRSOnly" : "daywiseSales";
     current_day_wise = formatReportData(last_data, report_to_use);
     labels = [];
@@ -485,6 +500,8 @@ function fill_charts(reportType){
     daily_chart_actual = [];
     growth_chart_expected = [];
     growth_chart_actual = [];
+    total_clients = [];
+    new_clients = [];
     growth_expected = 0;
     growth_actual = 0;
     last_date_pushed = null;
@@ -501,6 +518,8 @@ function fill_charts(reportType){
         growth_actual += day_sale.NetSale
         growth_chart_expected.push(growth_expected);
         growth_chart_actual.push(growth_actual);
+        total_clients.push(day_sale.Bills);
+        new_clients.push(day_sale.NewClients);
     });
     getRemainingDates(last_date_pushed).forEach(remaining_day => {
         labels.push(formatToMonthDay(remaining_day));
@@ -514,7 +533,8 @@ function fill_charts(reportType){
     });
 
     createReportChart('dailyChart', labels, daily_chart_expected, daily_chart_actual, "Day wise Target");
-    createReportChart('growthChart', labels, growth_chart_expected, growth_chart_actual, "Target");
+    createReportChart('growthChart', labels, growth_chart_expected, growth_chart_actual, "Total Target");
+    createReportChart('clientsChart', labels, total_clients, new_clients, "Clients Trend", "Total", "New");
 }
 
 function getDayOfWeek(dateString) {
@@ -557,7 +577,7 @@ function getRemainingDates(dateStr) {
   return remainingDates;
 }
 
-function createReportChart(canvasId, labels, series1, series2, title) {
+function createReportChart(canvasId, labels, series1, series2, title, label1="Expected", label2="Actual") {
   const existingChart = Chart.getChart(canvasId); // use canvas ID here
 
   if (existingChart) {
@@ -572,14 +592,14 @@ function createReportChart(canvasId, labels, series1, series2, title) {
       labels: labels,
       datasets: [
         {
-          label: "Expected",
+          label: label1,
           data: series1,
           borderColor: "blue",
           backgroundColor: "rgba(0,0,255,0.1)",
           fill: true,
         },
         {
-          label: "Actual",
+          label: label2,
           data: series2,
           borderColor: "green",
           backgroundColor: "rgba(0,255,0,0.1)",
@@ -610,7 +630,7 @@ function get_time_for_update(now) {
     return `${hours}:${minutes} ${ampm}`;   // Example: "9:05 PM"
 }
 
-function send_update(nrs_only=false, is_update=true){
+function send_update(nrs_only=false, is_update=true, client_count=0, appointments=0){
     reportTypeSelector.value = nrs_only ? "daywiseNRSOnly": "daywiseSales";
     now = new Date();
     set_from_date_to_month_beginning(now);
@@ -639,19 +659,47 @@ function send_update(nrs_only=false, is_update=true){
         if (! is_update) {
             summary += "Cash: " + today.Cash + "\n\nClosing now, Good Night!!!";
         }else {
-            summary += "Clients In Salon: \nAppointments:\n";
+            summary += "Clients In Salon: " + client_count + "\n";
+            summary += "Appointments:" + appointments + "\n";
         }
     }
     send_whatsapp(summary);
 }
 
-function sendUpdate(){
-    switch (updateSelector.value) {
-        case "update":
-            return send_update(false, true);
-        case "nrs_day_close":
-            return send_update(true, false);
-        case "day_close":
-            return send_update(false, false);
-    }
+function openUpdateDialog() {
+  updateModel.style.display = "block";
 }
+
+function closeUpdate() {
+  updateModel.style.display = "none";
+}
+
+function submitUpdate() {
+  closeUpdate();
+  send_update(false, true, noOfClients.value, appointments.value)
+}
+
+function toggleMenu() {
+  dropdownMenu.classList.toggle("show");
+}
+
+function resizeCanvas() {
+    const screenWidth = window.innerWidth;
+    const canvasWidth = screenWidth * 0.3; // 30% of screen width
+    const canvasHeight = canvasWidth / 2;  // half of canvas width
+
+    document.querySelectorAll("canvas").forEach(canvas => {
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+    });
+}
+
+window.onclick = function(event) {
+  if (!event.target.matches('.menu-button')) {
+    document.querySelectorAll(".menu-content").forEach(menu => {
+      menu.classList.remove("show");
+    });
+  }
+}
+
+window.addEventListener("resize", resizeCanvas);
