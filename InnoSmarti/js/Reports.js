@@ -13,7 +13,7 @@ table_columns = {
     "bills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Services', 'Price', 'Discount', 'NetSale', 'Gross', "PaymentType"],
     "services" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'ServiceName', 'EmpName', 'Price', 'Discount', 'NetSale', "PaymentType"],
     "employeeSales": ["EmployeeName", "Bills", "Services", "Price", "Discount", "NetSale", "ABV", "ASB"]
-}
+};
 
 employee_name_map = {
     "Guru": "Guru prasad",
@@ -22,23 +22,25 @@ employee_name_map = {
     "Nandini": "Ritika",
     "Lokeshwari": "Sarita",
     "Ritu": "Ritika"
-}
+};
+
+shops_map = {"JKR": "Jakkur", "TNS": "Thanisandra"};
 
 function get_emp_name(emp_name){
-    return employee_name_map[emp_name] || emp_name
+    return employee_name_map[emp_name] || emp_name;
 }
 
-range_columns = ["Bills", "Services", 'Price', "Discount", "NetSale", "Tax", "Gross", "ABV", "ASB", "Cash", "UPI", "Card"]
-daywise_reports = ["daywiseSales", "daywiseSplit", "daywiseNRSOnly"]
-monthly_reports = ["monthlySales", "monthlySplit", "monthlyNRSOnly"]
+range_columns = ["Bills", "Services", 'Price', "Discount", "NetSale", "Tax", "Gross", "ABV", "ASB", "Cash", "UPI", "Card"];
+daywise_reports = ["daywiseSales", "daywiseSplit", "daywiseNRSOnly"];
+monthly_reports = ["monthlySales", "monthlySplit", "monthlyNRSOnly"];
 daywise_reports.forEach(reportType => {
     table_columns[reportType] = ["Date"].concat(range_columns)
 });
 monthly_reports.forEach(reportType => {
     table_columns[reportType] = ["Month"].concat(range_columns)
 });
-bill_reports = ["bills", "detailsBills"]
-non_group_reports = ["services", "bills", "detailsBills"]
+bill_reports = ["bills", "detailsBills"];
+non_group_reports = ["services", "bills", "detailsBills"];
 
 let db_config = {}
 let db_url = "";
@@ -427,7 +429,7 @@ function send_whatsapp(text, phone_num=null){
         if(phone_num != null){
             wa_link = wa_link + "phone=91" + phone_num + "&";
         }
-    wa_link = wa_link + "text=" + text.replace(" ", "%20").replace("\n", "%0a");
+    wa_link = wa_link + "text=" + text.replace(/ /g, "%20").replace(/\n/g, "%0a");
     window.open(wa_link, '_blank');
 }
 
@@ -581,24 +583,60 @@ function createReportChart(canvasId, labels, series1, series2, title) {
   });
 }
 
+function daysInThisMonth() {
+  var now = new Date();
+  return new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+}
+
+function get_time_for_update() {
+    now = new Date();
+    hours = now.getHours();
+    minutes = now.getMinutes().toString().padStart(2, "0");
+    ampm = hours >= 12 ? "PM" : "AM";
+
+    hours = hours % 12 || 12;  // convert 0 → 12
+    return `${hours}:${minutes} ${ampm}`;   // Example: "9:05 PM"
+}
+
 function send_update(nrs_only=false, is_update=true){
-    formatReportData(last_data, nrs_only ? "daywiseNRSOnly": "daywiseSales");
+    reportTypeSelector.value = nrs_only ? "daywiseNRSOnly": "daywiseSales";
+    fetchReport();
     mtd = current_rows.pop();
     today = current_rows.pop();
     summary =  "Date: *" + today.Date + "*\n";
-    summary += "Salon: *Jakkur\n";
+    summary += "Salon: *" + shops_map[shopSelect.value] + "*\n\n";
     summary += "Sales: " + today.NetSale + "\n";
     summary += "Bills: " + today.Bills + "\n";
-    summary += "ABV: " + today.ABV + "\n\n";
+    summary += "ABV: " + today.ABV + "\n";
     date_num = parseInt(today.Date.split("-")[2], 10)
 
-    if(nrs_only){
-        summary += "MTD:\n  Sales: " + mtd.NetSale + "\n";
+    if(nrs_only) {
+        summary += "\nMTD:\n  Sales: " + mtd.NetSale + "\n";
         summary += "  Bills: " + mtd.Bills + "\n";
         summary += "  ABV: " + mtd.ABV + "\n\n";
-        projection = mtd.NetSale / date_num * 30
+        projection = parseInt(mtd.NetSale / date_num * daysInThisMonth());
         summary += "Projection: " + projection + "\n";
     }
+    else {
+        summary += "Services: " + today.Services + "\n\n";
+        update_str = is_update ? "Update" : "Closing";
+        summary += update_str + " Time: " + get_time_for_update()+ "\n";
+        if (! is_update) {
+            summary += "Cash: " + today.Cash + "\n\nClosing now, Good Night!!!";
+        }else {
+            summary += "Clients In Salon: \nAppointments:\n";
+        }
+    }
+    send_whatsapp(summary);
+}
 
-    send_whatsapp(summary)
+function sendUpdate(){
+    switch (updateSelector.value) {
+        case "update":
+            return send_update(false, true);
+        case "nrs_day_close":
+            return send_update(true, false);
+        case "day_close":
+            return send_update(false, false);
+    }
 }

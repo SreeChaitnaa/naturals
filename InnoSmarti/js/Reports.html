@@ -51,6 +51,26 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+
+    .filterRow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 15px 0;
+    }
+
+    .leftFilters {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #updateDiv {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
   </style>
   <script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -85,27 +105,44 @@
   <!-- Data Section -->
   <div id="dataDiv">
     <h2 id="shopName"></h2>
-    <label for="fromDatePicker">From Date:</label>
-    <input type="date" id="fromDatePicker">&nbsp;&nbsp;&nbsp;
-    <label for="toDatePicker">To Date:</label>
-    <input type="date" id="toDatePicker">&nbsp;&nbsp;&nbsp;
+    <!-- Filter Row -->
+    <div class="filterRow">
+      <div class="leftFilters">
+        <label for="fromDatePicker">From Date:</label>
+        <input type="date" id="fromDatePicker">&nbsp;&nbsp;&nbsp;
 
-    <!-- Report Type Dropdown -->
-    <label for="reportTypeSelector">Report:</label>
-    <select id="reportTypeSelector">
-      <option value="bills">Bills</option>
-      <option value="services">Services</option>
-      <option value="employeeSales">Employee Sales</option>
-      <option value="daywiseSales">DayWise Sales</option>
-      <option value="monthlySales">Monthly Sales</option>
-      <option value="detailsBills">Detailed Bills</option>
-      <option value="daywiseSplit">DayWise Split</option>
-      <option value="monthlySplit">Monthly Split</option>
-      <option value="daywiseNRSOnly">DayWise NRSOnly</option>
-      <option value="monthlyNRSOnly">Monthly NRSOnly</option>
-    </select>&nbsp;&nbsp;&nbsp;
+        <label for="toDatePicker">To Date:</label>
+        <input type="date" id="toDatePicker">&nbsp;&nbsp;&nbsp;
 
-    <button onclick="fetchReport()">Show Report</button>
+        <!-- Report Type Dropdown -->
+        <label for="reportTypeSelector">Report:</label>
+        <select id="reportTypeSelector">
+          <option value="bills">Bills</option>
+          <option value="services">Services</option>
+          <option value="employeeSales">Employee Sales</option>
+          <option value="daywiseSales">DayWise Sales</option>
+          <option value="monthlySales">Monthly Sales</option>
+          <option value="detailsBills">Detailed Bills</option>
+          <option value="daywiseSplit">DayWise Split</option>
+          <option value="monthlySplit">Monthly Split</option>
+          <option value="daywiseNRSOnly">DayWise NRSOnly</option>
+          <option value="monthlyNRSOnly">Monthly NRSOnly</option>
+        </select>&nbsp;&nbsp;&nbsp;
+
+        <button onclick="fetchReport()">Show Report</button>
+      </div>
+
+      <!-- Update Div (right aligned) -->
+      <div id="updateDiv">
+        <select id="updateSelector">
+          <option value="update">Update</option>
+          <option value="nrs_day_close">NRS Day Close</option>
+          <option value="day_close">Day Close</option>
+        </select>&nbsp;
+
+        <button onclick="sendUpdate()">Send</button>
+      </div>
+    </div>
     <hr>
 
     <div id="reportOutput">
