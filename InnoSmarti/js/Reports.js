@@ -103,10 +103,14 @@ window.onload = function() {
   }
 };
 
+function set_from_date_to_month_beginning(today) {
+    fromDatePicker.value = (new Date(Date.UTC(today.getFullYear(), today.getMonth(), 1))).toISOString().split('T')[0];
+}
+
 function reset_date_pickers(){
     const today = new Date();
     toDatePicker.value = (new Date()).toISOString().split('T')[0];
-    fromDatePicker.value = (new Date(Date.UTC(today.getFullYear(), today.getMonth(), 1))).toISOString().split('T')[0];
+    set_from_date_to_month_beginning(today);
 }
 
 // ==== LOGIN HANDLER ====
@@ -583,13 +587,11 @@ function createReportChart(canvasId, labels, series1, series2, title) {
   });
 }
 
-function daysInThisMonth() {
-  var now = new Date();
+function daysInThisMonth(now) {
   return new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
 }
 
-function get_time_for_update() {
-    now = new Date();
+function get_time_for_update(now) {
     hours = now.getHours();
     minutes = now.getMinutes().toString().padStart(2, "0");
     ampm = hours >= 12 ? "PM" : "AM";
@@ -600,6 +602,8 @@ function get_time_for_update() {
 
 function send_update(nrs_only=false, is_update=true){
     reportTypeSelector.value = nrs_only ? "daywiseNRSOnly": "daywiseSales";
+    now = new Date();
+    set_from_date_to_month_beginning(now);
     fetchReport();
     mtd = current_rows.pop();
     today = current_rows.pop();
@@ -614,13 +618,13 @@ function send_update(nrs_only=false, is_update=true){
         summary += "\nMTD:\n  Sales: " + mtd.NetSale + "\n";
         summary += "  Bills: " + mtd.Bills + "\n";
         summary += "  ABV: " + mtd.ABV.toFixed(2) + "\n\n";
-        projection = parseInt(mtd.NetSale / date_num * daysInThisMonth());
+        projection = parseInt(mtd.NetSale / date_num * daysInThisMonth(now));
         summary += "Projection: " + projection + "\n";
     }
     else {
         summary += "Services: " + today.Services + "\n\n";
         update_str = is_update ? "Update" : "Closing";
-        summary += update_str + " Time: " + get_time_for_update()+ "\n";
+        summary += update_str + " Time: " + get_time_for_update(now)+ "\n";
         if (! is_update) {
             summary += "Cash: " + today.Cash + "\n\nClosing now, Good Night!!!";
         }else {
