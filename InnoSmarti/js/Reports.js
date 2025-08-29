@@ -9,11 +9,13 @@ const shopConfig = {
 };
 
 table_columns = {
-    "detailsBills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Price', 'Discount', 'NetSale', 'Tax', 'Gross', 'Sex', 'Services', 'ServiceDesc', 'EmpName', "PaymentType", 'Cash', 'UPI', 'Card'],
+    "detailedBills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Price', 'Discount', 'NetSale', 'Tax', 'Gross', 'Sex', 'Services', 'ServiceDesc', 'EmpName', "PaymentType", 'Cash', 'UPI', 'Card'],
     "bills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Services', 'Price', 'Discount', 'NetSale', 'Gross', "PaymentType"],
     "services" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'ServiceName', 'EmpName', 'Price', 'Discount', 'NetSale', "PaymentType"],
     "employeeSales": ["EmployeeName", "Bills", "Services", "Price", "Discount", "NetSale", "ABV", "ASB"]
 };
+
+const numericColumns = ["Price", "Discount", "NetSale", "Tax", "Gross", "ABV", "ASB", "Cash", "UPI", "Card"];
 
 employee_name_map = {
     "Guru": "Guru prasad",
@@ -40,8 +42,9 @@ daywise_reports.forEach(reportType => {
 monthly_reports.forEach(reportType => {
     table_columns[reportType] = ["Month"].concat(range_columns);
 });
-bill_reports = ["bills", "detailsBills"];
-non_group_reports = ["services", "bills", "detailsBills"];
+table_columns["detailedAllBills"] = table_columns["detailedBills"];
+bill_reports = ["bills", "detailedBills", "detailedAllBills"];
+non_group_reports = ["services", "bills", "detailedBills", "detailedAllBills"];
 
 let db_config = {}
 let db_url = "";
@@ -50,6 +53,8 @@ let last_data = [];
 let full_data = [];
 let current_rows = [];
 let all_bills = {};
+let dt_table = null;
+let store_view = true;
 
 
 // ==== CRYPTO DECRYPT FUNCTION ====
@@ -95,6 +100,7 @@ window.onload = function() {
   const shopParam = params.get("shop");
   const pswParam = params.get("psw");
   const fromStore = params.get("from_store");
+  store_view = fromStore == "true"
   if (pswParam) {
     loginDiv.style.display = "none"
     password.value = pswParam;
@@ -106,8 +112,9 @@ window.onload = function() {
     gotoInnosmarti.style.display = "block"
     shopSelectDiv.style.display = "none"
   }
-  if(fromStore) {
-    gotoInnosmarti.outerHTML = ""
+  if(!store_view) {
+    gotoInnosmarti.outerHTML = "";
+    btn_export_csv.style.display = "block";
   }
   if (pswParam) {
     login();
@@ -389,46 +396,29 @@ function formatReportData(rawData, reportType) {
   return rows;
 }
 
-
 function fill_table_with_data(reportType)
 {
     dataTable.style.display = 'block';
     chartsDiv.style.display = 'none';
     rows = formatReportData(last_data, reportType);
-    current_rows = [];
-    current_rows.push(...rows);
-    const tableHeader = document.querySelector('#dataTable thead tr');
-    tableHeader.innerHTML = ''; // Clear existing data
-    sum_row = {};
+    current_rows = [...rows];
+    tableHolder.innerHTML = '<table id="dataTable" class="display"><thead><tr></tr></thead><tbody></tbody></table>';
     data_keys = table_columns[reportType];
-    data_keys.forEach(dk => {
-        tableHeader.innerHTML = tableHeader.innerHTML + "<th>" + dk + "</th>";
-        sum_row[dk] = 0;
-    });
-
-    const tableBody = document.querySelector('#dataTable tbody');
-    tableBody.innerHTML = ''; // Clear existing data
-
+    sum_row = {};
+    data_keys.forEach(dk => { sum_row[dk] = 0 });
     rows.forEach(item => {
-        const row = document.createElement('tr');
-        row.innerHTML = ""
         data_keys.forEach(dk => {
             dk_value = item[dk]
             if (typeof dk_value === 'number' && !isNaN(dk_value)) {
                 sum_row[dk] += dk_value;
-                dk_value = Number(dk_value.toFixed(2));
             }
             else{
                 sum_row[dk] = "-";
             }
-            row.innerHTML = row.innerHTML + "<td>" + dk_value + "</td>";
         });
-        tableBody.appendChild(row);
     });
 
     sum_row[data_keys[0]] = "Total";
-    const row = document.createElement('tr');
-    row.innerHTML = "";
     data_keys.forEach(dk => {
         dk_value = sum_row[dk];
         if (dk == "ABV") {
@@ -437,16 +427,64 @@ function fill_table_with_data(reportType)
         if (dk == "ASB") {
             dk_value = parseFloat((sum_row["Services"] / sum_row["Bills"]).toFixed(2));
         }
-        if (typeof dk_value === 'number' && !isNaN(dk_value)) {
-            dk_value = Number(dk_value.toFixed(2));
-        }
         sum_row[dk] = dk_value;
-        row.innerHTML = row.innerHTML + "<td>" + dk_value + "</td>";
     });
     current_rows.push(sum_row);
-    row.style.fontWeight = 'bold';
-    row.style.background = "grey";
-    tableBody.appendChild(row);
+
+    // If DataTable already exists, destroy it
+    if ($.fn.DataTable.isDataTable('#dataTable')) {
+        $('#dataTable').DataTable().clear().destroy();
+    }
+
+    // Reinitialize DataTables
+    dt_table = $('#dataTable').DataTable({
+        destroy: true, // reset old table
+        data: current_rows,    // array of objects
+        columns: data_keys.map(key => ({
+            data: key,
+            title: key,
+            className: numericColumns.includes(key) ? 'dt-right' : ''
+        })), // strictly use keys
+        paging: false,
+        ordering: true,
+        searching: true,
+        dom: 'rt',            // No Search in Table
+        order: [],
+        columnDefs: [
+            {
+                targets: data_keys.map((key, idx) => numericColumns.includes(key) ? idx : null).filter(v => v !== null),
+                render: function(data, type, row) {
+                    return Number(data).toFixed(2);
+                }
+            }
+        ],
+        createdRow: function (row, data, dataIndex) {
+            if (data[data_keys[0]] === "Total") {
+                $(row).css({
+                    "background-color": "grey",
+                    "font-weight": "bold",
+                    "color": "white"
+                });
+            }
+        },
+        rowCallback: function(row, data, displayIndex){
+            // If it's the Total row, keep it visually at bottom by adding a special class
+            if(data[data_keys[0]] === "Total"){
+                $(row).addClass('total-row');
+            }
+        },
+        drawCallback: function(settings){
+            // Move the Total row to the bottom after each draw
+            const api = this.api();
+            const $table = $(api.table().node());
+            const $totalRow = $table.find('tr.total-row');
+            $totalRow.appendTo($table.find('tbody'));
+        }
+    });
+
+    $('#tableSearch').on('keyup', function() {
+        dt_table.search(this.value).draw();
+    });
 }
 
 function send_whatsapp(text, phone_num=null){
@@ -474,7 +512,7 @@ function fetchReport() {
     try {
         last_data = [];
         full_data.forEach(date_entry => {
-            if(startDateNum <= date_entry["datenum"] && date_entry["datenum"] <= endDateNum){
+            if((startDateNum <= date_entry["datenum"] && date_entry["datenum"] <= endDateNum) || reportType.includes("All")){
                 last_data.push(date_entry);
             }
         });
@@ -692,6 +730,29 @@ function resizeCanvas() {
         canvas.width = canvasWidth;
         canvas.height = canvasHeight;
     });
+}
+
+function export_as_csv() {
+    new $.fn.dataTable.Buttons(dt_table, {
+        buttons: [
+            {
+                extend: 'csvHtml5',
+                text: 'Export CSV',
+                filename: 'report',
+                exportOptions: {
+                    columns: ':visible',
+                    format: {
+                        body: function(data, row, column, node) {
+                            return typeof data === 'string' ? data.replace(/<[^>]*>/g, '') : data;
+                        }
+                    }
+                }
+            }
+        ]
+    });
+
+    // trigger the CSV export
+    dt_table.button(0).trigger();
 }
 
 window.onclick = function(event) {
