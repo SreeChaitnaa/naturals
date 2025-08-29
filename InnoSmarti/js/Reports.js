@@ -34,10 +34,11 @@ range_columns = ["Bills", "Services", 'Price', "Discount", "NetSale", "Tax", "Gr
 daywise_reports = ["daywiseSales", "daywiseSplit", "daywiseNRSOnly"];
 monthly_reports = ["monthlySales", "monthlySplit", "monthlyNRSOnly"];
 daywise_reports.forEach(reportType => {
-    table_columns[reportType] = ["Date"].concat(range_columns)
+    table_columns[reportType] = ["Date"].concat(range_columns);
+    table_columns[reportType].push("NewClients");
 });
 monthly_reports.forEach(reportType => {
-    table_columns[reportType] = ["Month"].concat(range_columns)
+    table_columns[reportType] = ["Month"].concat(range_columns);
 });
 bill_reports = ["bills", "detailsBills"];
 non_group_reports = ["services", "bills", "detailsBills"];
@@ -48,6 +49,7 @@ let db_headers = {};
 let last_data = [];
 let full_data = [];
 let current_rows = [];
+let all_bills = {};
 
 
 // ==== CRYPTO DECRYPT FUNCTION ====
@@ -155,6 +157,12 @@ function login() {
         return data_res.json();
       }).then(data_response => {
           full_data = data_response;
+          formatReportData(full_data, "bills").forEach(bill_entry => {
+            if (!(bill_entry.Phone in all_bills)){
+                all_bills[bill_entry.Phone] = [];
+            }
+            all_bills[bill_entry.Phone].push(bill_entry);
+          });
           fetchReport();
           dataDiv.style.display = "block";
           spinnerOverlay.style.display = "none";
@@ -214,7 +222,7 @@ function calcTickets(tickets) {
 
 function formatReportData(rawData, reportType) {
   const grouped = {};
-  const direct_rows = []
+  const direct_rows = [];
 
   rawData.forEach(day => {
     const bills = day.bills || [];
@@ -323,7 +331,8 @@ function formatReportData(rawData, reportType) {
                 ASB: 0,
                 Cash: 0,
                 UPI: 0,
-                Card: 0
+                Card: 0,
+                NewClients: 0
               };
           }
 
@@ -338,6 +347,7 @@ function formatReportData(rawData, reportType) {
           row.Cash += cash;
           row.UPI += upi;
           row.Card += card;
+          row.NewClients += all_bills[bill.Phone].length == 1? 1:0;
       }
     });
   });
@@ -622,7 +632,8 @@ function send_update(nrs_only=false, is_update=true){
         summary += "Projection: " + projection + "\n";
     }
     else {
-        summary += "Services: " + today.Services + "\n\n";
+        summary += "Services: " + today.Services + "\n";
+        summary += "New Clients: " + today.NewClients + "\n\n";
         update_str = is_update ? "Update" : "Closing";
         summary += update_str + " Time: " + get_time_for_update(now)+ "\n";
         if (! is_update) {
