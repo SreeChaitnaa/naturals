@@ -236,8 +236,12 @@
 
   <!-- CallBack Send Modal -->
   <div id="CallBackModel" class="myModal">
-    <div id="CallBackModelContent" class="modalContent">
-      <h3 style="text-align:left">Call back Details: </h3>
+    <div id="CallBackModelContent" class="modalContent" style="text-align:left; width=400px">
+      <h3>Call back Details: </h3>
+      <label for="callBackPhone">Phone: </label>
+      <input type="text" class="spacy-input" id="callBackPhone" disabled><br />
+      <label for="callBackName">Name: </label>
+      <input type="text" class="spacy-input" id="callBackName" disabled><br />
       <label for="callBackStatus">Status: </label>
       <select id="callBackStatus" class="spacy-input">
         <option>Appointment Booked</option>
@@ -246,8 +250,11 @@
         <option>Send Offers</option>
         <option>Not Happy</option>
         <option>Moved Out of Town</option>
+        <option>Never Call Again</option>
         <option>Other</option>
       </select><br />
+      <label for="callBackDueDate">Due Date: </label>
+      <input type="date" class="spacy-input" id="callBackDueDate"><br />
       <label for="callBackNotes">Notes: </label>
       <input type="text" class="spacy-input" id="callBackNotes"><br />
       <div class="buttonRow">
@@ -273,7 +280,7 @@
         <label for="reportTypeSelector">Report:</label>
         <select id="reportTypeSelector" class="report-trigger">
           <option value="summary">Summary</option>
-          <option value="callBacks">CallBacks</option>
+          <option value="callBacks">Call Backs</option>
           <option value="bills">Bills</option>
           <option value="services">Services</option>
           <option value="employeeSales">Employee Sales</option>
@@ -283,6 +290,7 @@
           <option value="detailedAllBills">Detailed All Bills</option>
           <option value="daywiseSplit">DayWise Split</option>
           <option value="monthlySplit">Monthly Split</option>
+          <option value="callBacksOnHold">Call Backs On Hold</option>
           <option value="daywiseNRSOnly">DayWise NRSOnly</option>
           <option value="monthlyNRSOnly">Monthly NRSOnly</option>
           <option value="summaryNRSOnly">Summary NRSOnly</option>
@@ -312,6 +320,11 @@
           <td><canvas id="dailyChart" width="600" height="300"></canvas></td>
           <td><canvas id="growthChart" width="600" height="300"></canvas></td>
           <td><canvas id="clientsChart" width="600" height="300"></canvas></td>
+        </tr>
+        <tr>
+          <td><canvas id="callBackChart" width="600" height="300"></canvas></td>
+          <td></td>
+          <td></td>
         </tr>
       </table>
       <div id="tableHolder">

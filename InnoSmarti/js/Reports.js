@@ -13,7 +13,8 @@ table_columns = {
   "bills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Services', 'Price', 'Discount', 'NetSale', 'Gross', "PaymentType"],
   "services" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'ServiceName', 'EmpName', 'Price', 'Discount', 'NetSale', "PaymentType"],
   "employeeSales": ["EmployeeName", "Bills", "Services", "Price", "Discount", "NetSale", "ABV", "ASB"],
-  "callBacks": ['Phone', 'Name', 'Date', 'TicketID', "ServiceDesc", 'EmpName', "NetSale", "Notes", "Action"]
+  "callBacks": ['Phone', 'Name', 'Date', 'TicketID', "ServiceDesc", 'EmpName', "NetSale", "Notes", "Action"],
+  "callBacksOnHold": ['Phone', 'Name', 'UpdatedDate', "DueDate", "Status", "Notes", "Action"]
 };
 
 const numericColumns = ["Price", "Discount", "NetSale", "Tax", "Gross", "ABV", "ASB", "Cash", "UPI", "Card"];
@@ -45,7 +46,8 @@ monthly_reports.forEach(reportType => {
 });
 table_columns["detailedAllBills"] = table_columns["detailedBills"];
 bill_reports = ["bills", "detailedBills", "detailedAllBills"];
-non_group_reports = ["services", "bills", "detailedBills", "detailedAllBills", "callBacks"];
+non_group_reports = ["services", "bills", "detailedBills", "detailedAllBills", "callBacks", "callBacksOnHold"];
+never_call_again_list = ["Not Happy", "Moved Out of Town", "Never Call Again"];
 
 let db_config = {}
 let db_url = "";
@@ -129,7 +131,7 @@ function set_from_date_to_month_beginning(today) {
 
 function reset_date_pickers(){
   const today = new Date();
-  toDatePicker.value = (new Date()).toISOString().split('T')[0];
+  toDatePicker.value = today.toISOString().split('T')[0];
   set_from_date_to_month_beginning(today);
 }
 
@@ -169,7 +171,12 @@ function login() {
 
       // Simple render for debugging
       console.log("✅ Data:", data);
-      data.forEach(row => {db_config[row["config_name"]] = row["config_value"]});
+      data.forEach(row => {
+        db_config[row["config_name"]] = row["config_value"];
+        if (row["config_name"] == "callback"){
+          call_backs = row;
+        }
+      });
       reset_date_pickers();
       fetch(db_url + "daysales", db_headers).then(data_res => {
         return data_res.json();
@@ -237,12 +244,17 @@ function calcTickets(tickets) {
   return { servicesCount, priceSum, discountSum, netSalesSum, serviceNames, empNamesSet };
 }
 
+function is_call_back_on_hold(call_back_data){
+  return never_call_again_list.includes(call_back_data.Status) || (call_back_data.DueDate > today_string);
+}
+
 function formatReportData(rawData, reportType) {
   const grouped = {};
   const direct_rows = [];
 
   if (reportType == "callBacks"){
     const today = new Date(); // use new Date() in real case
+    today_string = today.toISOString().split('T')[0];
     const oneYearAgo = new Date(today);
     oneYearAgo.setFullYear(today.getFullYear() - 1);
 
@@ -254,9 +266,28 @@ function formatReportData(rawData, reportType) {
       return entryDate >= oneYearAgo && entryDate <= fortyFiveDaysAgo;
     }).forEach(selected_entry => {
       row = selected_entry.bills.at(-1);
-      row.Action = "Update"
       row.Notes = ""
-      direct_rows.push(row)
+      if (row.Phone in call_backs["config_value"]) {
+        call_back_data = call_backs["config_value"][row.Phone]
+        console.log("Call back exists for ", row.Phone, call_back_data);
+        if (is_call_back_on_hold(call_back_data)) {
+          return;
+        }
+        else {
+          row.Notes = call_back_data.DueDate + "<br />" + call_back_data.Status + " : " + call_back_data.Notes;
+        }
+      }
+      row.Action = "Update";
+      direct_rows.push(row);
+    });
+  } else if (reportType == "callBacksOnHold"){
+    Object.entries(call_backs["config_value"]).forEach(function([phone_num, call_back_data]) {
+      if(is_call_back_on_hold(call_back_data)) {
+        row = {...call_back_data};
+        row.Phone = phone_num;
+        row.Action = "Delete";
+        direct_rows.push(row);
+      }
     });
   } else {
     rawData.forEach(day => {
@@ -428,32 +459,34 @@ function fill_table_with_data(reportType)
   current_rows = [...rows];
   tableHolder.innerHTML = '<table id="dataTable" class="display"><thead><tr></tr></thead><tbody></tbody></table>';
   data_keys = table_columns[reportType];
-  sum_row = {};
-  data_keys.forEach(dk => { sum_row[dk] = 0 });
-  rows.forEach(item => {
-    data_keys.forEach(dk => {
-      dk_value = item[dk]
-      if (typeof dk_value === 'number' && !isNaN(dk_value)) {
-        sum_row[dk] += dk_value;
-      }
-      else{
-        sum_row[dk] = "-";
-      }
+  if (!reportType.includes("callBacks")) {
+    sum_row = {};
+    data_keys.forEach(dk => { sum_row[dk] = 0 });
+    rows.forEach(item => {
+      data_keys.forEach(dk => {
+        dk_value = item[dk]
+        if (typeof dk_value === 'number' && !isNaN(dk_value)) {
+          sum_row[dk] += dk_value;
+        }
+        else{
+          sum_row[dk] = "-";
+        }
+      });
     });
-  });
 
-  sum_row[data_keys[0]] = "Total";
-  data_keys.forEach(dk => {
-    dk_value = sum_row[dk];
-    if (dk == "ABV") {
-      dk_value = parseFloat((sum_row["NetSale"] / sum_row["Bills"]).toFixed(2));
-    }
-    if (dk == "ASB") {
-      dk_value = parseFloat((sum_row["Services"] / sum_row["Bills"]).toFixed(2));
-    }
-    sum_row[dk] = dk_value;
-  });
-  current_rows.push(sum_row);
+    sum_row[data_keys[0]] = "Total";
+    data_keys.forEach(dk => {
+      dk_value = sum_row[dk];
+      if (dk == "ABV") {
+        dk_value = parseFloat((sum_row["NetSale"] / sum_row["Bills"]).toFixed(2));
+      }
+      if (dk == "ASB") {
+        dk_value = parseFloat((sum_row["Services"] / sum_row["Bills"]).toFixed(2));
+      }
+      sum_row[dk] = dk_value;
+    });
+    current_rows.push(sum_row);
+  }
 
   // If DataTable already exists, destroy it
   if ($.fn.DataTable.isDataTable('#dataTable')) {
@@ -484,9 +517,14 @@ function fill_table_with_data(reportType)
       {
         targets: data_keys.map((key, idx) => key === "Action" ? idx : null).filter(v => v !== null),
         orderable: false,
-        render: function(data, type, row, meta) {
+        render: function(data, type, row) {
           if (type === "display") {
-            return `<button class="gray-button" onclick="openCallbackDialog(${meta.row})">${data}</button>`;
+            if(reportType == "callBacks"){
+              return `<button class="gray-button" onclick="openCallbackDialog('${row.Phone}','${row.Name}')">${data}</button>`;
+            } else if(reportType == "callBacksOnHold") {
+              return `<button class="gray-button" onclick="deleteCallBackData('${row.Phone}')">${data}</button>`;
+            }
+
           }
           return data;
         }
@@ -595,6 +633,15 @@ function fill_charts(reportType){
     total_clients.push(day_sale.Bills);
     new_clients.push(day_sale.NewClients);
   });
+
+
+  total_called_dict = {}
+  rejected_count_dict = {}
+  labels.forEach(label => {
+    total_called_dict[label] = 0;
+    rejected_count_dict[label] = 0;
+  });
+
   getRemainingDates(last_date_pushed).forEach(remaining_day => {
     labels.push(formatToMonthDay(remaining_day));
     exp_value = parseInt(db_config[getDayOfWeek(remaining_day)], 10);
@@ -609,6 +656,17 @@ function fill_charts(reportType){
   createReportChart('dailyChart', labels, daily_chart_expected, daily_chart_actual, "Day wise Target");
   createReportChart('growthChart', labels, growth_chart_expected, growth_chart_actual, "Total Target");
   createReportChart('clientsChart', labels, total_clients, new_clients, "Clients Trend", "Total", "New");
+
+  Object.entries(call_backs["config_value"]).forEach(function([phone_num, call_back_data]) {
+    called_date = formatToMonthDay(call_back_data.UpdatedDate);
+    total_called_dict[called_date] += 1;
+    if(never_call_again_list.includes(call_back_data.Status)){
+      rejected_count_dict[called_date] += 1;
+    }
+  });
+
+  createReportChart('callBackChart', labels, Object.values(total_called_dict), Object.values(rejected_count_dict),
+                    "Callback Trend", "Total Called", "Rejected to Visit");
 }
 
 function getDayOfWeek(dateString) {
@@ -753,7 +811,12 @@ function submitUpdate() {
   send_update(false, true, noOfClients.value, appointments.value)
 }
 
-function openCallbackDialog() {
+function openCallbackDialog(phone, name) {
+  callBackPhone.value = phone;
+  callBackName.value = name;
+  callBackDueDate.value = (new Date()).toISOString().split('T')[0];
+  callBackStatus.value = "Appointment Booked";
+  callBackNotes.value = "";
   CallBackModel.style.display = "block";
 }
 
@@ -761,11 +824,40 @@ function closeCallbackUpdate() {
   CallBackModel.style.display = "none";
 }
 
+function updateCallBackInDB() {
+  fetch(`${db_url}config/${call_backs._id}`, {
+    method: "PUT",
+    headers: db_headers["headers"],
+    body: JSON.stringify(call_backs) // full record with updated field
+  })
+  .then(response => response.json())
+  .then(updated => {
+    console.log("Updated call_backs:", updated);
+  })
+  .catch(err => {
+    console.error("Error:", err);
+  });
+}
+
 function submitCallbackUpdate() {
+  update_entry = {
+    "Status": callBackStatus.value,
+    "Notes": callBackNotes.value,
+    "DueDate": callBackDueDate.value,
+    "Name": callBackName.value,
+    "UpdatedDate": (new Date()).toISOString().split('T')[0]
+  }
+  call_backs["config_value"][callBackPhone.value] = update_entry
+  console.log(call_backs);
+  updateCallBackInDB();
   closeCallbackUpdate();
-  update_str = callBackStatus.value + " : " + callBackNotes.value;
-  console.log(update_str);
-//  send_update(false, true, noOfClients.value, appointments.value)
+  fetchReport();
+}
+
+function deleteCallBackData(phone_num){
+  delete call_backs["config_value"][phone_num];
+  updateCallBackInDB();
+  fetchReport();
 }
 
 function toggleMenu() {
