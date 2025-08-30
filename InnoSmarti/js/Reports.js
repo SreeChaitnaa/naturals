@@ -518,8 +518,10 @@ function fetchReport() {
         });
         if (reportType.includes("summary")){
             fill_charts(reportType);
+            searchDiv.style.display = 'none';
         } else {
             fill_table_with_data(reportType);
+            searchDiv.style.display = 'block';
         }
 
     } catch (error) {
