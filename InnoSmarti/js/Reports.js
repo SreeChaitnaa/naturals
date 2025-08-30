@@ -806,6 +806,19 @@ function send_update(nrs_only=false, is_update=true, client_count=0, appointment
   else {
     summary += "Services: " + today.Services + "\n";
     summary += "New Clients: " + today.NewClients + "\n\n";
+
+    today_call_backs = 0;
+    today_visit_rejected = 0;
+    Object.entries(call_backs["config_value"]).forEach(function([phone_num, call_back_data]) {
+      if (call_back_data.UpdatedDate == today.Date){
+        today_call_backs += 1;
+        if(never_call_again_list.includes(call_back_data.Status)){
+          today_visit_rejected += 1;
+        }
+      }
+    });
+    summary += "Callbacks: " + today_call_backs + "\n";
+    summary += "Rejected Clients: " + today_visit_rejected + "\n\n";
     update_str = is_update ? "Update" : "Closing";
     summary += update_str + " Time: " + get_time_for_update(now)+ "\n";
     if (! is_update) {
