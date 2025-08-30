@@ -13,7 +13,7 @@ table_columns = {
   "bills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Services', 'Price', 'Discount', 'NetSale', 'Gross', "PaymentType"],
   "services" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'ServiceName', 'EmpName', 'Price', 'Discount', 'NetSale', "PaymentType"],
   "employeeSales": ["EmployeeName", "Bills", "Services", "Price", "Discount", "NetSale", "ABV", "ASB"],
-  "callBacks": ['Phone', 'Name', 'Date', 'Visits', "BillsSummary", 'TotalNetSale', 'TicketID', "ServiceDesc", 'EmpName', "NetSale", "Notes", "Action"],
+  "callBacks": ['Phone', 'Name', 'Visits', "BillsSummary", 'TotalNetSale', 'TicketID', "ServiceDesc", 'EmpName', "NetSale", "Notes", "Action"],
   "callBacksOnHold": ['Phone', 'Name', 'UpdatedDate', "DueDate", "Status", "Notes", "Action"]
 };
 
@@ -25,6 +25,7 @@ employee_name_map = {
   "Shajid": "Javed",
   "Nandini": "Ritika",
   "Lokeshwari": "Sarita",
+  "sarita": "Sarita",
   "Ritu": "Ritika"
 };
 
