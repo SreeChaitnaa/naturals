@@ -234,6 +234,29 @@
     </div>
   </div>
 
+  <!-- CallBack Send Modal -->
+  <div id="CallBackModel" class="myModal">
+    <div id="CallBackModelContent" class="modalContent">
+      <h3 style="text-align:left">Call back Details: </h3>
+      <label for="callBackStatus">Status: </label>
+      <select id="callBackStatus" class="spacy-input">
+        <option>Appointment Booked</option>
+        <option>Call Again</option>
+        <option>Not Picked</option>
+        <option>Send Offers</option>
+        <option>Not Happy</option>
+        <option>Moved Out of Town</option>
+        <option>Other</option>
+      </select><br />
+      <label for="callBackNotes">Notes: </label>
+      <input type="text" class="spacy-input" id="callBackNotes"><br />
+      <div class="buttonRow">
+        <button onclick="closeCallbackUpdate()" class="gray-button">Cancel</button>
+        <button onclick="submitCallbackUpdate()">Submit</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Data Section -->
   <div id="dataDiv">
     <h2 id="shopName"></h2>
@@ -250,6 +273,7 @@
         <label for="reportTypeSelector">Report:</label>
         <select id="reportTypeSelector" class="report-trigger">
           <option value="summary">Summary</option>
+          <option value="callBacks">CallBacks</option>
           <option value="bills">Bills</option>
           <option value="services">Services</option>
           <option value="employeeSales">Employee Sales</option>

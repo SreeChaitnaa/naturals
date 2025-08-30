@@ -9,42 +9,43 @@ const shopConfig = {
 };
 
 table_columns = {
-    "detailedBills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Price', 'Discount', 'NetSale', 'Tax', 'Gross', 'Sex', 'Services', 'ServiceDesc', 'EmpName', "PaymentType", 'Cash', 'UPI', 'Card'],
-    "bills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Services', 'Price', 'Discount', 'NetSale', 'Gross', "PaymentType"],
-    "services" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'ServiceName', 'EmpName', 'Price', 'Discount', 'NetSale', "PaymentType"],
-    "employeeSales": ["EmployeeName", "Bills", "Services", "Price", "Discount", "NetSale", "ABV", "ASB"]
+  "detailedBills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Price', 'Discount', 'NetSale', 'Tax', 'Gross', 'Sex', 'Services', 'ServiceDesc', 'EmpName', "PaymentType", 'Cash', 'UPI', 'Card'],
+  "bills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Services', 'Price', 'Discount', 'NetSale', 'Gross', "PaymentType"],
+  "services" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'ServiceName', 'EmpName', 'Price', 'Discount', 'NetSale', "PaymentType"],
+  "employeeSales": ["EmployeeName", "Bills", "Services", "Price", "Discount", "NetSale", "ABV", "ASB"],
+  "callBacks": ['Phone', 'Name', 'Date', 'TicketID', "ServiceDesc", 'EmpName', "NetSale", "Notes", "Action"]
 };
 
 const numericColumns = ["Price", "Discount", "NetSale", "Tax", "Gross", "ABV", "ASB", "Cash", "UPI", "Card"];
 
 employee_name_map = {
-    "Guru": "Guru prasad",
-    "Komati": "Komathi",
-    "Shajid": "Javed",
-    "Nandini": "Ritika",
-    "Lokeshwari": "Sarita",
-    "Ritu": "Ritika"
+  "Guru": "Guru prasad",
+  "Komati": "Komathi",
+  "Shajid": "Javed",
+  "Nandini": "Ritika",
+  "Lokeshwari": "Sarita",
+  "Ritu": "Ritika"
 };
 
 shops_map = {"JKR": "Jakkur", "TNS": "Thanisandra"};
 
 function get_emp_name(emp_name){
-    return employee_name_map[emp_name] || emp_name;
+  return employee_name_map[emp_name] || emp_name;
 }
 
 range_columns = ["Bills", "Services", 'Price', "Discount", "NetSale", "Tax", "Gross", "ABV", "ASB", "Cash", "UPI", "Card"];
 daywise_reports = ["daywiseSales", "daywiseSplit", "daywiseNRSOnly"];
 monthly_reports = ["monthlySales", "monthlySplit", "monthlyNRSOnly"];
 daywise_reports.forEach(reportType => {
-    table_columns[reportType] = ["Date"].concat(range_columns);
-    table_columns[reportType].push("NewClients");
+  table_columns[reportType] = ["Date"].concat(range_columns);
+  table_columns[reportType].push("NewClients");
 });
 monthly_reports.forEach(reportType => {
-    table_columns[reportType] = ["Month"].concat(range_columns);
+  table_columns[reportType] = ["Month"].concat(range_columns);
 });
 table_columns["detailedAllBills"] = table_columns["detailedBills"];
 bill_reports = ["bills", "detailedBills", "detailedAllBills"];
-non_group_reports = ["services", "bills", "detailedBills", "detailedAllBills"];
+non_group_reports = ["services", "bills", "detailedBills", "detailedAllBills", "callBacks"];
 
 let db_config = {}
 let db_url = "";
@@ -53,6 +54,7 @@ let last_data = [];
 let full_data = [];
 let current_rows = [];
 let all_bills = {};
+let call_backs = {};
 let dt_table = null;
 let store_view = true;
 
@@ -122,13 +124,13 @@ window.onload = function() {
 };
 
 function set_from_date_to_month_beginning(today) {
-    fromDatePicker.value = (new Date(Date.UTC(today.getFullYear(), today.getMonth(), 1))).toISOString().split('T')[0];
+  fromDatePicker.value = (new Date(Date.UTC(today.getFullYear(), today.getMonth(), 1))).toISOString().split('T')[0];
 }
 
 function reset_date_pickers(){
-    const today = new Date();
-    toDatePicker.value = (new Date()).toISOString().split('T')[0];
-    set_from_date_to_month_beginning(today);
+  const today = new Date();
+  toDatePicker.value = (new Date()).toISOString().split('T')[0];
+  set_from_date_to_month_beginning(today);
 }
 
 // ==== LOGIN HANDLER ====
@@ -146,18 +148,18 @@ function login() {
     if (!db_apiKey) throw "Bad password";
     console.log(db_apiKey)
     db_headers = {
-                    headers: {
-                        "Content-Type": "application/json",
-                        "x-apikey": db_apiKey,
-                        "cache-control": "no-cache"
-                    }
-                 }
+      headers: {
+        "Content-Type": "application/json",
+        "x-apikey": db_apiKey,
+        "cache-control": "no-cache"
+      }
+    }
     // Test fetch
 
     console.log(db_headers)
     fetch(apiUrl, db_headers)
     .then(res => {
-        console.log(res)
+      console.log(res)
       if (!res.ok) throw "Login failed";
       return res.json();
     })
@@ -172,16 +174,17 @@ function login() {
       fetch(db_url + "daysales", db_headers).then(data_res => {
         return data_res.json();
       }).then(data_response => {
-          full_data = data_response;
-          formatReportData(full_data, "bills").forEach(bill_entry => {
-            if (!(bill_entry.Phone in all_bills)){
-                all_bills[bill_entry.Phone] = [];
-            }
-            all_bills[bill_entry.Phone].push(bill_entry);
-          });
-          fetchReport();
-          dataDiv.style.display = "block";
-          spinnerOverlay.style.display = "none";
+        full_data = data_response;
+        formatReportData(full_data, "bills").forEach(bill_entry => {
+          if (!(bill_entry.Phone in all_bills)){
+            all_bills[bill_entry.Phone] = {"bills": [], "last_bill_date": null};
+          }
+          all_bills[bill_entry.Phone]["bills"].push(bill_entry);
+          all_bills[bill_entry.Phone]["last_bill_date"] = bill_entry.Date;
+        });
+        fetchReport();
+        dataDiv.style.display = "block";
+        spinnerOverlay.style.display = "none";
       });
     })
     .catch(err => {
@@ -193,8 +196,6 @@ function login() {
     loginError.textContent = `Invalid password - ${e}`;
     spinnerOverlay.style.display = "none";
   }
-
-
 }
 
 function calcPayments(payments) {
@@ -240,91 +241,109 @@ function formatReportData(rawData, reportType) {
   const grouped = {};
   const direct_rows = [];
 
-  rawData.forEach(day => {
-    const bills = day.bills || [];
+  if (reportType == "callBacks"){
+    const today = new Date(); // use new Date() in real case
+    const oneYearAgo = new Date(today);
+    oneYearAgo.setFullYear(today.getFullYear() - 1);
 
-    bills.forEach(bill => {
-      // Format date -> YYYY-MM-DD
-      const [datePart, timePart] = bill.TimeMark.split(" ");
-      if (reportType.endsWith("NRSOnly") && bill.mmd) return;
-      const { cash, upi, card, payment_type } = calcPayments(bill.payment);
+    const fortyFiveDaysAgo = new Date(today);
+    fortyFiveDaysAgo.setDate(today.getDate() - 45);
 
-      if (non_group_reports.includes(reportType)) {
-        if (reportType === "services") {
+    Object.values(all_bills).filter(entry => {
+      const entryDate = new Date(entry.last_bill_date);
+      return entryDate >= oneYearAgo && entryDate <= fortyFiveDaysAgo;
+    }).forEach(selected_entry => {
+      row = selected_entry.bills.at(-1);
+      row.Action = "Update"
+      row.Notes = ""
+      direct_rows.push(row)
+    });
+  } else {
+    rawData.forEach(day => {
+      const bills = day.bills || [];
+
+      bills.forEach(bill => {
+        // Format date -> YYYY-MM-DD
+        const [datePart, timePart] = bill.TimeMark.split(" ");
+        if (reportType.endsWith("NRSOnly") && bill.mmd) return;
+        const { cash, upi, card, payment_type } = calcPayments(bill.payment);
+
+        if (non_group_reports.includes(reportType)) {
+          if (reportType === "services") {
             bill.ticket.forEach(service => {
-                for (let i = 0; i < service.Qty; i++) {
-                  row = {
-                    TicketID: bill.TicketID,
-                    Date: datePart,
-                    Time: timePart,
-                    Phone: bill.Phone,
-                    Name: bill.Name,
-                    ServiceID: service.ServiceID,
-                    ServiceName: service.ServiceName,
-                    Price: service.Price,
-                    Discount: (service.DiscountAmount / service.Qty),
-                    NetSale: service.Price - (service.DiscountAmount / service.Qty),
-                    Sex: bill.ticket[0]?.Sex || "",
-                    EmpName: get_emp_name(service.empname),
-                    PaymentType: payment_type
-                  };
-                  direct_rows.push(row)
-                }
+              for (let i = 0; i < service.Qty; i++) {
+                row = {
+                  TicketID: bill.TicketID,
+                  Date: datePart,
+                  Time: timePart,
+                  Phone: bill.Phone,
+                  Name: bill.Name,
+                  ServiceID: service.ServiceID,
+                  ServiceName: service.ServiceName,
+                  Price: service.Price,
+                  Discount: (service.DiscountAmount / service.Qty),
+                  NetSale: service.Price - (service.DiscountAmount / service.Qty),
+                  Sex: bill.ticket[0]?.Sex || "",
+                  EmpName: get_emp_name(service.empname),
+                  PaymentType: payment_type
+                };
+                direct_rows.push(row)
+              }
             });
-        } else if (bill_reports.includes(reportType)) {
-          const { servicesCount, priceSum, discountSum, netSalesSum, serviceNames, empNamesSet } = calcTickets(bill.ticket);
+          } else if (bill_reports.includes(reportType)) {
+            const { servicesCount, priceSum, discountSum, netSalesSum, serviceNames, empNamesSet } = calcTickets(bill.ticket);
 
-          row = {
-            TicketID: bill.TicketID,
-            Date: datePart,
-            Time: timePart,
-            Phone: bill.Phone,
-            Name: bill.Name,
-            Price: priceSum,
-            Discount: discountSum,
-            NetSale: netSalesSum,
-            Tax: netSalesSum * 0.18,
-            Gross: netSalesSum * 1.18,
-            Sex: bill.ticket[0]?.Sex || "",
-            Services: servicesCount,
-            ServiceDesc: serviceNames.join("/"),
-            EmpName: Array.from(empNamesSet).join("/"),
-            PaymentType: payment_type,
-            Cash: cash,
-            UPI: upi,
-            Card: card
-          };
-          direct_rows.push(row)
-        }
-      } else if (reportType === "employeeSales") {
-            const emp_in_bill = new Set();
-            bill.ticket.forEach(service => {
+            row = {
+              TicketID: bill.TicketID,
+              Date: datePart,
+              Time: timePart,
+              Phone: bill.Phone,
+              Name: bill.Name,
+              Price: priceSum,
+              Discount: discountSum,
+              NetSale: netSalesSum,
+              Tax: netSalesSum * 0.18,
+              Gross: netSalesSum * 1.18,
+              Sex: bill.ticket[0]?.Sex || "",
+              Services: servicesCount,
+              ServiceDesc: serviceNames.join("/"),
+              EmpName: Array.from(empNamesSet).join("/"),
+              PaymentType: payment_type,
+              Cash: cash,
+              UPI: upi,
+              Card: card
+            };
+            direct_rows.push(row)
+          }
+        } else if (reportType === "employeeSales") {
+          const emp_in_bill = new Set();
+          bill.ticket.forEach(service => {
 
-                let key = get_emp_name(service.empname);
-                emp_in_bill.add(key)
-                if (!grouped[key]) {
-                    grouped[key] = {
-                        EmployeeName: key,
-                        Bills: 0,
-                        Services: 0,
-                        Price: 0,
-                        Discount: 0,
-                        NetSale: 0,
-                        ABV: 0,
-                        ASB: 0
-                    };
-                }
+            let key = get_emp_name(service.empname);
+            emp_in_bill.add(key)
+            if (!grouped[key]) {
+              grouped[key] = {
+                EmployeeName: key,
+                Bills: 0,
+                Services: 0,
+                Price: 0,
+                Discount: 0,
+                NetSale: 0,
+                ABV: 0,
+                ASB: 0
+              };
+            }
 
-                const row = grouped[key];
-                row.Services += service.Qty;
-                row.Price += service.Qty * service.Price;
-                row.Discount += service.DiscountAmount;
-                row.NetSale += (service.Qty * service.Price) - service.DiscountAmount;
-            });
-            emp_in_bill.forEach(empName => {
-                grouped[empName].Bills += 1;
-            });
-      } else {
+            const row = grouped[key];
+            row.Services += service.Qty;
+            row.Price += service.Qty * service.Price;
+            row.Discount += service.DiscountAmount;
+            row.NetSale += (service.Qty * service.Price) - service.DiscountAmount;
+          });
+          emp_in_bill.forEach(empName => {
+              grouped[empName].Bills += 1;
+          });
+        } else {
           let key = datePart;
           if (reportType.startsWith("monthly")) {
             key = datePart.slice(0, 7);
@@ -333,23 +352,23 @@ function formatReportData(rawData, reportType) {
             key += "-" + (bill.mmd ? "SCA" : "NRS");
           }
           if (!grouped[key]) {
-              grouped[key] = {
-                Date: key,
-                Month: key,
-                Bills: 0,
-                Services: 0,
-                Price: 0,
-                Discount: 0,
-                NetSale: 0,
-                Tax: 0,
-                Gross: 0,
-                ABV: 0,
-                ASB: 0,
-                Cash: 0,
-                UPI: 0,
-                Card: 0,
-                NewClients: 0
-              };
+            grouped[key] = {
+              Date: key,
+              Month: key,
+              Bills: 0,
+              Services: 0,
+              Price: 0,
+              Discount: 0,
+              NetSale: 0,
+              Tax: 0,
+              Gross: 0,
+              ABV: 0,
+              ASB: 0,
+              Cash: 0,
+              UPI: 0,
+              Card: 0,
+              NewClients: 0
+            };
           }
 
           const row = grouped[key];
@@ -363,218 +382,233 @@ function formatReportData(rawData, reportType) {
           row.Cash += cash;
           row.UPI += upi;
           row.Card += card;
-          row.NewClients += all_bills[bill.Phone].length == 1? 1:0;
-      }
+          row.NewClients += all_bills[bill.Phone]["bills"].length == 1? 1:0;
+        }
+      });
     });
-  });
+  }
 
   let rows = Object.values(grouped);
   if (non_group_reports.includes(reportType)) {
     rows = direct_rows
-    rows.sort((a, b) => {
-      if (a.Date === b.Date) {
-        return a.Time > b.Time ? 1 : -1;
-      }
-      return a.Date > b.Date ? 1 : -1;
-    });
+    if (reportType === "callBacks") {
+      rows.sort((a, b) => (a.NetSale < b.NetSale ? 1 : -1));
+    } else {
+      rows.sort((a, b) => {
+        if (a.Date === b.Date) {
+          return a.Time > b.Time ? 1 : -1;
+        }
+        return a.Date > b.Date ? 1 : -1;
+      });
+    }
   }
   else {
-      // Finalize calculated fields
-      rows.forEach(row => {
-          row.Tax = row.NetSale * 0.18;
-          row.Gross = row.NetSale + row.Tax;
-          row.ABV = row.Bills > 0 ? parseFloat((row.NetSale / row.Bills).toFixed(2)) : 0;
-          row.ASB = row.Bills > 0 ? parseFloat((row.Services / row.Bills).toFixed(2)) : 0;
-      });
-      if (reportType === "employeeSales") {
-        rows.sort((a, b) => (a.EmployeeName > b.EmployeeName ? 1 : -1));
-      }
-      else {
-        rows.sort((a, b) => (a.Date > b.Date ? 1 : -1));
-      }
+    // Finalize calculated fields
+    rows.forEach(row => {
+      row.Tax = row.NetSale * 0.18;
+      row.Gross = row.NetSale + row.Tax;
+      row.ABV = row.Bills > 0 ? parseFloat((row.NetSale / row.Bills).toFixed(2)) : 0;
+      row.ASB = row.Bills > 0 ? parseFloat((row.Services / row.Bills).toFixed(2)) : 0;
+    });
+    if (reportType === "employeeSales") {
+      rows.sort((a, b) => (a.EmployeeName > b.EmployeeName ? 1 : -1));
+    }
+    else {
+      rows.sort((a, b) => (a.Date > b.Date ? 1 : -1));
+    }
   }
   return rows;
 }
 
 function fill_table_with_data(reportType)
 {
-    dataTable.style.display = 'block';
-    chartsDiv.style.display = 'none';
-    rows = formatReportData(last_data, reportType);
-    current_rows = [...rows];
-    tableHolder.innerHTML = '<table id="dataTable" class="display"><thead><tr></tr></thead><tbody></tbody></table>';
-    data_keys = table_columns[reportType];
-    sum_row = {};
-    data_keys.forEach(dk => { sum_row[dk] = 0 });
-    rows.forEach(item => {
-        data_keys.forEach(dk => {
-            dk_value = item[dk]
-            if (typeof dk_value === 'number' && !isNaN(dk_value)) {
-                sum_row[dk] += dk_value;
-            }
-            else{
-                sum_row[dk] = "-";
-            }
-        });
-    });
-
-    sum_row[data_keys[0]] = "Total";
+  dataTable.style.display = 'block';
+  chartsDiv.style.display = 'none';
+  rows = formatReportData(last_data, reportType);
+  current_rows = [...rows];
+  tableHolder.innerHTML = '<table id="dataTable" class="display"><thead><tr></tr></thead><tbody></tbody></table>';
+  data_keys = table_columns[reportType];
+  sum_row = {};
+  data_keys.forEach(dk => { sum_row[dk] = 0 });
+  rows.forEach(item => {
     data_keys.forEach(dk => {
-        dk_value = sum_row[dk];
-        if (dk == "ABV") {
-            dk_value = parseFloat((sum_row["NetSale"] / sum_row["Bills"]).toFixed(2));
-        }
-        if (dk == "ASB") {
-            dk_value = parseFloat((sum_row["Services"] / sum_row["Bills"]).toFixed(2));
-        }
-        sum_row[dk] = dk_value;
+      dk_value = item[dk]
+      if (typeof dk_value === 'number' && !isNaN(dk_value)) {
+        sum_row[dk] += dk_value;
+      }
+      else{
+        sum_row[dk] = "-";
+      }
     });
-    current_rows.push(sum_row);
+  });
 
-    // If DataTable already exists, destroy it
-    if ($.fn.DataTable.isDataTable('#dataTable')) {
-        $('#dataTable').DataTable().clear().destroy();
+  sum_row[data_keys[0]] = "Total";
+  data_keys.forEach(dk => {
+    dk_value = sum_row[dk];
+    if (dk == "ABV") {
+      dk_value = parseFloat((sum_row["NetSale"] / sum_row["Bills"]).toFixed(2));
     }
+    if (dk == "ASB") {
+      dk_value = parseFloat((sum_row["Services"] / sum_row["Bills"]).toFixed(2));
+    }
+    sum_row[dk] = dk_value;
+  });
+  current_rows.push(sum_row);
 
-    // Reinitialize DataTables
-    dt_table = $('#dataTable').DataTable({
-        destroy: true, // reset old table
-        data: current_rows,    // array of objects
-        columns: data_keys.map(key => ({
-            data: key,
-            title: key,
-            className: numericColumns.includes(key) ? 'dt-right' : ''
-        })), // strictly use keys
-        paging: false,
-        ordering: true,
-        searching: true,
-        dom: 'rt',            // No Search in Table
-        order: [],
-        columnDefs: [
-            {
-                targets: data_keys.map((key, idx) => numericColumns.includes(key) ? idx : null).filter(v => v !== null),
-                render: function(data, type, row) {
-                    return Number(data).toFixed(2);
-                }
-            }
-        ],
-        createdRow: function (row, data, dataIndex) {
-            if (data[data_keys[0]] === "Total") {
-                $(row).css({
-                    "background-color": "grey",
-                    "font-weight": "bold",
-                    "color": "white"
-                });
-            }
-        },
-        rowCallback: function(row, data, displayIndex){
-            // If it's the Total row, keep it visually at bottom by adding a special class
-            if(data[data_keys[0]] === "Total"){
-                $(row).addClass('total-row');
-            }
-        },
-        drawCallback: function(settings){
-            // Move the Total row to the bottom after each draw
-            const api = this.api();
-            const $table = $(api.table().node());
-            const $totalRow = $table.find('tr.total-row');
-            $totalRow.appendTo($table.find('tbody'));
+  // If DataTable already exists, destroy it
+  if ($.fn.DataTable.isDataTable('#dataTable')) {
+      $('#dataTable').DataTable().clear().destroy();
+  }
+
+  // Reinitialize DataTables
+  dt_table = $('#dataTable').DataTable({
+    destroy: true, // reset old table
+    data: current_rows,    // array of objects
+    columns: data_keys.map(key => ({
+      data: key,
+      title: key,
+      className: numericColumns.includes(key) ? 'dt-right' : ''
+    })), // strictly use keys
+    paging: false,
+    ordering: true,
+    searching: true,
+    dom: 'rt',            // No Search in Table
+    order: [],
+    columnDefs: [
+      {
+        targets: data_keys.map((key, idx) => numericColumns.includes(key) ? idx : null).filter(v => v !== null),
+        render: function(data, type, row) {
+          return Number(data).toFixed(2);
         }
-    });
+      },
+      {
+        targets: data_keys.map((key, idx) => key === "Action" ? idx : null).filter(v => v !== null),
+        orderable: false,
+        render: function(data, type, row, meta) {
+          if (type === "display") {
+            return `<button class="gray-button" onclick="openCallbackDialog(${meta.row})">${data}</button>`;
+          }
+          return data;
+        }
+      }
+    ],
+    createdRow: function (row, data, dataIndex) {
+      if (data[data_keys[0]] === "Total") {
+        $(row).css({
+          "background-color": "grey",
+          "font-weight": "bold",
+          "color": "white"
+        });
+      }
+    },
+    rowCallback: function(row, data, displayIndex){
+      // If it's the Total row, keep it visually at bottom by adding a special class
+      if(data[data_keys[0]] === "Total"){
+        $(row).addClass('total-row');
+      }
+    },
+    drawCallback: function(settings){
+      // Move the Total row to the bottom after each draw
+      const api = this.api();
+      const $table = $(api.table().node());
+      const $totalRow = $table.find('tr.total-row');
+      $totalRow.appendTo($table.find('tbody'));
+    }
+  });
 
-    $('#tableSearch').on('keyup', function() {
-        dt_table.search(this.value).draw();
-    });
+  $('#tableSearch').on('keyup', function() {
+    dt_table.search(this.value).draw();
+  });
 }
 
 function send_whatsapp(text, phone_num=null){
-    wa_link = "https://api.whatsapp.com/send/?";
-        if(phone_num != null){
-            wa_link = wa_link + "phone=91" + phone_num + "&";
-        }
-    wa_link = wa_link + "text=" + text.replace(/ /g, "%20").replace(/\n/g, "%0a");
-    window.open(wa_link, '_blank');
+  wa_link = "https://api.whatsapp.com/send/?";
+    if(phone_num != null){
+      wa_link = wa_link + "phone=91" + phone_num + "&";
+    }
+  wa_link = wa_link + "text=" + text.replace(/ /g, "%20").replace(/\n/g, "%0a");
+  window.open(wa_link, '_blank');
 }
 
 
 function fetchReport() {
-    const fromDate = fromDatePicker.value;
-    const toDate = toDatePicker.value;
-    const reportType = reportTypeSelector.value;
+  const fromDate = fromDatePicker.value;
+  const toDate = toDatePicker.value;
+  const reportType = reportTypeSelector.value;
 
-    if (!fromDate || !toDate) {
-        return;
+  if (!fromDate || !toDate) {
+      return;
+  }
+
+  const startDateNum = parseInt(fromDate.replace(/-/g, ""), 10);
+  const endDateNum = parseInt(toDate.replace(/-/g, ""), 10);
+
+  try {
+    last_data = [];
+    full_data.forEach(date_entry => {
+      if((startDateNum <= date_entry["datenum"] && date_entry["datenum"] <= endDateNum) || reportType.includes("All")){
+        last_data.push(date_entry);
+      }
+    });
+    if (reportType.includes("summary")){
+      fill_charts(reportType);
+      searchDiv.style.display = 'none';
+    } else {
+      fill_table_with_data(reportType);
+      searchDiv.style.display = 'block';
     }
 
-    const startDateNum = parseInt(fromDate.replace(/-/g, ""), 10);
-    const endDateNum = parseInt(toDate.replace(/-/g, ""), 10);
-
-    try {
-        last_data = [];
-        full_data.forEach(date_entry => {
-            if((startDateNum <= date_entry["datenum"] && date_entry["datenum"] <= endDateNum) || reportType.includes("All")){
-                last_data.push(date_entry);
-            }
-        });
-        if (reportType.includes("summary")){
-            fill_charts(reportType);
-            searchDiv.style.display = 'none';
-        } else {
-            fill_table_with_data(reportType);
-            searchDiv.style.display = 'block';
-        }
-
-    } catch (error) {
-        console.error(`Failed to fetch data:`, error);
-        alert(`Could not fetch report. Please try again.`);
-    }
+  } catch (error) {
+    console.error(`Failed to fetch data:`, error);
+    alert(`Could not fetch report. Please try again.`);
+  }
 }
 
 function fill_charts(reportType){
-    dataTable.style.display = 'none';
-    chartsDiv.style.display = 'block';
-    report_to_use = reportType.endsWith("NRSOnly") ? "daywiseNRSOnly" : "daywiseSales";
-    current_day_wise = formatReportData(last_data, report_to_use);
-    labels = [];
-    daily_chart_expected = [];
-    daily_chart_actual = [];
-    growth_chart_expected = [];
-    growth_chart_actual = [];
-    total_clients = [];
-    new_clients = [];
-    growth_expected = 0;
-    growth_actual = 0;
-    last_date_pushed = null;
-    current_day_wise.forEach(day_sale => {
-        labels.push(formatToMonthDay(day_sale.Date));
-        last_date_pushed = day_sale.Date;
-        exp_value = parseInt(db_config[getDayOfWeek(day_sale.Date)], 10);
-        if(reportType.endsWith("NRSOnly")){
-            exp_value = exp_value / 2;
-        }
-        daily_chart_expected.push(exp_value);
-        daily_chart_actual.push(day_sale.NetSale);
-        growth_expected += exp_value
-        growth_actual += day_sale.NetSale
-        growth_chart_expected.push(growth_expected);
-        growth_chart_actual.push(growth_actual);
-        total_clients.push(day_sale.Bills);
-        new_clients.push(day_sale.NewClients);
-    });
-    getRemainingDates(last_date_pushed).forEach(remaining_day => {
-        labels.push(formatToMonthDay(remaining_day));
-        exp_value = parseInt(db_config[getDayOfWeek(remaining_day)], 10);
-        if(reportType.endsWith("NRSOnly")){
-            exp_value = exp_value / 2;
-        }
-        daily_chart_expected.push(exp_value);
-        growth_expected += exp_value
-        growth_chart_expected.push(growth_expected);
-    });
+  dataTable.style.display = 'none';
+  chartsDiv.style.display = 'block';
+  report_to_use = reportType.endsWith("NRSOnly") ? "daywiseNRSOnly" : "daywiseSales";
+  current_day_wise = formatReportData(last_data, report_to_use);
+  labels = [];
+  daily_chart_expected = [];
+  daily_chart_actual = [];
+  growth_chart_expected = [];
+  growth_chart_actual = [];
+  total_clients = [];
+  new_clients = [];
+  growth_expected = 0;
+  growth_actual = 0;
+  last_date_pushed = null;
+  current_day_wise.forEach(day_sale => {
+    labels.push(formatToMonthDay(day_sale.Date));
+    last_date_pushed = day_sale.Date;
+    exp_value = parseInt(db_config[getDayOfWeek(day_sale.Date)], 10);
+    if(reportType.endsWith("NRSOnly")){
+      exp_value = exp_value / 2;
+    }
+    daily_chart_expected.push(exp_value);
+    daily_chart_actual.push(day_sale.NetSale);
+    growth_expected += exp_value
+    growth_actual += day_sale.NetSale
+    growth_chart_expected.push(growth_expected);
+    growth_chart_actual.push(growth_actual);
+    total_clients.push(day_sale.Bills);
+    new_clients.push(day_sale.NewClients);
+  });
+  getRemainingDates(last_date_pushed).forEach(remaining_day => {
+    labels.push(formatToMonthDay(remaining_day));
+    exp_value = parseInt(db_config[getDayOfWeek(remaining_day)], 10);
+    if(reportType.endsWith("NRSOnly")){
+      exp_value = exp_value / 2;
+    }
+    daily_chart_expected.push(exp_value);
+    growth_expected += exp_value
+    growth_chart_expected.push(growth_expected);
+  });
 
-    createReportChart('dailyChart', labels, daily_chart_expected, daily_chart_actual, "Day wise Target");
-    createReportChart('growthChart', labels, growth_chart_expected, growth_chart_actual, "Total Target");
-    createReportChart('clientsChart', labels, total_clients, new_clients, "Clients Trend", "Total", "New");
+  createReportChart('dailyChart', labels, daily_chart_expected, daily_chart_actual, "Day wise Target");
+  createReportChart('growthChart', labels, growth_chart_expected, growth_chart_actual, "Total Target");
+  createReportChart('clientsChart', labels, total_clients, new_clients, "Clients Trend", "Total", "New");
 }
 
 function getDayOfWeek(dateString) {
@@ -662,48 +696,48 @@ function daysInThisMonth(now) {
 }
 
 function get_time_for_update(now) {
-    hours = now.getHours();
-    minutes = now.getMinutes().toString().padStart(2, "0");
-    ampm = hours >= 12 ? "PM" : "AM";
+  hours = now.getHours();
+  minutes = now.getMinutes().toString().padStart(2, "0");
+  ampm = hours >= 12 ? "PM" : "AM";
 
-    hours = hours % 12 || 12;  // convert 0 → 12
-    return `${hours}:${minutes} ${ampm}`;   // Example: "9:05 PM"
+  hours = hours % 12 || 12;  // convert 0 → 12
+  return `${hours}:${minutes} ${ampm}`;   // Example: "9:05 PM"
 }
 
 function send_update(nrs_only=false, is_update=true, client_count=0, appointments=0){
-    reportTypeSelector.value = nrs_only ? "daywiseNRSOnly": "daywiseSales";
-    now = new Date();
-    set_from_date_to_month_beginning(now);
-    fetchReport();
-    mtd = current_rows.pop();
-    today = current_rows.pop();
-    summary =  "Date: *" + today.Date + "*\n";
-    summary += "Salon: *" + shops_map[shopSelect.value] + "*\n\n";
-    summary += "Sales: " + today.NetSale + "\n";
-    summary += "Bills: " + today.Bills + "\n";
-    summary += "ABV: " + today.ABV.toFixed(2) + "\n";
-    date_num = parseInt(today.Date.split("-")[2], 10)
+  reportTypeSelector.value = nrs_only ? "daywiseNRSOnly": "daywiseSales";
+  now = new Date();
+  set_from_date_to_month_beginning(now);
+  fetchReport();
+  mtd = current_rows.pop();
+  today = current_rows.pop();
+  summary =  "Date: *" + today.Date + "*\n";
+  summary += "Salon: *" + shops_map[shopSelect.value] + "*\n\n";
+  summary += "Sales: " + today.NetSale + "\n";
+  summary += "Bills: " + today.Bills + "\n";
+  summary += "ABV: " + today.ABV.toFixed(2) + "\n";
+  date_num = parseInt(today.Date.split("-")[2], 10)
 
-    if(nrs_only) {
-        summary += "\nMTD:\n  Sales: " + mtd.NetSale + "\n";
-        summary += "  Bills: " + mtd.Bills + "\n";
-        summary += "  ABV: " + mtd.ABV.toFixed(2) + "\n\n";
-        projection = parseInt(mtd.NetSale / date_num * daysInThisMonth(now));
-        summary += "Projection: " + projection + "\n";
+  if(nrs_only) {
+    summary += "\nMTD:\n  Sales: " + mtd.NetSale + "\n";
+    summary += "  Bills: " + mtd.Bills + "\n";
+    summary += "  ABV: " + mtd.ABV.toFixed(2) + "\n\n";
+    projection = parseInt(mtd.NetSale / date_num * daysInThisMonth(now));
+    summary += "Projection: " + projection + "\n";
+  }
+  else {
+    summary += "Services: " + today.Services + "\n";
+    summary += "New Clients: " + today.NewClients + "\n\n";
+    update_str = is_update ? "Update" : "Closing";
+    summary += update_str + " Time: " + get_time_for_update(now)+ "\n";
+    if (! is_update) {
+      summary += "Cash: " + today.Cash + "\n\nClosing now, Good Night!!!";
+    }else {
+      summary += "Clients In Salon: " + client_count + "\n";
+      summary += "Appointments:" + appointments + "\n";
     }
-    else {
-        summary += "Services: " + today.Services + "\n";
-        summary += "New Clients: " + today.NewClients + "\n\n";
-        update_str = is_update ? "Update" : "Closing";
-        summary += update_str + " Time: " + get_time_for_update(now)+ "\n";
-        if (! is_update) {
-            summary += "Cash: " + today.Cash + "\n\nClosing now, Good Night!!!";
-        }else {
-            summary += "Clients In Salon: " + client_count + "\n";
-            summary += "Appointments:" + appointments + "\n";
-        }
-    }
-    send_whatsapp(summary);
+  }
+  send_whatsapp(summary);
 }
 
 function openUpdateDialog() {
@@ -719,42 +753,57 @@ function submitUpdate() {
   send_update(false, true, noOfClients.value, appointments.value)
 }
 
+function openCallbackDialog() {
+  CallBackModel.style.display = "block";
+}
+
+function closeCallbackUpdate() {
+  CallBackModel.style.display = "none";
+}
+
+function submitCallbackUpdate() {
+  closeCallbackUpdate();
+  update_str = callBackStatus.value + " : " + callBackNotes.value;
+  console.log(update_str);
+//  send_update(false, true, noOfClients.value, appointments.value)
+}
+
 function toggleMenu() {
   dropdownMenu.classList.toggle("show");
 }
 
 function resizeCanvas() {
-    const screenWidth = window.innerWidth;
-    const canvasWidth = screenWidth * 0.3; // 30% of screen width
-    const canvasHeight = canvasWidth / 2;  // half of canvas width
+  const screenWidth = window.innerWidth;
+  const canvasWidth = screenWidth * 0.3; // 30% of screen width
+  const canvasHeight = canvasWidth / 2;  // half of canvas width
 
-    document.querySelectorAll("canvas").forEach(canvas => {
-        canvas.width = canvasWidth;
-        canvas.height = canvasHeight;
-    });
+  document.querySelectorAll("canvas").forEach(canvas => {
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+  });
 }
 
 function export_as_csv() {
-    new $.fn.dataTable.Buttons(dt_table, {
-        buttons: [
-            {
-                extend: 'csvHtml5',
-                text: 'Export CSV',
-                filename: 'report',
-                exportOptions: {
-                    columns: ':visible',
-                    format: {
-                        body: function(data, row, column, node) {
-                            return typeof data === 'string' ? data.replace(/<[^>]*>/g, '') : data;
-                        }
-                    }
-                }
+  new $.fn.dataTable.Buttons(dt_table, {
+    buttons: [
+      {
+        extend: 'csvHtml5',
+        text: 'Export CSV',
+        filename: 'report',
+        exportOptions: {
+          columns: ':visible',
+          format: {
+            body: function(data, row, column, node) {
+              return typeof data === 'string' ? data.replace(/<[^>]*>/g, '') : data;
             }
-        ]
-    });
+          }
+        }
+      }
+    ]
+  });
 
-    // trigger the CSV export
-    dt_table.button(0).trigger();
+  // trigger the CSV export
+  dt_table.button(0).trigger();
 }
 
 window.onclick = function(event) {
