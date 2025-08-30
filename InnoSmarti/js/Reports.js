@@ -12,10 +12,11 @@ table_columns = {
   "detailedBills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Price', 'Discount', 'NetSale', 'Tax', 'Gross', 'Sex', 'Services', 'ServiceDesc', 'EmpName', "PaymentType", 'Cash', 'UPI', 'Card'],
   "bills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Services', 'Price', 'Discount', 'NetSale', 'Gross', "PaymentType"],
   "services" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'ServiceName', 'EmpName', 'Price', 'Discount', 'NetSale', "PaymentType"],
-  "employeeSales": ["EmployeeName", "Bills", "Services", "Price", "Discount", "NetSale", "ABV", "ASB"],
+  "employeeSales": ["Name", "Bills", "Services", "Price", "Discount", "NetSale", "ABV", "ASB"],
   "callBacks": ['Phone', 'Name', 'Visits', "BillsSummary", 'TotalNetSale', 'TicketID', "ServiceDesc", 'EmpName', "NetSale", "Notes", "Action"],
   "callBacksOnHold": ['Phone', 'Name', 'UpdatedDate', "DueDate", "Status", "Notes", "Action"],
-  "dailyCash": ['Date', 'OpeningBalance', 'Cash', "CashGiven", "CashGivenTo", "ChangeMissed", "CashInBox"]
+  "dailyCash": ['Date', 'OpeningBalance', 'Cash', "CashGiven", "CashGivenTo", "ChangeMissed", "CashInBox"],
+  "serviceWiseSales": ["Name", "Count", 'Price', 'Discount', 'NetSale', "Providers"]
 };
 
 const numericColumns = ["Price", "Discount", "NetSale", "Tax", "Gross", "ABV", "ASB", "Cash", "UPI", "Card", "TotalNetSale"];
@@ -46,12 +47,31 @@ daywise_reports.forEach(reportType => {
 monthly_reports.forEach(reportType => {
   table_columns[reportType] = ["Month"].concat(range_columns);
 });
-table_columns["detailedAllBills"] = table_columns["detailedBills"];
+
+table_columns["detailedAllBills"] = [...table_columns["detailedBills"]];
+table_columns["sectionWiseSales"] = [...table_columns["serviceWiseSales"]];
+table_columns["sectionWiseSales"].push("Services");
+
 bill_reports = ["bills", "detailedBills", "detailedAllBills"];
 non_group_reports = ["services", "bills", "detailedBills", "detailedAllBills", "callBacks", "callBacksOnHold", "dailyCash"];
 never_call_again_list = ["Not Happy", "Moved Out of Town", "Never Call Again"];
 non_shop_reports = ["bills", "monthlySales", "daywiseSplit", "monthlySplit", "monthlyNRSOnly", "summaryNRSOnly", "daywiseNRSOnly"];
 non_sum_row_reports = ["callBacks", "callBacksOnHold", "dailyCash"];
+sections_map = {
+  "Hair Coloring": ["grey coverage", "color", "highlight", "ammonia"],
+  "Hair Treatments": ["treatment", "botox", "keratin", "dandruf", "hairfall"],
+  "Hair Spa & Massage": ["spa", "massage", "pro fiber", "rejuvenate", "frizz"],
+  "Hair Cuts & Styles": ["cut", "blow", "beard", "bangs", "hair styl", "shampoo", "shave", "tongs",
+                        "change of styl", "conditioning", "ironing", "hair wash"],
+  "Threading & Waxing": ["thread", "wax", "peel"],
+  "Pedi Mani": ["pedi", "mani", "reflexology"],
+  "Makeup": ["saree", "nail", "makeup"],
+  "Membership": ["membership"],
+  "Products": ["loreal", "max prime"],
+  "De-tan & Facials": ["facial", "ultimo", "fruit", "detan", "de-tan", "cleanup", "blaster", "bleach", "bliss",
+                        "glow", "no tan", "hydration", "back polish"],
+  "Other Combos": ["combo"]
+}
 
 let db_config = {}
 let db_url = "";
@@ -145,6 +165,17 @@ window.onload = function() {
 
 function set_from_date_to_month_beginning(today) {
   fromDatePicker.value = (new Date(Date.UTC(today.getFullYear(), today.getMonth(), 1))).toISOString().split('T')[0];
+}
+
+function getSection(serviceName) {
+  const lowerService = serviceName.toLowerCase();
+
+  for (const [section, keywords] of Object.entries(sections_map)) {
+    if (keywords.some(keyword => lowerService.includes(keyword))) {
+      return section;
+    }
+  }
+  return "Others";
 }
 
 function get_yesterday_date_num(today_date) {
@@ -406,7 +437,7 @@ function formatReportData(rawData, reportType) {
             emp_in_bill.add(key)
             if (!grouped[key]) {
               grouped[key] = {
-                EmployeeName: key,
+                Name: key,
                 Bills: 0,
                 Services: 0,
                 Price: 0,
@@ -425,6 +456,29 @@ function formatReportData(rawData, reportType) {
           });
           emp_in_bill.forEach(empName => {
               grouped[empName].Bills += 1;
+          });
+        } else if (["serviceWiseSales", "sectionWiseSales"].includes(reportType)) {
+          bill.ticket.forEach(service => {
+            key = reportType == "sectionWiseSales" ? getSection(service.ServiceName) : service.ServiceName;
+            if (!grouped[key]) {
+              grouped[key] = {
+                Name: key,
+                Count: 0,
+                Price: 0,
+                Discount: 0,
+                NetSale: 0,
+                Services: new Set(),
+                Providers: new Set()
+              };
+            }
+
+            const row = grouped[key];
+            row.Count += service.Qty;
+            row.Services.add(service.ServiceName);
+            row.Price += service.Qty * service.Price;
+            row.Discount += service.DiscountAmount;
+            row.NetSale += (service.Qty * service.Price) - service.DiscountAmount;
+            row.Providers.add(get_emp_name(service.empname))
           });
         } else {
           let key = datePart;
@@ -486,17 +540,23 @@ function formatReportData(rawData, reportType) {
     }
   }
   else {
-    // Finalize calculated fields
-    rows.forEach(row => {
-      row.Tax = row.NetSale * 0.18;
-      row.Gross = row.NetSale + row.Tax;
-      row.ABV = row.Bills > 0 ? parseFloat((row.NetSale / row.Bills).toFixed(2)) : 0;
-      row.ASB = row.Bills > 0 ? parseFloat((row.Services / row.Bills).toFixed(2)) : 0;
-    });
-    if (reportType === "employeeSales") {
-      rows.sort((a, b) => (a.EmployeeName > b.EmployeeName ? 1 : -1));
+    if (["serviceWiseSales", "sectionWiseSales"].includes(reportType)){
+      console.log(rows);
+      rows.forEach(row => {
+        row.Providers = Array.from(row.Providers).join("/");
+        row.Services = Array.from(row.Services).join("/");
+      });
+    } else {
+      rows.forEach(row => {
+        row.Tax = row.NetSale * 0.18;
+        row.Gross = row.NetSale + row.Tax;
+        row.ABV = row.Bills > 0 ? parseFloat((row.NetSale / row.Bills).toFixed(2)) : 0;
+        row.ASB = row.Bills > 0 ? parseFloat((row.Services / row.Bills).toFixed(2)) : 0;
+      });
     }
-    else {
+    if (["employeeSales", "serviceWiseSales", "sectionWiseSales"].includes(reportType)) {
+      rows.sort((a, b) => (a.Name > b.Name ? 1 : -1));
+    } else {
       rows.sort((a, b) => (a.Date > b.Date ? 1 : -1));
     }
   }
@@ -705,9 +765,16 @@ function fill_charts(reportType){
     growth_chart_expected.push(growth_expected);
   });
 
-  createReportChart('dailyChart', labels, daily_chart_expected, daily_chart_actual, "Day wise Target");
-  createReportChart('growthChart', labels, growth_chart_expected, growth_chart_actual, "Total Target");
-  createReportChart('clientsChart', labels, total_clients, new_clients, "Clients Trend", "Total", "New");
+//  label1="Expected", label2="Actual"
+
+  datasets = [{"label": "Expected", "data": daily_chart_expected}, {"label": "Actual", "data": daily_chart_actual}]
+  createReportChart('dailyChart', labels, "Day wise Target", datasets);
+
+  datasets = [{"label": "Expected", "data": growth_chart_expected}, {"label": "Actual", "data": growth_chart_actual}]
+  createReportChart('growthChart', labels, "Total Target", datasets);
+
+  datasets = [{"label": "Total", "data": total_clients}, {"label": "New", "data": new_clients}]
+  createReportChart('clientsChart', labels, "Clients Trend", datasets);
 
   Object.entries(call_backs["config_value"]).forEach(function([phone_num, call_back_data]) {
     called_date = formatToMonthDay(call_back_data.UpdatedDate);
@@ -717,8 +784,9 @@ function fill_charts(reportType){
     }
   });
 
-  createReportChart('callBackChart', labels, Object.values(total_called_dict), Object.values(rejected_count_dict),
-                    "Callback Trend", "Total Called", "Rejected to Visit");
+  datasets = [{"label": "Total Called", "data": Object.values(total_called_dict)},
+              {"label": "Rejected to Visit", "data": Object.values(rejected_count_dict)}]
+  createReportChart('callBackChart', labels, "Callback Trend", datasets);
 }
 
 function getDayOfWeek(dateString) {
@@ -761,7 +829,7 @@ function getRemainingDates(dateStr) {
   return remainingDates;
 }
 
-function createReportChart(canvasId, labels, series1, series2, title, label1="Expected", label2="Actual") {
+function createReportChart(canvasId, labels, title, data_points) {
   const existingChart = Chart.getChart(canvasId); // use canvas ID here
 
   if (existingChart) {
@@ -770,26 +838,22 @@ function createReportChart(canvasId, labels, series1, series2, title, label1="Ex
 
   const ctx = document.getElementById(canvasId).getContext("2d");
 
+  colors_in_reverse_order = ["navy", "brown", "indigo", "magenta", "teal", "purple", "red", "orange", "green", "blue"];
+  datasets = []
+  fill = data_points.length <= 2;
+  data_points.forEach(data_point => {
+    dataset = {...data_point};
+    dataset["borderColor"] = colors_in_reverse_order.pop();
+    dataset["backgroundColor"] = "rgba(0,0,255,0.1)";
+    dataset["fill"] = fill;
+    datasets.push(dataset);
+  });
+
   return new Chart(ctx, {
     type: "line",
     data: {
       labels: labels,
-      datasets: [
-        {
-          label: label1,
-          data: series1,
-          borderColor: "blue",
-          backgroundColor: "rgba(0,0,255,0.1)",
-          fill: true,
-        },
-        {
-          label: label2,
-          data: series2,
-          borderColor: "green",
-          backgroundColor: "rgba(0,255,0,0.1)",
-          fill: true,
-        },
-      ],
+      datasets: datasets,
     },
     options: {
       responsive: false,
