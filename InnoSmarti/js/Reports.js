@@ -13,11 +13,11 @@ table_columns = {
   "bills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Services', 'Price', 'Discount', 'NetSale', 'Gross', "PaymentType"],
   "services" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'ServiceName', 'EmpName', 'Price', 'Discount', 'NetSale', "PaymentType"],
   "employeeSales": ["EmployeeName", "Bills", "Services", "Price", "Discount", "NetSale", "ABV", "ASB"],
-  "callBacks": ['Phone', 'Name', 'Date', 'TicketID', "ServiceDesc", 'EmpName', "NetSale", "Notes", "Action"],
+  "callBacks": ['Phone', 'Name', 'Date', 'Visits', "BillsSummary", 'TotalNetSale', 'TicketID', "ServiceDesc", 'EmpName', "NetSale", "Notes", "Action"],
   "callBacksOnHold": ['Phone', 'Name', 'UpdatedDate', "DueDate", "Status", "Notes", "Action"]
 };
 
-const numericColumns = ["Price", "Discount", "NetSale", "Tax", "Gross", "ABV", "ASB", "Cash", "UPI", "Card"];
+const numericColumns = ["Price", "Discount", "NetSale", "Tax", "Gross", "ABV", "ASB", "Cash", "UPI", "Card", "TotalNetSale"];
 
 employee_name_map = {
   "Guru": "Guru prasad",
@@ -277,7 +277,15 @@ function formatReportData(rawData, reportType) {
       return entryDate >= oneYearAgo && entryDate <= fortyFiveDaysAgo;
     }).forEach(selected_entry => {
       row = selected_entry.bills.at(-1);
-      row.Notes = ""
+      row.Notes = "";
+      row.TotalNetSale = 0;
+      row.Visits = selected_entry.bills.length;
+      row.BillsSummary = [];
+      selected_entry.bills.forEach(bill => {
+        row.BillsSummary.push(bill.Date + " : " + bill.NetSale);
+        row.TotalNetSale += bill.NetSale;
+      });
+      row.BillsSummary = row.BillsSummary.join("<br />");
       if (row.Phone in call_backs["config_value"]) {
         call_back_data = call_backs["config_value"][row.Phone]
         console.log("Call back exists for ", row.Phone, call_back_data);
