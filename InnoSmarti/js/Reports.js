@@ -14,7 +14,8 @@ table_columns = {
   "services" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'ServiceName', 'EmpName', 'Price', 'Discount', 'NetSale', "PaymentType"],
   "employeeSales": ["EmployeeName", "Bills", "Services", "Price", "Discount", "NetSale", "ABV", "ASB"],
   "callBacks": ['Phone', 'Name', 'Visits', "BillsSummary", 'TotalNetSale', 'TicketID', "ServiceDesc", 'EmpName', "NetSale", "Notes", "Action"],
-  "callBacksOnHold": ['Phone', 'Name', 'UpdatedDate', "DueDate", "Status", "Notes", "Action"]
+  "callBacksOnHold": ['Phone', 'Name', 'UpdatedDate', "DueDate", "Status", "Notes", "Action"],
+  "dailyCash": ['Date', 'OpeningBalance', 'Cash', "CashGiven", "CashGivenTo", "ChangeMissed", "CashInBox"]
 };
 
 const numericColumns = ["Price", "Discount", "NetSale", "Tax", "Gross", "ABV", "ASB", "Cash", "UPI", "Card", "TotalNetSale"];
@@ -47,9 +48,10 @@ monthly_reports.forEach(reportType => {
 });
 table_columns["detailedAllBills"] = table_columns["detailedBills"];
 bill_reports = ["bills", "detailedBills", "detailedAllBills"];
-non_group_reports = ["services", "bills", "detailedBills", "detailedAllBills", "callBacks", "callBacksOnHold"];
+non_group_reports = ["services", "bills", "detailedBills", "detailedAllBills", "callBacks", "callBacksOnHold", "dailyCash"];
 never_call_again_list = ["Not Happy", "Moved Out of Town", "Never Call Again"];
 non_shop_reports = ["bills", "monthlySales", "daywiseSplit", "monthlySplit", "monthlyNRSOnly", "summaryNRSOnly", "daywiseNRSOnly"];
+non_sum_row_reports = ["callBacks", "callBacksOnHold", "dailyCash"];
 
 let db_config = {}
 let db_url = "";
@@ -59,6 +61,7 @@ let full_data = [];
 let current_rows = [];
 let all_bills = {};
 let call_backs = {};
+let cash_rows = {};
 let dt_table = null;
 let store_view = true;
 
@@ -101,6 +104,9 @@ window.onload = function() {
   document.querySelectorAll(".report-trigger").forEach(trigger_element => {
     trigger_element.addEventListener("change", fetchReport);
   });
+  document.querySelectorAll(".cash-trigger").forEach(trigger_element => {
+    trigger_element.addEventListener("change", calculate_cash_in_box);
+  });
 
   const params = new URLSearchParams(window.location.search);
   const shopParam = params.get("shop");
@@ -141,10 +147,21 @@ function set_from_date_to_month_beginning(today) {
   fromDatePicker.value = (new Date(Date.UTC(today.getFullYear(), today.getMonth(), 1))).toISOString().split('T')[0];
 }
 
+function get_yesterday_date_num(today_date) {
+  const yesterday = new Date(today_date);
+  yesterday.setDate(yesterday.getDate() - 1);
+  return parseInt(yesterday.toISOString().split('T')[0].replace(/-/g, ""), 10)
+}
+
 function reset_date_pickers(){
-  const today = new Date();
+  const today = get_ist_date();
   toDatePicker.value = today.toISOString().split('T')[0];
   set_from_date_to_month_beginning(today);
+}
+
+function get_ist_date(){
+  const nowUtc = new Date();
+  return new Date(nowUtc.getTime() + 330 * 60000);
 }
 
 // ==== LOGIN HANDLER ====
@@ -200,6 +217,12 @@ function login() {
           }
           all_bills[bill_entry.Phone]["bills"].push(bill_entry);
           all_bills[bill_entry.Phone]["last_bill_date"] = bill_entry.Date;
+        });
+        full_data.forEach(day_sale => {
+          cash_data = day_sale["cashdata"];
+          if (cash_data){
+            cash_rows[day_sale["datenum"]] = cash_data;
+          }
         });
         fetchReport();
         dataDiv.style.display = "block";
@@ -265,7 +288,7 @@ function formatReportData(rawData, reportType) {
   const direct_rows = [];
 
   if (reportType == "callBacks"){
-    const today = new Date(); // use new Date() in real case
+    const today = get_ist_date();
     today_string = today.toISOString().split('T')[0];
     const oneYearAgo = new Date(today);
     oneYearAgo.setFullYear(today.getFullYear() - 1);
@@ -306,6 +329,15 @@ function formatReportData(rawData, reportType) {
         row = {...call_back_data};
         row.Phone = phone_num;
         row.Action = "Delete";
+        direct_rows.push(row);
+      }
+    });
+  } else if (reportType == "dailyCash"){
+    rawData.forEach(day => {
+      if(day["cashdata"]){
+        row = {...day["cashdata"]};
+        const str = day["datenum"].toString();
+        row.Date = str.slice(0, 4) + "-" + str.slice(4, 6) + "-" + str.slice(6, 8);
         direct_rows.push(row);
       }
     });
@@ -479,7 +511,7 @@ function fill_table_with_data(reportType)
   current_rows = [...rows];
   tableHolder.innerHTML = '<table id="dataTable" class="display"><thead><tr></tr></thead><tbody></tbody></table>';
   data_keys = table_columns[reportType];
-  if (!reportType.includes("callBacks")) {
+  if (!non_sum_row_reports.includes(reportType)) {
     sum_row = {};
     data_keys.forEach(dk => { sum_row[dk] = 0 });
     rows.forEach(item => {
@@ -773,7 +805,8 @@ function daysInThisMonth(now) {
   return new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
 }
 
-function get_time_for_update(now) {
+function get_current_time() {
+  now = new Date();
   hours = now.getHours();
   minutes = now.getMinutes().toString().padStart(2, "0");
   ampm = hours >= 12 ? "PM" : "AM";
@@ -782,13 +815,27 @@ function get_time_for_update(now) {
   return `${hours}:${minutes} ${ampm}`;   // Example: "9:05 PM"
 }
 
-function send_update(nrs_only=false, is_update=true, client_count=0, appointments=0){
+function get_today_and_mtd(nrs_only){
   reportTypeSelector.value = nrs_only ? "daywiseNRSOnly": "daywiseSales";
-  now = new Date();
+  now = get_ist_date();
   set_from_date_to_month_beginning(now);
   fetchReport();
   mtd = current_rows.pop();
   today = current_rows.pop();
+  success = true;
+
+  if (today.Date != toDatePicker.value){
+    alert("No Sale today:" + today.Date);
+    success = false;
+  }
+  return [now, today, mtd, success];
+}
+
+function send_update(nrs_only=false, is_update=true, client_count=0, appointments=0){
+  const [now, today, mtd, success] = get_today_and_mtd(nrs_only);
+  if(!success){
+    return;
+  }
   summary =  "Date: *" + today.Date + "*\n";
   summary += "Salon: *" + shops_map[shopSelect.value] + "*\n\n";
   summary += "Sales: " + today.NetSale + "\n";
@@ -819,14 +866,42 @@ function send_update(nrs_only=false, is_update=true, client_count=0, appointment
     });
     summary += "Callbacks: " + today_call_backs + "\n";
     summary += "Rejected Clients: " + today_visit_rejected + "\n\n";
-    update_str = is_update ? "Update" : "Closing";
-    summary += update_str + " Time: " + get_time_for_update(now)+ "\n";
     if (! is_update) {
-      summary += "Cash: " + today.Cash + "\n\nClosing now, Good Night!!!";
+      dayCloseDateNum = parseInt(today.Date.replace(/-/g, ""), 10);
+      cash_data = {
+        "OpeningBalance": parseInt(yesterdayCash.value, 10),
+        "Cash": parseInt(todayCash.value, 10),
+        "CashGiven": parseInt(cashGiven.value || "0", 10),
+        "CashGivenTo": cashGivenTo.value,
+        "ChangeMissed": parseInt(changeMissed.value || "0", 10),
+        "CashInBox": parseInt(cashInBox.value, 10)
+      };
+      summary += "Cash Details: \n";
+      summary += "  Yesterday Cash: " + cash_data["OpeningBalance"] + "\n";
+      summary += "  Today Cash: " + cash_data["Cash"] + "\n";
+      if(cash_data["CashGiven"] != 0){
+        summary += "  Cash Given: " + cash_data["CashGiven"] + "\n";
+        summary += "  Cash Given To: " + cash_data["CashGivenTo"] + "\n";
+      }
+      if(cash_data["ChangeMissed"] != 0){
+        summary += "  Change Missed: " + cash_data["ChangeMissed"] + "\n";
+      }
+      summary += "  Cash in Box: " + cash_data["CashInBox"] + "\n";
+      summary += "\nClosing now, Good Night!!!\n";
+
+      today_day_sales = full_data.filter(item => item.datenum == dayCloseDateNum)[0];
+      today_day_sales["cashdata"] = cash_data;
+      updateDataInDB("daysales", today_day_sales);
+
+      console.log(dayCloseDateNum);
+      console.log(cash_data);
+      console.log(today_day_sales);
     }else {
       summary += "Clients In Salon: " + client_count + "\n";
       summary += "Appointments:" + appointments + "\n";
     }
+    update_str = is_update ? "Update" : "Closing";
+    summary += update_str + " Time: " + get_current_time()+ "\n";
   }
   send_whatsapp(summary);
 }
@@ -847,7 +922,7 @@ function submitUpdate() {
 function openCallbackDialog(phone, name) {
   callBackPhone.value = phone;
   callBackName.value = name;
-  callBackDueDate.value = (new Date()).toISOString().split('T')[0];
+  callBackDueDate.value = get_ist_date().toISOString().split('T')[0];
   callBackStatus.value = "Appointment Booked";
   callBackNotes.value = "";
   CallBackModel.style.display = "block";
@@ -857,19 +932,80 @@ function closeCallbackUpdate() {
   CallBackModel.style.display = "none";
 }
 
-function updateCallBackInDB() {
-  fetch(`${db_url}config/${call_backs._id}`, {
+function updateDataInDB(table_name, db_obj) {
+  fetch(`${db_url}${table_name}/${db_obj._id}`, {
     method: "PUT",
     headers: db_headers["headers"],
-    body: JSON.stringify(call_backs) // full record with updated field
+    body: JSON.stringify(db_obj) // full record with updated field
   })
   .then(response => response.json())
   .then(updated => {
-    console.log("Updated call_backs:", updated);
+    console.log("Updated Obj:", updated);
   })
   .catch(err => {
     console.error("Error:", err);
   });
+}
+
+function calculate_cash_in_box(){
+  value = 0;
+  value += parseInt(yesterdayCash.value, 10);
+  value += parseInt(todayCash.value, 10);
+  value -= parseInt(cashGiven.value || "0", 10);
+  value -= parseInt(changeMissed.value || "0", 10);
+  cashInBox.value = value;
+}
+
+function openDayCloseDialog() {
+  const [now, today, mtd, success] = get_today_and_mtd(false);
+  if(!success){
+    return;
+  }
+  try{
+    yesterdayCash.value = cash_rows[get_yesterday_date_num(today.Date)].CashInBox;
+  }
+  catch{
+    yesterdayCash.value = 0;
+  }
+  todayCash.value = parseInt(today.Cash, 10);
+  cashGiven.value = 0;
+  cashGivenTo.value = "";
+  changeMissed.value = 0;
+  calculate_cash_in_box();
+  DayCloseModel.style.display = "block";
+}
+
+function closeDayCloseDialog() {
+  DayCloseModel.style.display = "none";
+}
+
+function submitDayClose() {
+  closeDayCloseDialog();
+  send_update(false, false);
+}
+
+function updateCallBackInDB() {
+  updateDataInDB("config", call_backs);
+}
+
+function delete_bills(bill_ids){
+  updated_dates = {};
+  full_data.forEach(day_sale => {
+    for (let i = day_sale.bills.length - 1; i >= 0; i--) {
+      const ticketId = day_sale.bills[i].TicketID;
+      const idx = bill_ids.indexOf(ticketId);
+
+      if (idx !== -1) {
+        // remove bill from bills
+        day_sale.bills.splice(i, 1);
+
+        // remove TicketID from bill_ids so it’s only removed once
+        bill_ids.splice(idx, 1);
+        updated_dates[day_sale.datenum] = day_sale;
+      }
+    }
+  });
+  Object.values(updated_dates).forEach(day_sale => {updateDataInDB("daysales", day_sale)});
 }
 
 function submitCallbackUpdate() {
@@ -878,7 +1014,7 @@ function submitCallbackUpdate() {
     "Notes": callBackNotes.value,
     "DueDate": callBackDueDate.value,
     "Name": callBackName.value,
-    "UpdatedDate": (new Date()).toISOString().split('T')[0]
+    "UpdatedDate": get_ist_date().toISOString().split('T')[0]
   }
   call_backs["config_value"][callBackPhone.value] = update_entry
   console.log(call_backs);

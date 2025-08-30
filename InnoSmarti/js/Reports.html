@@ -82,11 +82,24 @@
       margin: 15% auto;
       padding: 20px;
       border-radius: 8px;
-      width: 300px;
+      width: 500px;
       text-align: center;
     }
 
-    .spacy-input {
+    .form-row {
+      display: grid;
+      grid-template-columns: 200px 1fr; /* label width + input width */
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .form-row label {
+      text-align: right; /* keeps labels aligned */
+      margin-right: 10px;
+    }
+
+    .form-row input,
+    .form-row select {
+      width: 200px;
       margin: 8px 0;
       padding: 6px;
     }
@@ -223,10 +236,14 @@
   <div id="updateModel" class="myModal">
     <div id="updateModelContent" class="modalContent">
       <h3 style="text-align:left">Current Status: </h3>
-      <label for="noOfClients">No of Clients: </label>
-      <input type="text" class="spacy-input" id="noOfClients"><br />
-      <label for="appointments">Appointments: </label>
-      <input type="text" class="spacy-input" id="appointments"><br />
+      <div class="form-row">
+        <label for="noOfClients">No of Clients: </label>
+        <input type="text" id="noOfClients">
+      </div>
+      <div class="form-row">
+        <label for="appointments">Appointments: </label>
+        <input type="text" id="appointments">
+      </div>
       <div class="buttonRow">
         <button onclick="closeUpdate()" class="gray-button">Cancel</button>
         <button onclick="submitUpdate()">Submit</button>
@@ -236,33 +253,79 @@
 
   <!-- CallBack Send Modal -->
   <div id="CallBackModel" class="myModal">
-    <div id="CallBackModelContent" class="modalContent" style="text-align:left; width=400px">
+    <div id="CallBackModelContent" class="modalContent" style="text-align:left">
       <h3>Call back Details: </h3>
-      <label for="callBackPhone">Phone: </label>
-      <input type="text" class="spacy-input" id="callBackPhone" disabled><br />
-      <label for="callBackName">Name: </label>
-      <input type="text" class="spacy-input" id="callBackName" disabled><br />
-      <label for="callBackStatus">Status: </label>
-      <select id="callBackStatus" class="spacy-input">
-        <option>Appointment Booked</option>
-        <option>Call Again</option>
-        <option>Not Picked</option>
-        <option>Send Offers</option>
-        <option>Not Happy</option>
-        <option>Moved Out of Town</option>
-        <option>Never Call Again</option>
-        <option>Other</option>
-      </select><br />
-      <label for="callBackDueDate">Due Date: </label>
-      <input type="date" class="spacy-input" id="callBackDueDate"><br />
-      <label for="callBackNotes">Notes: </label>
-      <input type="text" class="spacy-input" id="callBackNotes"><br />
+      <div class="form-row">
+        <label for="callBackPhone">Phone: </label>
+        <input type="text" id="callBackPhone" disabled>
+      </div>
+      <div class="form-row">
+        <label for="callBackName">Name: </label>
+        <input type="text" id="callBackName" disabled>
+      </div>
+      <div class="form-row">
+        <label for="callBackStatus">Status: </label>
+        <select id="callBackStatus" class="spacy-input">
+          <option>Appointment Booked</option>
+          <option>Call Again</option>
+          <option>Not Picked</option>
+          <option>Send Offers</option>
+          <option>Not Happy</option>
+          <option>Moved Out of Town</option>
+          <option>Never Call Again</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label for="callBackDueDate">Due Date: </label>
+        <input type="date" id="callBackDueDate">
+      </div>
+      <div class="form-row">
+        <label for="callBackNotes">Notes: </label>
+        <input type="text" id="callBackNotes">
+      </div>
       <div class="buttonRow">
         <button onclick="closeCallbackUpdate()" class="gray-button">Cancel</button>
         <button onclick="submitCallbackUpdate()">Submit</button>
       </div>
     </div>
   </div>
+
+  <!-- DayClose Cash Modal -->
+  <div id="DayCloseModel" class="myModal">
+    <div id="DayCloseModelContent" class="modalContent" style="text-align:left">
+      <h3>Call back Details: </h3>
+      <div class="form-row">
+        <label for="yesterdayCash">Yesterday Cash in Box:</label>
+        <input type="text" id="yesterdayCash" disabled>
+      </div>
+      <div class="form-row">
+        <label for="todayCash">Today Cash:</label>
+        <input type="text" id="todayCash" disabled>
+      </div>
+      <div class="form-row">
+        <label for="cashGiven">Cash Hand-overed:</label>
+        <input type="text" class="spacy-input cash-trigger" id="cashGiven">
+      </div>
+      <div class="form-row">
+        <label for="cashGivenTo">Cash Hand-overed To:</label>
+        <input type="text" id="cashGivenTo">
+      </div>
+      <div class="form-row">
+        <label for="changeMissed">Change Missed:</label>
+        <input type="text" class="spacy-input cash-trigger" id="changeMissed">
+      </div>
+      <div class="form-row">
+        <label for="cashInBox">Cash in Box:</label>
+        <input type="text" id="cashInBox" disabled>
+      </div>
+      <div class="buttonRow">
+        <button onclick="closeDayCloseDialog()" class="gray-button">Cancel</button>
+        <button onclick="submitDayClose()">Submit</button>
+      </div>
+    </div>
+  </div>
+
 
   <!-- Data Section -->
   <div id="dataDiv">
@@ -294,6 +357,7 @@
           <option value="daywiseNRSOnly">DayWise NRSOnly</option>
           <option value="monthlyNRSOnly">Monthly NRSOnly</option>
           <option value="summaryNRSOnly">Summary NRSOnly</option>
+          <option value="dailyCash">Daily Cash</option>
         </select>&nbsp;&nbsp;&nbsp;
 
         <div id="searchDiv">
@@ -307,7 +371,7 @@
         <div id="dropdownMenu" class="menu-content">
           <button onclick="openUpdateDialog()">Send Update</button>
           <button onclick="send_update(true, false)">NRS DayClose</button>
-          <button onclick="send_update(false, false)">SCA DayClose</button>
+          <button onclick="openDayCloseDialog()">SCA DayClose</button>
           <button onclick="export_as_csv()" style="display:none" id="btn_export_csv">Export as CSV</button>
         </div>
       </div>
