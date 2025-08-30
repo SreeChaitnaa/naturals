@@ -48,6 +48,7 @@ table_columns["detailedAllBills"] = table_columns["detailedBills"];
 bill_reports = ["bills", "detailedBills", "detailedAllBills"];
 non_group_reports = ["services", "bills", "detailedBills", "detailedAllBills", "callBacks", "callBacksOnHold"];
 never_call_again_list = ["Not Happy", "Moved Out of Town", "Never Call Again"];
+non_shop_reports = ["bills", "monthlySales", "daywiseSplit", "monthlySplit", "monthlyNRSOnly", "summaryNRSOnly", "daywiseNRSOnly"];
 
 let db_config = {}
 let db_url = "";
@@ -119,6 +120,16 @@ window.onload = function() {
   if(!store_view) {
     gotoInnosmarti.outerHTML = "";
     btn_export_csv.style.display = "block";
+  }
+  else{
+    non_shop_reports.forEach(option_to_remove => {
+      for (let i = 0; i < reportTypeSelector.options.length; i++) {
+        if (option_to_remove == reportTypeSelector.options[i].value) {
+          reportTypeSelector.remove(i);
+          break;
+        }
+      }
+    });
   }
   if (pswParam) {
     login();
@@ -572,7 +583,7 @@ function send_whatsapp(text, phone_num=null){
 function fetchReport() {
   const fromDate = fromDatePicker.value;
   const toDate = toDatePicker.value;
-  const reportType = reportTypeSelector.value;
+  const reportType = reportTypeSelector.value || "daywiseNRSOnly";
 
   if (!fromDate || !toDate) {
       return;
