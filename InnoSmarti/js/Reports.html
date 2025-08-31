@@ -380,8 +380,8 @@
         <button class="menu-button" onclick="toggleMenu()">⋮</button>
         <div id="dropdownMenu" class="menu-content">
           <button onclick="openUpdateDialog()">Send Update</button>
-          <button onclick="send_update(true, false)">NRS DayClose</button>
-          <button onclick="openDayCloseDialog()">SCA DayClose</button>
+          <button onclick="send_update(true, false)" id="nrsDayClose">NRS DayClose</button>
+          <button onclick="openDayCloseDialog()">DayClose</button>
           <button onclick="export_as_csv()" style="display:none" id="btn_export_csv">Export as CSV</button>
         </div>
       </div>

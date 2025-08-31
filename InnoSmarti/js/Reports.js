@@ -158,10 +158,12 @@ window.onload = function() {
     gotoInnosmarti.style.display = "block"
     shopSelectDiv.style.display = "none"
   }
-  if (!store_view || is_ylg()){
+  if (is_ylg()){
     gotoInnosmarti.outerHTML = "";
+    nrsDayClose.style.display = "none";
   }
   if(!store_view) {
+    gotoInnosmarti.outerHTML = "";
     btn_export_csv.style.display = "block";
   }
   else{
