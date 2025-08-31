@@ -71,7 +71,7 @@ Sub Button1_Click(Optional ByVal print_bill_flag As Boolean = True, Optional ByV
     End If
 
     PrepareAndSendTodaySales
-    
+
     CreateContactIfNew
 
     SendReviewAfterSale Sheets("Invoice").Range("E8").Value
@@ -699,7 +699,7 @@ Function CallRestDBAPI(method As String, Optional endpoint As String = "", Optio
     Dim apiKey As String
 
     url = "https://ylghrlr-1795.restdb.io/rest/"
-    apiKey = "68b44194b349a33e334b6d77"
+    apiKey = "faab532180a0e1a59d497109d256444bf6a07"
 
     If endpoint <> "" Then url = url & endpoint
 

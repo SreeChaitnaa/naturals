@@ -5,7 +5,9 @@ const shopConfig = {
   "TNS": { "url": "https://innosmartisca-d3db.restdb.io/rest/",
     "encKey": "ki62s6ktea89p72RjFNDDrqVjKrUUT9i7d78cup3kqCEK1KvuFaLDkY7PdjUrnT5S5eQzFF2/9FGDGrt3SflYA==" },
   "JKR": { "url": "https://innosmartiscajkr-30a7.restdb.io/rest/",
-    "encKey": "Fr4R+Qu6i1p+hdfcmDrm4bywTHY/b863GlNnuA9p9uo3x5nnahlJqvssPOJRt1BcDXLw34a2rIrcT81DmMe7xQ==" }
+    "encKey": "Fr4R+Qu6i1p+hdfcmDrm4bywTHY/b863GlNnuA9p9uo3x5nnahlJqvssPOJRt1BcDXLw34a2rIrcT81DmMe7xQ==" },
+  "HRLR": { "url": "https://ylghrlr-1795.restdb.io/rest/",
+    "encKey": "2BX/pNW9wc4beTsrRlfC8N1CGsgPK0AMLDJvWzivhHdfg2Wsn76QMwqdAHEUCy6dIxTLGEWQVGF9CRu2LnBWOw==" }
 };
 
 table_columns = {
@@ -31,7 +33,8 @@ employee_name_map = {
   "Ritu": "Ritika"
 };
 
-shops_map = {"JKR": "Jakkur", "TNS": "Thanisandra"};
+shops_map = {"JKR": "Jakkur", "TNS": "Thanisandra", "HRLR": "Haralur"};
+ylg_shops = ["HRLR"];
 
 function get_emp_name(emp_name){
   return employee_name_map[emp_name] || emp_name;
@@ -141,13 +144,15 @@ window.onload = function() {
   }
 
   if (shopParam) {
-    shopSelect.value = {"2339": "JKR", "1526": "TNS"}[shopParam];
+    shopSelect.value = {"2339": "JKR", "1526": "TNS"}[shopParam] || shopParam;
     console.log("🔹 Default shop set from URL:", shopParam);
     gotoInnosmarti.style.display = "block"
     shopSelectDiv.style.display = "none"
   }
-  if(!store_view) {
+  if (!store_view || ylg_shops.include(shopSelect.value)){
     gotoInnosmarti.outerHTML = "";
+  }
+  if(!store_view) {
     btn_export_csv.style.display = "block";
   }
   else{
@@ -735,6 +740,10 @@ function fetchReport() {
         last_data.push(date_entry);
       }
     });
+    if(last_data.length == 0 && !reportType.includes("callBacks")){
+      alert(`No Sale data available between ${fromDate} and ${toDate}`);
+      return;
+    }
     if (reportType.includes("summary")){
       fill_charts(reportType);
       searchDiv.style.display = 'none';
