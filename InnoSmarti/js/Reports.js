@@ -61,7 +61,7 @@ sections_map = {
   "Hair Coloring": ["grey coverage", "color", "highlight", "ammonia"],
   "Hair Treatments": ["treatment", "botox", "keratin", "dandruf", "hairfall"],
   "Hair Spa & Massage": ["spa", "massage", "pro fiber", "rejuvenate", "frizz"],
-  "Hair Cuts & Styles": ["cut", "blow", "beard", "bangs", "hair styl", "shampoo", "shave", "tongs",
+  "Hair Cuts & Styles": ["cut", "blow", "beard", "bangs", "hair styl", "shave", "tongs",
                         "change of styl", "conditioning", "ironing", "hair wash", "trim"],
   "Threading & Waxing": ["thread", "wax", "peel", "half legs", "underarm"],
   "Pedi Mani": ["pedi", "mani", "reflexology"],
@@ -69,7 +69,7 @@ sections_map = {
   "Membership": ["membership"],
   "De-tan & Facials": ["facial", "ultimo", "fruit", "detan", "de-tan", "cleanup", "blaster", "bleach", "bliss",
                         "glow", "no tan", "hydration", "back polish", "kanpeki"],
-  "Products": ["loreal", "prime", "acia"],
+  "Products": ["loreal", "prime", "acia oil", " shampoo"],
   "Other Combos": ["combo"]
 }
 
