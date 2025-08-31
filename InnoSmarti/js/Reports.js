@@ -166,6 +166,7 @@ window.onload = function() {
 };
 
 function set_from_date_to_month_beginning(today) {
+  today = (new Date(today.getTime() - 330 * 60000));
   fromDatePicker.value = (new Date(Date.UTC(today.getFullYear(), today.getMonth(), 1))).toISOString().split('T')[0];
 }
 

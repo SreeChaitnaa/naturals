@@ -47,5 +47,6 @@
         "value": "set_reports"
     },
     "hosts_file": "C:\\Windows\\System32\\drivers\\etc\\hosts",
-    "store_id": "BranchID"
+    "store_id": "BranchID",
+    "base_db_snapp_key": "a66864f147eeabce3554cb9007348be5"
 }
