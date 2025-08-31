@@ -149,7 +149,7 @@ window.onload = function() {
     gotoInnosmarti.style.display = "block"
     shopSelectDiv.style.display = "none"
   }
-  if (!store_view || ylg_shops.include(shopSelect.value)){
+  if (!store_view || ylg_shops.includes(shopSelect.value)){
     gotoInnosmarti.outerHTML = "";
   }
   if(!store_view) {
@@ -235,7 +235,7 @@ function login() {
     })
     .then(data => {
       loginDiv.style.display = "none";
-      shopName.textContent = "Reports for - " + shop;
+      shopName.textContent = "Reports for - " + shops_map[shop];
 
       // Simple render for debugging
       console.log("✅ Data:", data);
