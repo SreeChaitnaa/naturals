@@ -67,9 +67,9 @@ sections_map = {
   "Pedi Mani": ["pedi", "mani", "reflexology"],
   "Makeup": ["saree", "nail", "makeup"],
   "Membership": ["membership"],
-  "Products": ["loreal", "prime", "acia"],
   "De-tan & Facials": ["facial", "ultimo", "fruit", "detan", "de-tan", "cleanup", "blaster", "bleach", "bliss",
                         "glow", "no tan", "hydration", "back polish", "kanpeki"],
+  "Products": ["loreal", "prime", "acia"],
   "Other Combos": ["combo"]
 }
 
