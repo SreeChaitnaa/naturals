@@ -36,8 +36,16 @@ employee_name_map = {
 shops_map = {"JKR": "Jakkur", "TNS": "Thanisandra", "HRLR": "Haralur"};
 ylg_shops = ["HRLR"];
 
+function is_ylg(){
+  return ylg_shops.includes(shopSelect.value);
+}
+
 function get_emp_name(emp_name){
   return employee_name_map[emp_name] || emp_name;
+}
+
+function get_ticket_id(ticket_id){
+  return is_ylg() ? ticket_id.toLowerCase().replace("mmd", "") : ticket_id;
 }
 
 range_columns = ["Bills", "Services", 'Price', "Discount", "NetSale", "Tax", "Gross", "ABV", "ASB", "Cash", "UPI", "Card"];
@@ -61,19 +69,20 @@ never_call_again_list = ["Not Happy", "Moved Out of Town", "Never Call Again"];
 non_shop_reports = ["bills", "daywiseSplit", "monthlySplit", "monthlyNRSOnly", "summaryNRSOnly", "daywiseNRSOnly"];
 non_sum_row_reports = ["callBacks", "callBacksOnHold", "dailyCash"];
 sections_map = {
-  "Hair Coloring": ["grey coverage", "color", "highlight", "ammonia"],
-  "Hair Treatments": ["treatment", "botox", "keratin", "dandruf", "hairfall"],
+  "Pedi Mani": ["pedi", "mani", "reflexology", "Cut and Polish"],
+  "Hair Coloring": ["grey coverage", "color", "highlight", "ammonia", "Root Touch", "colour"],
+  "Hair Treatments": ["treatment", "botox", "keratin", "dandruf", "hairfall", "Fibre", "Botoplexx", "smooth", "HAIR FALL"],
   "Hair Spa & Massage": ["spa", "massage", "pro fiber", "rejuvenate", "frizz"],
   "Hair Cuts & Styles": ["cut", "blow", "beard", "bangs", "hair styl", "shave", "tongs",
-                        "change of styl", "conditioning", "ironing", "hair wash", "trim"],
+                        "change of styl", "conditioning", "ironing", "hair wash", "trim", "Shampoo and Condition"],
   "Threading & Waxing": ["thread", "wax", "peel", "half legs", "underarm"],
-  "Pedi Mani": ["pedi", "mani", "reflexology"],
   "Makeup": ["saree", "nail", "makeup"],
   "Membership": ["membership"],
   "De-tan & Facials": ["facial", "ultimo", "fruit", "detan", "de-tan", "cleanup", "blaster", "bleach", "bliss",
-                        "glow", "no tan", "hydration", "back polish", "kanpeki"],
-  "Products": ["loreal", "prime", "acia oil", " shampoo"],
-  "Other Combos": ["combo"]
+                        "glow", "no tan", "hydration", "back polish", "kanpeki", "Skin Radiance", "Whitening",
+                        "Under Eye"],
+  "Products": ["loreal", "prime", "acia oil", " shampoo", "mask"],
+  "Other Combos": ["combo", "package"]
 }
 
 let db_config = {}
@@ -149,7 +158,7 @@ window.onload = function() {
     gotoInnosmarti.style.display = "block"
     shopSelectDiv.style.display = "none"
   }
-  if (!store_view || ylg_shops.includes(shopSelect.value)){
+  if (!store_view || is_ylg()){
     gotoInnosmarti.outerHTML = "";
   }
   if(!store_view) {
@@ -412,7 +421,7 @@ function formatReportData(rawData, reportType) {
             bill.ticket.forEach(service => {
               for (let i = 0; i < service.Qty; i++) {
                 row = {
-                  TicketID: bill.TicketID,
+                  TicketID: get_ticket_id(bill.TicketID),
                   Date: datePart,
                   Time: timePart,
                   Phone: bill.Phone,
@@ -433,7 +442,7 @@ function formatReportData(rawData, reportType) {
             const { servicesCount, priceSum, discountSum, netSalesSum, serviceNames, empNamesSet } = calcTickets(bill.ticket);
 
             row = {
-              TicketID: bill.TicketID,
+              TicketID: get_ticket_id(bill.TicketID),
               Date: datePart,
               Time: timePart,
               Phone: bill.Phone,
@@ -1137,7 +1146,7 @@ function delete_bills(bill_ids){
   updated_dates = {};
   full_data.forEach(day_sale => {
     for (let i = day_sale.bills.length - 1; i >= 0; i--) {
-      const ticketId = day_sale.bills[i].TicketID;
+      const ticketId = get_ticket_id(day_sale.bills[i].TicketID);
       const idx = bill_ids.indexOf(ticketId);
 
       if (idx !== -1) {
