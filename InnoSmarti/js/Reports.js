@@ -62,14 +62,14 @@ sections_map = {
   "Hair Treatments": ["treatment", "botox", "keratin", "dandruf", "hairfall"],
   "Hair Spa & Massage": ["spa", "massage", "pro fiber", "rejuvenate", "frizz"],
   "Hair Cuts & Styles": ["cut", "blow", "beard", "bangs", "hair styl", "shampoo", "shave", "tongs",
-                        "change of styl", "conditioning", "ironing", "hair wash"],
-  "Threading & Waxing": ["thread", "wax", "peel"],
+                        "change of styl", "conditioning", "ironing", "hair wash", "trim"],
+  "Threading & Waxing": ["thread", "wax", "peel", "half legs", "underarm"],
   "Pedi Mani": ["pedi", "mani", "reflexology"],
   "Makeup": ["saree", "nail", "makeup"],
   "Membership": ["membership"],
-  "Products": ["loreal", "max prime"],
+  "Products": ["loreal", "prime", "acia"],
   "De-tan & Facials": ["facial", "ultimo", "fruit", "detan", "de-tan", "cleanup", "blaster", "bleach", "bliss",
-                        "glow", "no tan", "hydration", "back polish"],
+                        "glow", "no tan", "hydration", "back polish", "kanpeki"],
   "Other Combos": ["combo"]
 }
 
@@ -84,6 +84,8 @@ let call_backs = {};
 let cash_rows = {};
 let dt_table = null;
 let store_view = true;
+let all_emp_names = new Set();
+let all_section_names = new Set();
 
 
 // ==== CRYPTO DECRYPT FUNCTION ====
@@ -171,7 +173,7 @@ function getSection(serviceName) {
   const lowerService = serviceName.toLowerCase();
 
   for (const [section, keywords] of Object.entries(sections_map)) {
-    if (keywords.some(keyword => lowerService.includes(keyword))) {
+    if (keywords.some(keyword => lowerService.includes(keyword.toLowerCase()))) {
       return section;
     }
   }
@@ -297,17 +299,34 @@ function calcTickets(tickets) {
   let priceSum = 0;
   const serviceNames = [];
   const empNamesSet = new Set();
+  emp_sale = {};
+  section_sale = {};
 
   tickets.forEach(item => {
-    discountSum += item.DiscountAmount || 0;
-    priceSum += item.Qty * (item.Price || 0);
+    discount = item.DiscountAmount || 0
+    discountSum += discount;
+    price = item.Qty * (item.Price || 0)
+    priceSum += price;
+    netSale = price - discount;
     servicesCount += item.Qty || 0;
     serviceNames.push(item.ServiceName);
-    if (item.empname) empNamesSet.add(get_emp_name(item.empname));
+    emp_name = get_emp_name(item.empname);
+    empNamesSet.add(emp_name);
+    if(!emp_sale[emp_name]){
+      emp_sale[emp_name] = 0;
+    }
+    emp_sale[emp_name] += netSale;
+    section_name = getSection(item.ServiceName);
+    if(!section_sale[section_name]){
+      section_sale[section_name] = 0;
+    }
+    section_sale[section_name] += netSale;
+    all_emp_names.add(emp_name);
+    all_section_names.add(section_name);
   });
   netSalesSum = priceSum - discountSum
 
-  return { servicesCount, priceSum, discountSum, netSalesSum, serviceNames, empNamesSet };
+  return { servicesCount, priceSum, discountSum, netSalesSum, serviceNames, empNamesSet, emp_sale, section_sale };
 }
 
 function is_call_back_on_hold(call_back_data){
@@ -504,12 +523,15 @@ function formatReportData(rawData, reportType) {
               Cash: 0,
               UPI: 0,
               Card: 0,
-              NewClients: 0
+              NewClients: 0,
+              EmpSale: {},
+              SectionSale: {}
             };
           }
 
           const row = grouped[key];
-          const { servicesCount, priceSum, discountSum, netSalesSum } = calcTickets(bill.ticket);
+
+          const { servicesCount, priceSum, discountSum, netSalesSum, emp_sale, section_sale } = calcTickets(bill.ticket);
 
           row.Bills += 1;
           row.Services += servicesCount;
@@ -520,6 +542,18 @@ function formatReportData(rawData, reportType) {
           row.UPI += upi;
           row.Card += card;
           row.NewClients += all_bills[bill.Phone]["bills"].length == 1? 1:0;
+          Object.entries(emp_sale).forEach(([emp_name, emp_net_sale]) => {
+            if(!row.EmpSale[emp_name]){
+              row.EmpSale[emp_name] = 0;
+            }
+            row.EmpSale[emp_name] += emp_net_sale;
+          });
+          Object.entries(section_sale).forEach(([section_name, section_net_sale]) => {
+            if(!row.SectionSale[section_name]){
+              row.SectionSale[section_name] = 0;
+            }
+            row.SectionSale[section_name] += section_net_sale;
+          });
         }
       });
     });
@@ -729,6 +763,10 @@ function fill_charts(reportType){
   growth_expected = 0;
   growth_actual = 0;
   last_date_pushed = null;
+  emp_sale_dict = {};
+  all_emp_names.forEach(emp_name => {emp_sale_dict[emp_name] = []});
+  section_sale_dict = {};
+  all_section_names.forEach(section_name => {section_sale_dict[section_name] = []});
   current_day_wise.forEach(day_sale => {
     labels.push(formatToMonthDay(day_sale.Date));
     last_date_pushed = day_sale.Date;
@@ -744,8 +782,9 @@ function fill_charts(reportType){
     growth_chart_actual.push(growth_actual);
     total_clients.push(day_sale.Bills);
     new_clients.push(day_sale.NewClients);
+    all_emp_names.forEach(emp_name => { emp_sale_dict[emp_name].push(day_sale.EmpSale[emp_name] || 0); });
+    all_section_names.forEach(sec_name => { section_sale_dict[sec_name].push(day_sale.SectionSale[sec_name] || 0); });
   });
-
 
   total_called_dict = {}
   rejected_count_dict = {}
@@ -767,13 +806,13 @@ function fill_charts(reportType){
 
 //  label1="Expected", label2="Actual"
 
-  datasets = [{"label": "Expected", "data": daily_chart_expected}, {"label": "Actual", "data": daily_chart_actual}]
+  datasets = [{"label": "Expected", "data": daily_chart_expected}, {"label": "Actual", "data": daily_chart_actual}];
   createReportChart('dailyChart', labels, "Day wise Target", datasets);
 
-  datasets = [{"label": "Expected", "data": growth_chart_expected}, {"label": "Actual", "data": growth_chart_actual}]
+  datasets = [{"label": "Expected", "data": growth_chart_expected}, {"label": "Actual", "data": growth_chart_actual}];
   createReportChart('growthChart', labels, "Total Target", datasets);
 
-  datasets = [{"label": "Total", "data": total_clients}, {"label": "New", "data": new_clients}]
+  datasets = [{"label": "Total", "data": total_clients}, {"label": "New", "data": new_clients}];
   createReportChart('clientsChart', labels, "Clients Trend", datasets);
 
   Object.entries(call_backs["config_value"]).forEach(function([phone_num, call_back_data]) {
@@ -785,8 +824,34 @@ function fill_charts(reportType){
   });
 
   datasets = [{"label": "Total Called", "data": Object.values(total_called_dict)},
-              {"label": "Rejected to Visit", "data": Object.values(rejected_count_dict)}]
+              {"label": "Rejected to Visit", "data": Object.values(rejected_count_dict)}];
   createReportChart('callBackChart', labels, "Callback Trend", datasets);
+
+  datasets = [];
+  Object.entries(emp_sale_dict).forEach(([emp_name, emp_sales_trend]) => {
+    emp_sum = emp_sales_trend.reduce((a, v) => a + v, 0);
+    if (emp_sum > 0) {
+      datasets.push({"label": emp_name, "data": emp_sales_trend, "sum": emp_sum});
+    }
+  });
+  datasets = datasets.sort((a, b) => b.sum - a.sum);
+  top_datasets = datasets.slice(0, 3);
+  low_datasets = datasets.slice(-3)
+  createReportChart('empSaleChartTop', labels, "Employee Sale Trend (Top Performers)", top_datasets);
+  createReportChart('empSaleChartLow', labels, "Employee Sale Trend (Low Performers)", low_datasets);
+
+  datasets = [];
+  Object.entries(section_sale_dict).forEach(([section_name, section_sales_trend]) => {
+    section_sum = section_sales_trend.reduce((a, v) => a + v, 0);
+    if (section_sum > 0) {
+      datasets.push({"label": section_name, "data": section_sales_trend, "sum": section_sum});
+    }
+  });
+  datasets = datasets.sort((a, b) => b.sum - a.sum);
+  top_datasets = datasets.slice(0, 3);
+  low_datasets = datasets.slice(-3)
+  createReportChart('sectionSaleChartTop', labels, "Sections Sale Trend (Top Performers)", top_datasets);
+  createReportChart('sectionSaleChartLow', labels, "Sections Sale Trend (Low Performers)", low_datasets);
 }
 
 function getDayOfWeek(dateString) {
@@ -830,6 +895,7 @@ function getRemainingDates(dateStr) {
 }
 
 function createReportChart(canvasId, labels, title, data_points) {
+  console.log(data_points);
   const existingChart = Chart.getChart(canvasId); // use canvas ID here
 
   if (existingChart) {
@@ -858,7 +924,7 @@ function createReportChart(canvasId, labels, title, data_points) {
     options: {
       responsive: false,
       plugins: {
-        legend: { position: "top" },
+        legend: { position: "top", display: datasets.length <= 4 },
         title: { display: true, text: title },
       },
     }
@@ -889,7 +955,7 @@ function get_today_and_mtd(nrs_only){
   success = true;
 
   if (today.Date != toDatePicker.value){
-    alert("No Sale today:" + today.Date);
+    alert("No Sale today, Last sale day is:" + today.Date);
     success = false;
   }
   return [now, today, mtd, success];
@@ -1044,6 +1110,11 @@ function closeDayCloseDialog() {
 }
 
 function submitDayClose() {
+  if(cashInBoxConfirm.value != cashInBox.value) {
+    alert("Please confirm cash in box matched with expected - " + cashInBox.value);
+    cashInBoxConfirm.value = "";
+    return;
+  }
   closeDayCloseDialog();
   send_update(false, false);
 }

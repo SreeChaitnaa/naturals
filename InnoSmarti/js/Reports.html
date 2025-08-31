@@ -191,6 +191,10 @@
       color: white;
     }
 
+    canvas {
+      height: 400px
+    }
+
   </style>
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
@@ -319,6 +323,10 @@
         <label for="cashInBox">Cash in Box:</label>
         <input type="text" id="cashInBox" disabled>
       </div>
+      <div class="form-row">
+        <label for="cashInBoxConfirm">Cash in Box Confirmed:</label>
+        <input type="text" id="cashInBoxConfirm">
+      </div>
       <div class="buttonRow">
         <button onclick="closeDayCloseDialog()" class="gray-button">Cancel</button>
         <button onclick="submitDayClose()">Submit</button>
@@ -383,13 +391,18 @@
     <div id="reportOutput">
       <table id="chartsDiv" class="noBorderTable">
         <tr>
-          <td><canvas id="dailyChart" width="600" height="300"></canvas></td>
-          <td><canvas id="growthChart" width="600" height="300"></canvas></td>
-          <td><canvas id="clientsChart" width="600" height="300"></canvas></td>
+          <td><canvas id="dailyChart"></canvas></td>
+          <td><canvas id="growthChart"></canvas></td>
+          <td><canvas id="clientsChart"></canvas></td>
         </tr>
         <tr>
-          <td><canvas id="callBackChart" width="600" height="300"></canvas></td>
-          <td></td>
+          <td><canvas id="empSaleChartTop"></canvas></td>
+          <td><canvas id="empSaleChartLow"></canvas></td>
+          <td><canvas id="callBackChart"></canvas></td>
+        </tr>
+        <tr>
+          <td><canvas id="sectionSaleChartTop"></canvas></td>
+          <td><canvas id="sectionSaleChartLow"></canvas></td>
           <td></td>
         </tr>
       </table>
