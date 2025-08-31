@@ -55,7 +55,7 @@ table_columns["sectionWiseSales"].push("Services");
 bill_reports = ["bills", "detailedBills", "detailedAllBills"];
 non_group_reports = ["services", "bills", "detailedBills", "detailedAllBills", "callBacks", "callBacksOnHold", "dailyCash"];
 never_call_again_list = ["Not Happy", "Moved Out of Town", "Never Call Again"];
-non_shop_reports = ["bills", "monthlySales", "daywiseSplit", "monthlySplit", "monthlyNRSOnly", "summaryNRSOnly", "daywiseNRSOnly"];
+non_shop_reports = ["bills", "daywiseSplit", "monthlySplit", "monthlyNRSOnly", "summaryNRSOnly", "daywiseNRSOnly"];
 non_sum_row_reports = ["callBacks", "callBacksOnHold", "dailyCash"];
 sections_map = {
   "Hair Coloring": ["grey coverage", "color", "highlight", "ammonia"],
