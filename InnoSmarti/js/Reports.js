@@ -292,6 +292,7 @@ function login() {
       return res.json();
     })
     .then(data => {
+      if (data == null) {return};
       console.log(data);
       loginDiv.style.display = "none";
       shopName.textContent = "Reports for - " + shops_map[shop];
