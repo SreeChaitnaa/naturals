@@ -1096,7 +1096,7 @@ function send_update(nrs_only=false, is_update=true, client_count=0, appointment
   }
   summary =  "Date: *" + today.Date + "*\n";
   summary += "Salon: *" + shops_map[shopSelect.value] + "*\n\n";
-  summary += "Sales: " + today.NetSale + "\n";
+  summary += "Sales: " + today.NetSale.toFixed(2) + "\n";
   summary += "Bills: " + today.Bills + "\n";
   summary += "ABV: " + today.ABV.toFixed(2) + "\n";
   date_num = parseInt(today.Date.split("-")[2], 10)
