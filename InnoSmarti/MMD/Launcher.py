@@ -52,8 +52,8 @@ class Launcher:
             if element:
                 if element_setting["value"] == "click":
                     element.click()
-                elif element_setting["value"] == "set_reports":
-                    self.set_reports(element)
+                # elif element_setting["value"] == "set_reports":
+                #     self.set_reports(element)
                 else:
                     element.send_keys(Keys.CONTROL + "a")
                     element.send_keys(Keys.DELETE)
