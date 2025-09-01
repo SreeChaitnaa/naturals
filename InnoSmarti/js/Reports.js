@@ -6,8 +6,8 @@ const shopConfig = {
     "encKey": "ki62s6ktea89p72RjFNDDrqVjKrUUT9i7d78cup3kqCEK1KvuFaLDkY7PdjUrnT5S5eQzFF2/9FGDGrt3SflYA==" },
   "JKR": { "url": "https://innosmartiscajkr-30a7.restdb.io/rest/",
     "encKey": "Fr4R+Qu6i1p+hdfcmDrm4bywTHY/b863GlNnuA9p9uo3x5nnahlJqvssPOJRt1BcDXLw34a2rIrcT81DmMe7xQ==" },
-  "HRLR": { "url": "https://ylghrlr-1795.restdb.io/rest/",
-    "encKey": "2BX/pNW9wc4beTsrRlfC8N1CGsgPK0AMLDJvWzivhHdfg2Wsn76QMwqdAHEUCy6dIxTLGEWQVGF9CRu2LnBWOw==" }
+  "HRLR": { "url": "https://ylgharalur-be6e.restdb.io/rest/",
+    "encKey": "bKuxUJfSNeOtp67m3v4WC39P+xPn/7a5QJNCYF1ogTW0OXSgOaxpNb+jvSBQq+93kZGHU3Bj87QFi9FAk7No+g==" }
 };
 
 table_columns = {
