@@ -7,7 +7,7 @@ const shopConfig = {
   "JKR": { "url": "https://jkr.marammuralidhar3234.workers.dev/rest/",
     "encKey": "Fr4R+Qu6i1p+hdfcmDrm4bywTHY/b863GlNnuA9p9uo3x5nnahlJqvssPOJRt1BcDXLw34a2rIrcT81DmMe7xQ==" },
   "HRLR": { "url": "https://hrlr.marammuralidhar3234.workers.dev/rest/",
-    "encKey": "2BX/pNW9wc4beTsrRlfC8N1CGsgPK0AMLDJvWzivhHdfg2Wsn76QMwqdAHEUCy6dIxTLGEWQVGF9CRu2LnBWOw==" }
+    "encKey": "bKuxUJfSNeOtp67m3v4WC39P+xPn/7a5QJNCYF1ogTW0OXSgOaxpNb+jvSBQq+93kZGHU3Bj87QFi9FAk7No+g==" }
 };
 
 //  "HRLR": { "url": "https://ylghrlr-1795.restdb.io/rest/",
