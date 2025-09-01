@@ -2,26 +2,32 @@
 
 // ==== SHOP CONFIG (paste encrypted keys from Python output) ====
 const shopConfig = {
-  "TNS": { "url": "https://innosmartisca-d3db.restdb.io/rest/",
+  "TNS": { "url": "https://tns.marammuralidhar3234.workers.dev/rest/",
     "encKey": "ki62s6ktea89p72RjFNDDrqVjKrUUT9i7d78cup3kqCEK1KvuFaLDkY7PdjUrnT5S5eQzFF2/9FGDGrt3SflYA==" },
-  "JKR": { "url": "https://innosmartiscajkr-30a7.restdb.io/rest/",
+  "JKR": { "url": "https://jkr.marammuralidhar3234.workers.dev/rest/",
     "encKey": "Fr4R+Qu6i1p+hdfcmDrm4bywTHY/b863GlNnuA9p9uo3x5nnahlJqvssPOJRt1BcDXLw34a2rIrcT81DmMe7xQ==" },
-  "HRLR": { "url": "https://ylgharalur-be6e.restdb.io/rest/",
-    "encKey": "bKuxUJfSNeOtp67m3v4WC39P+xPn/7a5QJNCYF1ogTW0OXSgOaxpNb+jvSBQq+93kZGHU3Bj87QFi9FAk7No+g==" }
+  "HRLR": { "url": "https://hrlr.marammuralidhar3234.workers.dev/rest/",
+    "encKey": "2BX/pNW9wc4beTsrRlfC8N1CGsgPK0AMLDJvWzivhHdfg2Wsn76QMwqdAHEUCy6dIxTLGEWQVGF9CRu2LnBWOw==" }
 };
+
+//  "HRLR": { "url": "https://ylghrlr-1795.restdb.io/rest/",
+//    "encKey": "2BX/pNW9wc4beTsrRlfC8N1CGsgPK0AMLDJvWzivhHdfg2Wsn76QMwqdAHEUCy6dIxTLGEWQVGF9CRu2LnBWOw==" }
+//  "HRLR": { "url": "https://ylgharalur-be6e.restdb.io/rest/",
+//    "encKey": "bKuxUJfSNeOtp67m3v4WC39P+xPn/7a5QJNCYF1ogTW0OXSgOaxpNb+jvSBQq+93kZGHU3Bj87QFi9FAk7No+g==" }
+
 
 table_columns = {
-  "detailedBills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Price', 'Discount', 'NetSale', 'Tax', 'Gross', 'Sex', 'Services', 'ServiceDesc', 'EmpName', "PaymentType", 'Cash', 'UPI', 'Card'],
-  "bills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Services', 'Price', 'Discount', 'NetSale', 'Gross', "PaymentType"],
-  "services" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'ServiceName', 'EmpName', 'Price', 'Discount', 'NetSale', "PaymentType"],
-  "employeeSales": ["Name", "Bills", "Services", "Price", "Discount", "NetSale", "ABV", "ASB"],
-  "callBacks": ['Phone', 'Name', 'Visits', "BillsSummary", 'TotalNetSale', 'TicketID', "ServiceDesc", 'EmpName', "NetSale", "Notes", "Action"],
-  "callBacksOnHold": ['Phone', 'Name', 'UpdatedDate', "DueDate", "Status", "Notes", "Action"],
-  "dailyCash": ['Date', 'OpeningBalance', 'Cash', "CashGiven", "CashGivenTo", "ChangeMissed", "CashInBox"],
-  "serviceWiseSales": ["Name", "Count", 'Price', 'Discount', 'NetSale', "Providers"]
+  "detailedBills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Price', 'Discount', 'NetSale', 'Tax', 'Gross', 'Sex', 'Services', 'ServiceDesc', 'EmpName', 'PaymentType', 'Cash', 'UPI', 'Card'],
+  "bills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Services', 'Price', 'Discount', 'NetSale', 'Gross', 'PaymentType'],
+  "services" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'ServiceName', 'EmpName', 'Price', 'Discount', 'NetSale', 'PaymentType'],
+  "employeeSales": ['Name', 'Bills', 'Services', 'Price', 'Discount', 'NetSale', 'ABV', 'ASB'],
+  "callBacks": ['Phone', 'Name', 'Visits', 'BillsSummary', 'TotalNetSale', 'TicketID', 'ServiceDesc', 'EmpName', 'NetSale', 'Notes', 'Action'],
+  "callBacksOnHold": ['Phone', 'Name', 'UpdatedDate', 'DueDate', 'Status', 'Notes', 'Action'],
+  "dailyCash": ['Date', 'OpeningBalance', 'Cash', 'CashGiven', 'CashGivenTo', 'ChangeMissed', 'CashInBox'],
+  "serviceWiseSales": ['Name', 'Count', 'Price', 'Discount', 'NetSale', 'Providers']
 };
 
-const numericColumns = ["Price", "Discount", "NetSale", "Tax", "Gross", "ABV", "ASB", "Cash", "UPI", "Card", "TotalNetSale"];
+const numericColumns = ['Price', 'Discount', 'NetSale', 'Tax', 'Gross', 'ABV', 'ASB', 'Cash', 'UPI', 'Card', 'TotalNetSale'];
 
 employee_name_map = {
   "Guru": "Guru prasad",
@@ -30,7 +36,14 @@ employee_name_map = {
   "Nandini": "Ritika",
   "Lokeshwari": "Sarita",
   "sarita": "Sarita",
-  "Ritu": "Ritika"
+  "Ritu": "Ritika",
+  "Ali": "Lucky",
+  "Margareat": "Suprita",
+  "Mariya": "Rekha",
+  'Mary': "mary L",
+  'Meenakshi': "Ashwini",
+  'Sneha': 'Shannu',
+  'Toheed': "Sameer"
 };
 
 shops_map = {"JKR": "Jakkur", "TNS": "Thanisandra", "HRLR": "Haralur"};
@@ -70,18 +83,18 @@ non_shop_reports = ["bills", "daywiseSplit", "monthlySplit", "monthlyNRSOnly", "
 non_sum_row_reports = ["callBacks", "callBacksOnHold", "dailyCash"];
 sections_map = {
   "Pedi Mani": ["pedi", "mani", "reflexology", "Cut and Polish"],
-  "Hair Coloring": ["grey coverage", "color", "highlight", "ammonia", "Root Touch", "colour"],
+  "Hair Coloring": ["grey coverage", "coloring", "highlight", "ammonia", "Root Touch", "colour"],
   "Hair Treatments": ["treatment", "botox", "keratin", "dandruf", "hairfall", "Fibre", "Botoplexx", "smooth", "HAIR FALL"],
   "Hair Spa & Massage": ["spa", "massage", "pro fiber", "rejuvenate", "frizz"],
   "Hair Cuts & Styles": ["cut", "blow", "beard", "bangs", "hair styl", "shave", "tongs",
                         "change of styl", "conditioning", "ironing", "hair wash", "trim", "Shampoo and Condition"],
+  "De-tan & Facials": ["facial", "ultimo", "fruit", "detan", "de-tan", "cleanup", "blaster", "bleach", "bliss",
+                        "glow", "no tan", "hydration", "back polish", "kanpeki", "Skin Radiance", "Whitening",
+                        "Under Eye", "add on mask"],
   "Threading & Waxing": ["thread", "wax", "peel", "half legs", "underarm"],
   "Makeup": ["saree", "nail", "makeup"],
   "Membership": ["membership"],
-  "De-tan & Facials": ["facial", "ultimo", "fruit", "detan", "de-tan", "cleanup", "blaster", "bleach", "bliss",
-                        "glow", "no tan", "hydration", "back polish", "kanpeki", "Skin Radiance", "Whitening",
-                        "Under Eye"],
-  "Products": ["loreal", "prime", "acia oil", " shampoo", "mask"],
+  "Products": ["loreal", "prime", "acia oil", " shampoo", " mask"],
   "Other Combos": ["combo", "package"]
 }
 
@@ -237,11 +250,49 @@ function login() {
     console.log(db_headers)
     fetch(apiUrl, db_headers)
     .then(res => {
-      console.log(res)
-      if (!res.ok) throw "Login failed";
+      console.log(res);
+      if (res.status === 429) {
+        return res.json().then(errData => {
+          // Example: "Try again in 0:22:57 hrs:min:sec."
+          const match = errData.msg.match(/(\d+):(\d+):(\d+)/);
+          if (match) {
+            const hours = parseInt(match[1], 10);
+            const minutes = parseInt(match[2], 10);
+            const seconds = parseInt(match[3], 10);
+
+            const now = new Date();
+            const unblockTime = new Date(now.getTime() +
+              (hours * 3600 + minutes * 60 + seconds) * 1000
+            );
+
+            // Format date and time in 12h with AM/PM
+            const options = {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+              hour: 'numeric',
+              minute: '2-digit',
+              second: '2-digit',
+              hour12: true
+            };
+            const formattedDateTime = unblockTime.toLocaleString(undefined, options);
+
+            alert(
+              `⚠️ DB Requests limit hit!\n${errData.msg}\n\n` +
+              `You can retry after: ${formattedDateTime}`
+            );
+          } else {
+            alert(`⚠️ DB Requests limit hit!\n${errData.msg}\n\nContact Murali with this Error Message`);
+          }
+          return null; // Stop further processing
+        });
+      }
+      console.log(res);
+      if (!res.ok) throw "Login failed - " + res.status;
       return res.json();
     })
     .then(data => {
+      console.log(data);
       loginDiv.style.display = "none";
       shopName.textContent = "Reports for - " + shops_map[shop];
 
@@ -279,10 +330,13 @@ function login() {
     .catch(err => {
       loginError.textContent = `Invalid password or API key - ${err.message}`;
       spinnerOverlay.style.display = "none";
+      console.log(err);
+      alert(`Invalid password or API key - ${err.message}`);
     });
-
   } catch (e) {
+    console.log(e);
     loginError.textContent = `Invalid password - ${e}`;
+    alert(`Invalid password - ${e}`);
     spinnerOverlay.style.display = "none";
   }
 }
