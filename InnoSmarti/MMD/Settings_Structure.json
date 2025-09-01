@@ -13,7 +13,9 @@
             "cache-control": "no-cache",
             "username": "naturals.branch1@gmail.com",
             "password": "branch1_innosmarti_password",
-            "ReportPassword": "Branch1_Reports@Password"
+            "ReportPassword": "Branch1_Reports@Password",
+            "shop_name": "ShopName1",
+            "shop_review_link": "https://maps.review1"
         },
         "Branch2ID": {
             "url": "https://Branch2DBName-d3db.restdb.io/rest",
@@ -22,7 +24,9 @@
             "cache-control": "no-cache",
             "username": "naturals.branch2@gmail.com",
             "password": "branch2_innosmarti_password",
-            "ReportPassword": "Branch2_Reports@Password"
+            "ReportPassword": "Branch2_Reports@Password",
+            "shop_name": "ShopName2",
+            "shop_review_link": "https://maps.review2"
         }
     },
     "flask_command": "python -m flask run --debug -p 443 --cert Certs\\server2.crt --key Certs\\server2.key",

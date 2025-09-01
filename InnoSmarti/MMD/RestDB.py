@@ -32,6 +32,8 @@ class RestDB:
         self.logger = logger
         self.url = settings.RestDBData[store_id]["url"]
         self.headers = settings.RestDBData[store_id].copy()
+        self.shop_name = settings.RestDBData[store_id]["shop_name"]
+        self.shop_review_link = settings.RestDBData[store_id]["shop_review_link"]
 
     def do_rest_call(self, method=DBStrings.GET, body=None, url_params=None, table=DBStrings.Table_Bills):
         url = "/".join([self.url, table])
@@ -116,6 +118,14 @@ class RestDB:
         config[DBStrings.ConfigValue] = str(config_value)
         self.do_rest_call(DBStrings.PUT, config, table=DBStrings.Table_config)
 
+    def send_thank_you_whatsapp(self, phone, name):
+        message = (f"Hi {name},\n"
+                   f"Thank you for choosing {self.shop_name} for your pampering session!\n"
+                   f"We’d truly appreciate it if you could share your feedback here: {self.shop_review_link}\n\n"
+                   f"Looking forward to seeing you again—just call or WhatsApp us to book your next session! ")
+        payload = json.dumps({"number":f"91{phone}", "message":message})
+        return requests.post("http://localhost:3000/send", payload, headers={"Content-Type": "application/json"})
+
     def update_bills(self, bills_to_add, is_mmd, last_bill_key, next_bill_number):
         bills_per_day = {}
         if len(bills_to_add) == 0:
@@ -144,6 +154,7 @@ class RestDB:
                     nt[k] = ticket[k]
                 bill["ticket"].append(nt)
             bills_per_day[bill_date]["bills"].append(bill)
+            self.send_thank_you_whatsapp(bill["Phone"], bill["Name"])
 
         self.update_bills_of_days(bills_per_day)
         self.update_config_value(last_bill_key, next_bill_number)
