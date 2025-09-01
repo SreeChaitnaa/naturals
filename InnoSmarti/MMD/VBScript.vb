@@ -698,8 +698,8 @@ Function CallRestDBAPI(method As String, Optional endpoint As String = "", Optio
     Dim url As String
     Dim apiKey As String
 
-    url = "https://ylghrlr-1795.restdb.io/rest/"
-    apiKey = "faab532180a0e1a59d497109d256444bf6a07"
+    url = "https://ylgharalur-be6e.restdb.io/rest/"
+    apiKey = "68b540d2b349a313344b6d85"
 
     If endpoint <> "" Then url = url & endpoint
 

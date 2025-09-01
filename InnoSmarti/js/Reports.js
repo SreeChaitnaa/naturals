@@ -19,13 +19,46 @@ const shopConfig = {
 table_columns = {
   "detailedBills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Price', 'Discount', 'NetSale', 'Tax', 'Gross', 'Sex', 'Services', 'ServiceDesc', 'EmpName', 'PaymentType', 'Cash', 'UPI', 'Card'],
   "bills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Services', 'Price', 'Discount', 'NetSale', 'Gross', 'PaymentType'],
-  "services" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'ServiceName', 'EmpName', 'Price', 'Discount', 'NetSale', 'PaymentType'],
+  "services" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'ServiceName', 'EmpName', 'Price', 'Discount', 'NetSale', 'PaymentType', 'Section'],
   "employeeSales": ['Name', 'Bills', 'Services', 'Price', 'Discount', 'NetSale', 'ABV', 'ASB'],
   "callBacks": ['Phone', 'Name', 'Visits', 'BillsSummary', 'TotalNetSale', 'TicketID', 'ServiceDesc', 'EmpName', 'NetSale', 'Notes', 'Action'],
   "callBacksOnHold": ['Phone', 'Name', 'UpdatedDate', 'DueDate', 'Status', 'Notes', 'Action'],
   "dailyCash": ['Date', 'OpeningBalance', 'Cash', 'CashGiven', 'CashGivenTo', 'ChangeMissed', 'CashInBox'],
-  "serviceWiseSales": ['Name', 'Count', 'Price', 'Discount', 'NetSale', 'Providers']
+  "serviceWiseSales": ['Name', 'Count', 'Price', 'Discount', 'NetSale', 'Section', 'Providers']
 };
+
+table_click_links = {
+  "callBacks": {
+    "Phone": "detailedAllBills"
+  },
+  "employeeSales": {
+    "Name": "services"
+  },
+  "serviceWiseSales": {
+    "Name": "services",
+    "Section": "services"
+  },
+  "sectionWiseSales": {
+    "Name": "services"
+  },
+  "daywiseSales": {
+    "Date": "detailedBills"
+  },
+  "detailedBills": {
+    "TicketID": "services",
+    "Phone": "detailedAllBills"
+  },
+  "services": {
+    "Phone": "detailedAllBills"
+  },
+  "bills": {
+    "TicketID": "services",
+    "Phone": "detailedAllBills"
+  },
+  "detailedAllBills": {
+    "Phone": "detailedAllBills"
+  }
+}
 
 const numericColumns = ['Price', 'Discount', 'NetSale', 'Tax', 'Gross', 'ABV', 'ASB', 'Cash', 'UPI', 'Card', 'TotalNetSale'];
 
@@ -487,7 +520,8 @@ function formatReportData(rawData, reportType) {
                   NetSale: service.Price - (service.DiscountAmount / service.Qty),
                   Sex: bill.ticket[0]?.Sex || "",
                   EmpName: get_emp_name(service.empname),
-                  PaymentType: payment_type
+                  PaymentType: payment_type,
+                  Section: getSection(service.ServiceName)
                 };
                 direct_rows.push(row)
               }
@@ -556,7 +590,8 @@ function formatReportData(rawData, reportType) {
                 Discount: 0,
                 NetSale: 0,
                 Services: new Set(),
-                Providers: new Set()
+                Providers: new Set(),
+                Section: getSection(key)
               };
             }
 
@@ -709,6 +744,7 @@ function fill_table_with_data(reportType)
   }
 
   // Reinitialize DataTables
+  tableSearch.value = "";
   dt_table = $('#dataTable').DataTable({
     destroy: true, // reset old table
     data: current_rows,    // array of objects
@@ -724,23 +760,37 @@ function fill_table_with_data(reportType)
     order: [],
     columnDefs: [
       {
-        targets: data_keys.map((key, idx) => numericColumns.includes(key) ? idx : null).filter(v => v !== null),
-        render: function(data, type, row) {
-          return Number(data).toFixed(2);
-        }
-      },
-      {
-        targets: data_keys.map((key, idx) => key === "Action" ? idx : null).filter(v => v !== null),
-        orderable: false,
-        render: function(data, type, row) {
-          if (type === "display") {
-            if(reportType == "callBacks"){
+        targets: "_all",
+        render: function (data, type, row, meta) {
+          // get column name (the key from data_keys)
+          let colName = meta.settings.aoColumns[meta.col].data;
+
+          // Example: numeric formatting
+          if (numericColumns.includes(colName)) {
+            return Number(data).toFixed(2);
+          }
+
+          if(row[data_keys[0]] == "Total"){
+            return data;
+          }
+
+          // Example: special handling for Action column
+          if (colName === "Action") {
+            if (reportType === "callBacks") {
               return `<button class="gray-button" onclick="openCallbackDialog('${row.Phone}','${row.Name}')">${data}</button>`;
-            } else if(reportType == "callBacksOnHold") {
+            } else if (reportType === "callBacksOnHold") {
               return `<button class="gray-button" onclick="deleteCallBackData('${row.Phone}')">${data}</button>`;
             }
-
           }
+
+          if(table_click_links[reportType]){
+            if(table_click_links[reportType][colName]){
+              return `<span style="cursor:pointer; color:blue;"
+                       onclick="goto_selection('${table_click_links[reportType][colName]}','${data}')">${data}</span>`;
+            }
+          }
+
+          // default: just return the value
           return data;
         }
       }
@@ -772,6 +822,13 @@ function fill_table_with_data(reportType)
   $('#tableSearch').on('keyup', function() {
     dt_table.search(this.value).draw();
   });
+}
+
+function goto_selection(reportType, search_value){
+  reportTypeSelector.value = reportType;
+  fetchReport();
+  tableSearch.value = search_value;
+  dt_table.search(search_value).draw();
 }
 
 function send_whatsapp(text, phone_num=null){
