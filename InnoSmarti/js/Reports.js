@@ -17,7 +17,7 @@ const shopConfig = {
 
 
 table_columns = {
-  "detailedBills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Price', 'Discount', 'NetSale', 'Tax', 'Gross', 'Sex', 'Services', 'ServiceDesc', 'EmpName', 'PaymentType', 'Cash', 'UPI', 'Card'],
+  "detailedBills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Price', 'Discount', 'NetSale', 'Tax', 'Gross', 'Services', 'ServiceDesc', 'EmpName', 'PaymentType', 'Cash', 'UPI', 'Card'],
   "bills" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'Services', 'Price', 'Discount', 'NetSale', 'Gross', 'PaymentType'],
   "services" : ['TicketID', 'Date', 'Time', 'Name', 'Phone', 'ServiceName', 'EmpName', 'Price', 'Discount', 'NetSale', 'PaymentType', 'Section'],
   "employeeSales": ['Name', 'Bills', 'Services', 'Price', 'Discount', 'NetSale', 'ABV', 'ASB'],
@@ -518,7 +518,6 @@ function formatReportData(rawData, reportType) {
                   Price: service.Price,
                   Discount: (service.DiscountAmount / service.Qty),
                   NetSale: service.Price - (service.DiscountAmount / service.Qty),
-                  Sex: bill.ticket[0]?.Sex || "",
                   EmpName: get_emp_name(service.empname),
                   PaymentType: payment_type,
                   Section: getSection(service.ServiceName)
@@ -540,7 +539,6 @@ function formatReportData(rawData, reportType) {
               NetSale: netSalesSum,
               Tax: netSalesSum * 0.18,
               Gross: netSalesSum * 1.18,
-              Sex: bill.ticket[0]?.Sex || "",
               Services: servicesCount,
               ServiceDesc: serviceNames.join("/"),
               EmpName: Array.from(empNamesSet).join("/"),
