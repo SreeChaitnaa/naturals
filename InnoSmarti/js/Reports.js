@@ -155,15 +155,12 @@ window.onload = function() {
   if (shopParam) {
     shopSelect.value = {"2339": "JKR", "1526": "TNS"}[shopParam] || shopParam;
     console.log("🔹 Default shop set from URL:", shopParam);
-    gotoInnosmarti.style.display = "block"
     shopSelectDiv.style.display = "none"
   }
   if (is_ylg()){
-    gotoInnosmarti.outerHTML = "";
     nrsDayClose.style.display = "none";
   }
   if(!store_view) {
-    try{ gotoInnosmarti.outerHTML = ""; } catch(e) {console.log(e)};
     btn_export_csv.style.display = "block";
   }
   else{
