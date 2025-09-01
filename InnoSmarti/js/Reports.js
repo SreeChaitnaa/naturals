@@ -163,7 +163,7 @@ window.onload = function() {
     nrsDayClose.style.display = "none";
   }
   if(!store_view) {
-    gotoInnosmarti.outerHTML = "";
+    try{ gotoInnosmarti.outerHTML = ""; } catch(e) {console.log(e)};
     btn_export_csv.style.display = "block";
   }
   else{
