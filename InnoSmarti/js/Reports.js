@@ -92,11 +92,10 @@ employee_name_map = {
   "sarita": "Sarita",
   "Ritu": "Ritika",
   "Ali": "Lucky",
-  "Margareat": "Suprita",
   "Mariya": "Rekha",
   'Mary': "mary L",
   'Meenakshi': "Ashwini",
-  'Sneha': 'Shannu',
+  'Sneha': 'Suprita',
   'Toheed': "Sameer"
 };
 
