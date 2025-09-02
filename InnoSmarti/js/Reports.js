@@ -6,8 +6,8 @@ const shopConfig = {
     "url": "https://tns.marammuralidhar3234.workers.dev/rest/",
     "encKey": "ki62s6ktea89p72RjFNDDrqVjKrUUT9i7d78cup3kqCEK1KvuFaLDkY7PdjUrnT5S5eQzFF2/9FGDGrt3SflYA==",
     "name": "Thanisandra",
-    "whatsapp_number": ["8722036021"],
-//    "whatsapp_number": ["8722036021", "7829347636"]
+//    "whatsapp_number": ["8722036021"],
+    "whatsapp_number": ["8722036021", "7829347636"]
   },
   "JKR": {
     "url": "https://jkr.marammuralidhar3234.workers.dev/rest/",
@@ -20,8 +20,8 @@ const shopConfig = {
     "url": "https://hrlr.marammuralidhar3234.workers.dev/rest/",
     "encKey": "bKuxUJfSNeOtp67m3v4WC39P+xPn/7a5QJNCYF1ogTW0OXSgOaxpNb+jvSBQq+93kZGHU3Bj87QFi9FAk7No+g==",
     "name": "Haralur",
-    "whatsapp_number": ["8073959696"]
-//    "whatsapp_number": ["8073959696", "9663233832"]
+//    "whatsapp_number": ["8073959696"]
+    "whatsapp_number": ["8073959696", "9663233832"]
   }
 };
 
@@ -47,6 +47,9 @@ table_click_links = {
     "Phone": "detailedAllBills"
   },
   "employeeSales": {
+    "Name": "services"
+  },
+  "employeeSectionSales": {
     "Name": "services"
   },
   "serviceWiseSales": {
@@ -120,15 +123,7 @@ monthly_reports.forEach(reportType => {
   table_columns[reportType] = ["Month"].concat(range_columns);
 });
 
-table_columns["detailedAllBills"] = [...table_columns["detailedBills"]];
-table_columns["sectionWiseSales"] = [...table_columns["serviceWiseSales"]];
-table_columns["sectionWiseSales"].push("Services");
 
-bill_reports = ["bills", "detailedBills", "detailedAllBills"];
-non_group_reports = ["services", "bills", "detailedBills", "detailedAllBills", "callBacks", "callBacksOnHold", "dailyCash"];
-never_call_again_list = ["Not Happy", "Moved Out of Town", "Never Call Again"];
-non_shop_reports = ["bills", "daywiseSplit", "monthlySplit", "monthlyNRSOnly", "summaryNRSOnly", "daywiseNRSOnly"];
-non_sum_row_reports = ["callBacks", "callBacksOnHold", "dailyCash"];
 sections_map = {
   "Pedi Mani": ["pedi", "mani", "reflexology", "Cut and Polish"],
   "Hair Coloring": ["grey coverage", "coloring", "highlight", "ammonia", "Root Touch", "colour"],
@@ -143,8 +138,21 @@ sections_map = {
   "Makeup": ["saree", "nail", "makeup"],
   "Membership": ["membership"],
   "Products": ["loreal", "prime", "acia oil", " shampoo", " mask"],
-  "Other Combos": ["combo", "package"]
+  "Other Combos": ["combo", "package"],
+  "Others": []
 }
+
+table_columns["detailedAllBills"] = [...table_columns["detailedBills"]];
+table_columns["sectionWiseSales"] = [...table_columns["serviceWiseSales"]];
+table_columns["sectionWiseSales"].push("Services");
+table_columns["employeeSectionSales"] = ["Name"];
+Object.keys(sections_map).forEach(section_name => {table_columns["employeeSectionSales"].push(section_name)});
+
+bill_reports = ["bills", "detailedBills", "detailedAllBills"];
+non_group_reports = ["services", "bills", "detailedBills", "detailedAllBills", "callBacks", "callBacksOnHold", "dailyCash"];
+never_call_again_list = ["Not Happy", "Moved Out of Town", "Never Call Again"];
+non_shop_reports = ["bills", "daywiseSplit", "monthlySplit", "monthlyNRSOnly", "summaryNRSOnly", "daywiseNRSOnly"];
+non_sum_row_reports = ["callBacks", "callBacksOnHold", "dailyCash"];
 
 let db_config = {}
 let db_url = "";
@@ -594,6 +602,25 @@ function formatReportData(rawData, reportType) {
           emp_in_bill.forEach(empName => {
               grouped[empName].Bills += 1;
           });
+        } else if (reportType === "employeeSectionSales") {
+          bill.ticket.forEach(service => {
+            let key = get_emp_name(service.empname);
+            if (!grouped[key]) {
+              grouped[key] = {};
+              table_columns["employeeSectionSales"].forEach(section_name => {
+                grouped[key][section_name] = 0;
+              });
+              grouped[key]["Name"] = key;
+            }
+            emp_sec_name = getSection(service.ServiceName);
+            grouped[key][emp_sec_name] += (service.Qty * service.Price) - service.DiscountAmount;
+          });
+          Object.keys(grouped).forEach(emp_name => {
+            Object.keys(grouped[emp_name]).forEach(emp_sec_name => {
+              if (emp_sec_name == "Name"){ return }
+              grouped[emp_name][emp_sec_name] = parseInt(grouped[emp_name][emp_sec_name]);
+            });
+          });
         } else if (["serviceWiseSales", "sectionWiseSales"].includes(reportType)) {
           bill.ticket.forEach(service => {
             key = reportType == "sectionWiseSales" ? getSection(service.ServiceName) : service.ServiceName;
@@ -707,7 +734,7 @@ function formatReportData(rawData, reportType) {
         row.ASB = row.Bills > 0 ? parseFloat((row.Services / row.Bills).toFixed(2)) : 0;
       });
     }
-    if (["employeeSales", "serviceWiseSales", "sectionWiseSales"].includes(reportType)) {
+    if (["employeeSales", "serviceWiseSales", "sectionWiseSales", "employeeSectionSales"].includes(reportType)) {
       rows.sort((a, b) => (a.Name > b.Name ? 1 : -1));
     } else {
       rows.sort((a, b) => (a.Date > b.Date ? 1 : -1));
