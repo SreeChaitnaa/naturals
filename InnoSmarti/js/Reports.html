@@ -75,9 +75,12 @@
       left: 0; top: 0;
       width: 100%; height: 100%;
       background-color: rgba(0,0,0,0.4);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
 
     .modalContent {
+      position: relative;
       background: #fff;
       margin: 15% auto;
       padding: 20px;
@@ -195,6 +198,32 @@
       height: 400px
     }
 
+    .close-btn {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 24px;
+      height: 26px;
+      border: none;
+      border-radius: 50%;
+      background: #eee;
+      color: #333;
+      font-size: 20px;
+      font-weight: bold;
+
+      display: flex;              /* center X horizontally + vertically */
+      align-items: center;
+      justify-content: center;
+
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .close-btn:hover {
+      background: #ccc;
+    }
+
+
   </style>
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
@@ -238,6 +267,7 @@
   <!-- Update Send Modal -->
   <div id="updateModel" class="myModal">
     <div id="updateModelContent" class="modalContent">
+      <button class="close-btn" onclick="closeDialog()">×</button>
       <h3>Current Status: </h3>
       <div class="form-row">
         <label for="noOfClients">No of Clients: </label>
@@ -248,7 +278,7 @@
         <input type="text" id="appointments">
       </div>
       <div class="buttonRow">
-        <button onclick="closeUpdate()" class="gray-button">Cancel</button>
+        <button onclick="closeDialog()" class="gray-button">Cancel</button>
         <button onclick="submitUpdate()">Submit</button>
       </div>
     </div>
@@ -257,6 +287,7 @@
   <!-- CallBack Send Modal -->
   <div id="CallBackModel" class="myModal">
     <div id="CallBackModelContent" class="modalContent">
+      <button class="close-btn" onclick="closeDialog()">×</button>
       <h3>Call back Details: </h3>
       <div class="form-row">
         <label for="callBackPhone">Phone: </label>
@@ -288,7 +319,7 @@
         <input type="text" id="callBackNotes">
       </div>
       <div class="buttonRow">
-        <button onclick="closeCallbackUpdate()" class="gray-button">Cancel</button>
+        <button onclick="closeDialog()" class="gray-button">Cancel</button>
         <button onclick="submitCallbackUpdate()">Submit</button>
       </div>
     </div>
@@ -297,6 +328,7 @@
   <!-- DayClose Cash Modal -->
   <div id="DayCloseModel" class="myModal">
     <div id="DayCloseModelContent" class="modalContent">
+      <button class="close-btn" onclick="closeDialog()">×</button>
       <h3>DayClose Cash Details: </h3>
       <div class="form-row">
         <label for="yesterdayCash">Yesterday Cash in Box:</label>
@@ -327,8 +359,22 @@
         <input type="text" id="cashInBoxConfirm">
       </div>
       <div class="buttonRow">
-        <button onclick="closeDayCloseDialog()" class="gray-button">Cancel</button>
+        <button onclick="closeDialog()" class="gray-button">Cancel</button>
         <button onclick="submitDayClose()">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search Table Modal -->
+  <div id="searchTableModel" class="myModal">
+    <div id="searchTableModelContent" class="modalContent">
+      <button class="close-btn" onclick="closeDialog()">×</button>
+      <div class="buttonRow">
+        <button onclick="closeDialog()" class="gray-button">Close</button>
+      </div>
+      <div id="searchTableHolder"> </div>
+      <div class="buttonRow">
+        <button onclick="closeDialog()" class="gray-button">Close</button>
       </div>
     </div>
   </div>

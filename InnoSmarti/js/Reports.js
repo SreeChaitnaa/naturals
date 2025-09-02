@@ -870,6 +870,7 @@ function goto_selection(reportType, search_value){
   fetchReport();
   tableSearch.value = search_value;
   dt_table.search(search_value).draw();
+//  searchTableModel.style.display = "block";
 }
 
 function send_whatsapp(text, phone_num=null){
@@ -1226,12 +1227,8 @@ function openUpdateDialog() {
   updateModel.style.display = "block";
 }
 
-function closeUpdate() {
-  updateModel.style.display = "none";
-}
-
 function submitUpdate() {
-  closeUpdate();
+  closeDialog();
   send_update(false, true, noOfClients.value, appointments.value)
 }
 
@@ -1242,10 +1239,6 @@ function openCallbackDialog(phone, name) {
   callBackStatus.value = "Appointment Booked";
   callBackNotes.value = "";
   CallBackModel.style.display = "block";
-}
-
-function closeCallbackUpdate() {
-  CallBackModel.style.display = "none";
 }
 
 function updateDataInDB(table_name, db_obj) {
@@ -1291,17 +1284,13 @@ function openDayCloseDialog() {
   DayCloseModel.style.display = "block";
 }
 
-function closeDayCloseDialog() {
-  DayCloseModel.style.display = "none";
-}
-
 function submitDayClose() {
   if(cashInBoxConfirm.value != cashInBox.value) {
     alert("Please confirm cash in box matched with expected - " + cashInBox.value);
     cashInBoxConfirm.value = "";
     return;
   }
-  closeDayCloseDialog();
+  closeDialog();
   send_update(false, false);
 }
 
@@ -1340,7 +1329,7 @@ function submitCallbackUpdate() {
   call_backs["config_value"][callBackPhone.value] = update_entry
   console.log(call_backs);
   updateCallBackInDB();
-  closeCallbackUpdate();
+  closeDialog();
   fetchReport();
 }
 
@@ -1386,6 +1375,10 @@ function export_as_csv() {
 
   // trigger the CSV export
   dt_table.button(0).trigger();
+}
+
+function closeDialog() {
+  document.querySelectorAll(".myModal").forEach(modal => {modal.style.display = "none"});
 }
 
 window.onclick = function(event) {
