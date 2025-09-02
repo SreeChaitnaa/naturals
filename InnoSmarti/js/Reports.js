@@ -6,19 +6,22 @@ const shopConfig = {
     "url": "https://tns.marammuralidhar3234.workers.dev/rest/",
     "encKey": "ki62s6ktea89p72RjFNDDrqVjKrUUT9i7d78cup3kqCEK1KvuFaLDkY7PdjUrnT5S5eQzFF2/9FGDGrt3SflYA==",
     "name": "Thanisandra",
-    "whatsapp_number": ["918722036021", "917829347636"]
+    "whatsapp_number": ["8722036021"],
+//    "whatsapp_number": ["8722036021", "7829347636"]
   },
   "JKR": {
     "url": "https://jkr.marammuralidhar3234.workers.dev/rest/",
     "encKey": "Fr4R+Qu6i1p+hdfcmDrm4bywTHY/b863GlNnuA9p9uo3x5nnahlJqvssPOJRt1BcDXLw34a2rIrcT81DmMe7xQ==",
     "name": "Jakkur",
-    "whatsapp_number": ["919743823134", "917892256106"]
+    "whatsapp_number": ["9743823134"]
+//    "whatsapp_number": ["9743823134", "7892256106"]
   },
   "HRLR": {
     "url": "https://hrlr.marammuralidhar3234.workers.dev/rest/",
     "encKey": "bKuxUJfSNeOtp67m3v4WC39P+xPn/7a5QJNCYF1ogTW0OXSgOaxpNb+jvSBQq+93kZGHU3Bj87QFi9FAk7No+g==",
     "name": "Haralur",
-    "whatsapp_number": ["918073959696", "919663233832"]
+    "whatsapp_number": ["8073959696"]
+//    "whatsapp_number": ["8073959696", "9663233832"]
   }
 };
 
@@ -839,18 +842,24 @@ function goto_selection(reportType, search_value){
 }
 
 function send_whatsapp(text, phone_num=null){
-//  fetch("http://localhost:3000/send", {
-//    method: "POST",
-//    headers: {"Content-Type": "application/json"},
-//    body: JSON.stringify({"number":phone_num, "message":text}) // full record with updated field
-//  })
-//  .then(response => alert(response.json()))
-  wa_link = "https://api.whatsapp.com/send/?";
-    if(phone_num != null){
-      wa_link = wa_link + "phone=91" + phone_num + "&";
+  fetch("http://localhost:3000/send", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({"number":"91"+phone_num, "message":text}) // full record with updated field
+  })
+  .then(response => {
+    if(response.status === 200){
+      alert(response.json())
     }
-  wa_link = wa_link + "text=" + text.replace(/ /g, "%20").replace(/\n/g, "%0a");
-  window.open(wa_link, '_blank');
+    else{
+      wa_link = "https://api.whatsapp.com/send/?";
+        if(phone_num != null){
+          wa_link = wa_link + "phone=91" + phone_num + "&";
+        }
+      wa_link = wa_link + "text=" + text.replace(/ /g, "%20").replace(/\n/g, "%0a");
+      window.open(wa_link, '_blank');
+    }
+  });
 }
 
 
@@ -1176,8 +1185,8 @@ function send_update(nrs_only=false, is_update=true, client_count=0, appointment
     update_str = is_update ? "Update" : "Closing";
     summary += update_str + " Time: " + get_current_time()+ "\n";
   }
-  //  shopConfig[shopSelect.value].whatsapp_number.forEach(phone_num => { send_whatsapp(summary, phone_num); });
-  send_whatsapp(summary);
+  shopConfig[shopSelect.value].whatsapp_number.forEach(phone_num => { send_whatsapp(summary, phone_num); });
+  //  send_whatsapp(summary);
 }
 
 function openUpdateDialog() {
