@@ -447,6 +447,8 @@ function calcTickets(tickets) {
 }
 
 function is_call_back_on_hold(call_back_data){
+  const today = get_ist_date();
+  today_string = today.toISOString().split('T')[0];
   return never_call_again_list.includes(call_back_data.Status) || (call_back_data.DueDate > today_string);
 }
 
