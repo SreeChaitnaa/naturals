@@ -851,14 +851,17 @@ function send_whatsapp(text, phone_num=null){
     if(response.status === 200){
       alert(`Sent Whatsapp to ${phone_num} Successfully`);
     }
-    else{
-      wa_link = "https://api.whatsapp.com/send/?";
-        if(phone_num != null){
-          wa_link = wa_link + "phone=91" + phone_num + "&";
-        }
-      wa_link = wa_link + "text=" + text.replace(/ /g, "%20").replace(/\n/g, "%0a");
-      window.open(wa_link, '_blank');
+    else {
+      alert(`Error while sending Whatsapp update - ${response.status}`);
     }
+  })
+  .catch(err => {
+    wa_link = "https://api.whatsapp.com/send/?";
+  //    if(phone_num != null){
+  //      wa_link = wa_link + "phone=91" + phone_num + "&";
+  //    }
+    wa_link = wa_link + "text=" + text.replace(/ /g, "%20").replace(/\n/g, "%0a");
+    window.open(wa_link, '_blank');
   });
 }
 
