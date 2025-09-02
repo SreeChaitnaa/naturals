@@ -1,40 +1,78 @@
 const { Client, LocalAuth } = require("whatsapp-web.js");
-const express = require("express");
 const qrcode = require("qrcode-terminal");
+const express = require("express");
 const cors = require("cors");
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
-// Allow requests from any origin (or restrict to your domain)
-app.use(cors({
-  origin: "*",          // or e.g. "https://myfrontend.com"
-  methods: ["POST", "GET"],
-}));
-
+// WhatsApp client
 const client = new Client({
-  authStrategy: new LocalAuth()
+  authStrategy: new LocalAuth({ clientId: "my-whatsapp-bot" }),
+  puppeteer: {
+    headless: true,   // change to false to see browser
+    args: ["--no-sandbox", "--disable-setuid-sandbox"]
+  }
 });
 
+// WhatsApp Events
 client.on("qr", (qr) => {
-  console.log("Scan this QR to log in:");
+  console.log("📱 Scan this QR:");
   qrcode.generate(qr, { small: true });
 });
 
-client.on("ready", () => {
-  console.log("WhatsApp client is ready!");
+client.on("authenticated", () => {
+  console.log("✅ Authenticated successfully!");
 });
 
+client.on("ready", () => {
+  console.log("🎉 WhatsApp client is ready!");
+});
+
+client.on("disconnected", (reason) => {
+  console.log("⚠️ Client disconnected:", reason);
+});
+
+// Express API
 app.post("/send", async (req, res) => {
-  const { number, message } = req.body;
   try {
-    await client.sendMessage(number + "@c.us", message);
+    const { number, message } = req.body;
+    if (!number || !message) {
+      return res.status(400).json({ status: "error", error: "Missing number or message" });
+    }
+
+    const chatId = number + "@c.us"; // for normal numbers
+    await client.sendMessage(chatId, message);
+
     res.json({ status: "success", number, message });
+  } catch (err) {
+    console.error("❌ Error sending:", err);
+    res.status(500).json({ status: "error", error: err.message });
+  }
+});
+
+// Reset session endpoint
+app.post("/reset-session", async (req, res) => {
+  try {
+    const fs = require("fs");
+    const path = require("path");
+    const dir = path.join(__dirname, ".wwebjs_auth");
+    if (fs.existsSync(dir)) {
+      fs.rmSync(dir, { recursive: true, force: true });
+      res.json({ status: "success", message: "Session reset. Restart service and re-scan QR." });
+    } else {
+      res.json({ status: "success", message: "No session found to reset." });
+    }
   } catch (err) {
     res.status(500).json({ status: "error", error: err.message });
   }
 });
 
-client.initialize();
-app.listen(3000, () => console.log("Server running on http://localhost:3000"));
+// Start server
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 API server running at http://localhost:${PORT}`);
+});
 
+client.initialize();
