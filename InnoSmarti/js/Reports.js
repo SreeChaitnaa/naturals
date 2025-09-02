@@ -849,7 +849,7 @@ function send_whatsapp(text, phone_num=null){
   })
   .then(response => {
     if(response.status === 200){
-      alert(response.json())
+      alert(JSON.stringify(response.json()));
     }
     else{
       wa_link = "https://api.whatsapp.com/send/?";
