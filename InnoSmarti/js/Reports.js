@@ -862,7 +862,6 @@ function send_whatsapp(text, phone_num=null){
   });
 }
 
-
 function fetchReport() {
   const fromDate = fromDatePicker.value;
   const toDate = toDatePicker.value;

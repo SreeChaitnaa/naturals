@@ -122,7 +122,7 @@ class RestDB:
         message = (f"Hi {name},\n"
                    f"Thank you for choosing {self.shop_name} for your pampering session!\n"
                    f"We’d truly appreciate it if you could share your feedback here: {self.shop_review_link}\n\n"
-                   f"Looking forward to seeing you again—just call or WhatsApp us to book your next session! ")
+                   f"Looking forward to seeing you again — just call or WhatsApp us to book your next session! ")
         payload = json.dumps({"number":f"91{phone}", "message":message})
         return requests.post("http://localhost:3000/send", payload, headers={"Content-Type": "application/json"})
 
