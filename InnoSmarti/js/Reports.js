@@ -72,7 +72,10 @@ table_click_links = {
   },
   "detailedAllBills": {
     "Phone": "detailedAllBills"
-  }
+  },
+  "callBacksOnHold": {
+    "Phone": "detailedAllBills"
+  },
 }
 
 const numericColumns = ['Price', 'Discount', 'NetSale', 'Tax', 'Gross', 'ABV', 'ASB', 'Cash', 'UPI', 'Card', 'TotalNetSale'];
