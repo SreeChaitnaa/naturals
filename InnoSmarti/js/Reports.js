@@ -6,15 +6,13 @@ const shopConfig = {
     "url": "https://tns.marammuralidhar3234.workers.dev/rest/",
     "encKey": "ki62s6ktea89p72RjFNDDrqVjKrUUT9i7d78cup3kqCEK1KvuFaLDkY7PdjUrnT5S5eQzFF2/9FGDGrt3SflYA==",
     "name": "Thanisandra",
-//    "whatsapp_number": ["8722036021"],
     "whatsapp_number": ["8722036021", "7829347636"]
   },
   "JKR": {
     "url": "https://jkr.marammuralidhar3234.workers.dev/rest/",
     "encKey": "Fr4R+Qu6i1p+hdfcmDrm4bywTHY/b863GlNnuA9p9uo3x5nnahlJqvssPOJRt1BcDXLw34a2rIrcT81DmMe7xQ==",
     "name": "Jakkur",
-    "whatsapp_number": ["9743823134"]
-//    "whatsapp_number": ["9743823134", "7892256106"]
+    "whatsapp_number": ["9743823134", "7892256106"]
   },
   "HRLR": {
     "url": "https://hrlr.marammuralidhar3234.workers.dev/rest/",
