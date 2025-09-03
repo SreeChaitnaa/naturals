@@ -44,44 +44,46 @@ table_columns = {
 
 table_click_links = {
   "callBacks": {
-    "Phone": "detailedAllBills"
+    "Phone": ["detailedAllBills", "Phone"]
   },
   "employeeSales": {
-    "Name": "services"
+    "Name": ["services", "EmpName"]
   },
   "employeeSectionSales": {
-    "Name": "services"
+    "Name": ["services", "EmpName"]
   },
   "serviceWiseSales": {
-    "Name": "services",
-    "Section": "services"
+    "Name": ["services", "Name"],
+    "Section": ["services", "Section"]
   },
   "sectionWiseSales": {
-    "Name": "services"
+    "Name": ["services", "Section"]
   },
   "daywiseSales": {
-    "Date": "detailedBills"
+    "Date": ["detailedBills", "Date"]
   },
   "detailedBills": {
-    "TicketID": "services",
-    "Phone": "detailedAllBills"
+    "TicketID": ["services", "TicketID"],
+    "Phone": ["detailedAllBills", "Phone"]
   },
   "services": {
-    "Phone": "detailedAllBills"
+    "Phone": ["detailedAllBills", "Phone"],
+    "Section": ["services", "Section"]
   },
   "bills": {
-    "TicketID": "services",
-    "Phone": "detailedAllBills"
+    "TicketID": ["services", "TicketID"],
+    "Phone": ["detailedAllBills", "Phone"]
   },
   "detailedAllBills": {
-    "Phone": "detailedAllBills"
+    "Phone": ["detailedAllBills", "Phone"]
   },
   "callBacksOnHold": {
-    "Phone": "detailedAllBills"
+    "Phone": ["detailedAllBills", "Phone"]
   },
 }
 
 const numericColumns = ['Price', 'Discount', 'NetSale', 'Tax', 'Gross', 'ABV', 'ASB', 'Cash', 'UPI', 'Card', 'TotalNetSale'];
+const excludeColumnsInSearchTable = ['Tax', 'Gross', 'PaymentType', 'Cash', 'UPI', 'Card'];
 
 employee_name_map = {
   "Guru": "Guru prasad",
@@ -292,7 +294,6 @@ function login() {
     const db_apiKey = decryptApiKey(encKey, passwd);
 
     if (!db_apiKey) throw "Bad password";
-    console.log(db_apiKey)
     db_headers = {
       headers: {
         "Content-Type": "application/json",
@@ -301,8 +302,6 @@ function login() {
       }
     }
     // Test fetch
-
-    console.log(db_headers)
     fetch(apiUrl, db_headers)
     .then(res => {
       console.log(res);
@@ -488,7 +487,6 @@ function formatReportData(rawData, reportType) {
       row.BillsSummary = row.BillsSummary.join("<br />");
       if (row.Phone in call_backs["config_value"]) {
         call_back_data = call_backs["config_value"][row.Phone]
-        console.log("Call back exists for ", row.Phone, call_back_data);
         if (is_call_back_on_hold(call_back_data)) {
           return;
         }
@@ -720,7 +718,6 @@ function formatReportData(rawData, reportType) {
   }
   else {
     if (["serviceWiseSales", "sectionWiseSales"].includes(reportType)){
-      console.log(rows);
       rows.forEach(row => {
         row.Providers = Array.from(row.Providers).join("/");
         row.Services = Array.from(row.Services).join("/");
@@ -742,18 +739,37 @@ function formatReportData(rawData, reportType) {
   return rows;
 }
 
-function fill_table_with_data(reportType)
+function get_empty_table(table_id){
+  return '<table id="' + table_id + '" class="display"><thead><tr></tr></thead><tbody></tbody></table>'
+}
+
+function fill_table_with_data(reportType, in_dialog=false, search_key=null, search_value=null)
 {
   dataTable.style.display = 'block';
   chartsDiv.style.display = 'none';
-  rows = formatReportData(last_data, reportType);
+  rows = formatReportData(reportType.includes("All") ? full_data : last_data, reportType);
   current_rows = [...rows];
-  tableHolder.innerHTML = '<table id="dataTable" class="display"><thead><tr></tr></thead><tbody></tbody></table>';
-  data_keys = table_columns[reportType];
+  dialog_rows = [];
+  if(in_dialog) {
+    searchTableHolder.innerHTML = get_empty_table("dataTableInDialog");
+    rows.forEach(row => {
+      if(row[search_key] == search_value){
+        dialog_rows.push(row);
+      }
+    });
+  }
+  else {
+    tableHolder.innerHTML = get_empty_table("dataTable");
+  }
+  data_keys = [];
+  table_columns[reportType].forEach(col_name => {
+    if (in_dialog && excludeColumnsInSearchTable.includes(col_name)) { return; }
+    data_keys.push(col_name);
+  });
   if (!non_sum_row_reports.includes(reportType)) {
     sum_row = {};
     data_keys.forEach(dk => { sum_row[dk] = 0 });
-    rows.forEach(item => {
+    (in_dialog ? dialog_rows : rows).forEach(item => {
       data_keys.forEach(dk => {
         dk_value = item[dk]
         if (typeof dk_value === 'number' && !isNaN(dk_value)) {
@@ -776,19 +792,21 @@ function fill_table_with_data(reportType)
       }
       sum_row[dk] = dk_value;
     });
-    current_rows.push(sum_row);
+    (in_dialog ? dialog_rows : current_rows).push(sum_row);
   }
 
+  dt_id = in_dialog ? "#dataTableInDialog" : '#dataTable';
+
   // If DataTable already exists, destroy it
-  if ($.fn.DataTable.isDataTable('#dataTable')) {
-      $('#dataTable').DataTable().clear().destroy();
+  if ($.fn.DataTable.isDataTable(dt_id)) {
+      $(dt_id).DataTable().clear().destroy();
   }
 
   // Reinitialize DataTables
   tableSearch.value = "";
-  dt_table = $('#dataTable').DataTable({
+  dt_table = $(dt_id).DataTable({
     destroy: true, // reset old table
-    data: current_rows,    // array of objects
+    data: in_dialog ? dialog_rows : current_rows,    // array of objects
     columns: data_keys.map(key => ({
       data: key,
       title: key,
@@ -811,6 +829,10 @@ function fill_table_with_data(reportType)
             return Number(data).toFixed(2);
           }
 
+          if(in_dialog){
+            return data;
+          }
+
           if(row[data_keys[0]] == "Total"){
             return data;
           }
@@ -825,9 +847,10 @@ function fill_table_with_data(reportType)
           }
 
           if(table_click_links[reportType]){
-            if(table_click_links[reportType][colName]){
+            let goto_data = table_click_links[reportType][colName]
+            if(goto_data){
               return `<span style="cursor:pointer; color:blue;"
-                       onclick="goto_selection('${table_click_links[reportType][colName]}','${data}')">${data}</span>`;
+                       onclick="open_selection('${goto_data[0]}','${goto_data[1]}','${data}')">${data}</span>`;
             }
           }
 
@@ -860,17 +883,23 @@ function fill_table_with_data(reportType)
     }
   });
 
-  $('#tableSearch').on('keyup', function() {
-    dt_table.search(this.value).draw();
-  });
+  if(! in_dialog){
+    $('#searchTableSearch').on('keyup', function() {
+      dt_table.search(this.value).draw();
+    });
+  } else {
+    $('#tableSearch').on('keyup', function() {
+      dt_table.search(this.value).draw();
+    });
+  }
 }
 
-function goto_selection(reportType, search_value){
-  reportTypeSelector.value = reportType;
-  fetchReport();
-  tableSearch.value = search_value;
-  dt_table.search(search_value).draw();
-//  searchTableModel.style.display = "block";
+function open_selection(reportType, search_key, search_value){
+  searchTableSearch.value = "";
+  fill_table_with_data(reportType, true, search_key, search_value);
+  report_name = reportTypeSelector.querySelector(`option[value="${reportType}"]`).text;
+  searchDetailsSpan.innerHTML = `Showing details for ${search_key}:<b>${search_value}</b> from ${report_name}`;
+  searchTableModel.style.display = "block";
 }
 
 function send_whatsapp(text, phone_num=null){
@@ -1081,7 +1110,6 @@ function getRemainingDates(dateStr) {
 }
 
 function createReportChart(canvasId, labels, title, data_points) {
-  console.log(data_points);
   const existingChart = Chart.getChart(canvasId); // use canvas ID here
 
   if (existingChart) {
@@ -1208,10 +1236,6 @@ function send_update(nrs_only=false, is_update=true, client_count=0, appointment
       today_day_sales = full_data.filter(item => item.datenum == dayCloseDateNum)[0];
       today_day_sales["cashdata"] = cash_data;
       updateDataInDB("daysales", today_day_sales);
-
-      console.log(dayCloseDateNum);
-      console.log(cash_data);
-      console.log(today_day_sales);
     }else {
       summary += "Clients In Salon: " + client_count + "\n";
       summary += "Appointments:" + appointments + "\n";
@@ -1327,7 +1351,6 @@ function submitCallbackUpdate() {
     "UpdatedDate": get_ist_date().toISOString().split('T')[0]
   }
   call_backs["config_value"][callBackPhone.value] = update_entry
-  console.log(call_backs);
   updateCallBackInDB();
   closeDialog();
   fetchReport();
@@ -1379,6 +1402,7 @@ function export_as_csv() {
 
 function closeDialog() {
   document.querySelectorAll(".myModal").forEach(modal => {modal.style.display = "none"});
+  fetchReport();
 }
 
 window.onclick = function(event) {

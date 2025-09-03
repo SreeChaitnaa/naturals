@@ -87,6 +87,28 @@
       border-radius: 8px;
       width: 500px;
       text-align: left;
+      max-height: 90%;  /* don't exceed 90% of screen height */
+      overflow-y: auto; /* scroll vertically if needed */
+      overflow-x: auto; /* scroll horizontally if DataTable is wide */
+      box-sizing: border-box;
+    }
+
+    .searchTableModalContent {
+      margin: 5% auto;
+      width: 70%;
+    }
+
+    .modalHeader {
+      flex-shrink: 0; /* prevent shrinking */
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .modalBody {
+      flex: 1 1 auto;          /* take remaining height */
+      overflow-x: auto;        /* horizontal scroll if table too wide */
+      overflow-y: auto;        /* vertical scroll if table too tall */
+      padding: 10px;
     }
 
     .form-row {
@@ -210,13 +232,12 @@
       color: #333;
       font-size: 20px;
       font-weight: bold;
-
       display: flex;              /* center X horizontally + vertically */
       align-items: center;
       justify-content: center;
-
       cursor: pointer;
       transition: background 0.2s;
+      float: right;
     }
 
     .close-btn:hover {
@@ -367,15 +388,21 @@
 
   <!-- Search Table Modal -->
   <div id="searchTableModel" class="myModal">
-    <div id="searchTableModelContent" class="modalContent">
-      <button class="close-btn" onclick="closeDialog()">×</button>
-      <div class="buttonRow">
-        <button onclick="closeDialog()" class="gray-button">Close</button>
+    <div id="searchTableModelContent" class="modalContent searchTableModalContent">
+
+      <!-- Fixed Header -->
+      <div class="modalHeader">
+        <span id="searchDetailsSpan">Searched for : <b>Phone</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <label for="searchTableSearch">Filter Again:</label>
+        <input type="text" id="searchTableSearch">
+        <button class="close-btn" onclick="closeDialog()">×</button>
       </div>
-      <div id="searchTableHolder"> </div>
-      <div class="buttonRow">
-        <button onclick="closeDialog()" class="gray-button">Close</button>
+
+      <!-- Scrollable Content -->
+      <div class="modalBody">
+        <div id="searchTableHolder"></div>
       </div>
+
     </div>
   </div>
 
