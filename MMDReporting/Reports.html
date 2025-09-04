@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shop Sales Report</title>
+  <style>
+    #dataDiv { display: none;}
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f4f4f4; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    h2, h3 {
+      margin: 0;   /* removes top and bottom margin */
+    }
+
+    /* Fullscreen overlay */
+    #spinnerOverlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(255, 255, 255, 0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    /* Spinner style */
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 6px solid #ccc;
+      border-top: 6px solid #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .filterRow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 15px 0;
+    }
+
+    .leftFilters {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .myModal {
+      display: none; /* hidden by default */
+      position: fixed;
+      z-index: 1;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.4);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .modalContent {
+      position: relative;
+      background: #fff;
+      margin: 15% auto;
+      padding: 20px;
+      border-radius: 8px;
+      width: 500px;
+      text-align: left;
+      max-height: 90%;  /* don't exceed 90% of screen height */
+      overflow-y: auto; /* scroll vertically if needed */
+      overflow-x: auto; /* scroll horizontally if DataTable is wide */
+      box-sizing: border-box;
+    }
+
+    .searchTableModalContent {
+      margin: 5% auto;
+      width: 70%;
+    }
+
+    .modalHeader {
+      flex-shrink: 0; /* prevent shrinking */
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .modalBody {
+      flex: 1 1 auto;          /* take remaining height */
+      overflow-x: auto;        /* horizontal scroll if table too wide */
+      overflow-y: auto;        /* vertical scroll if table too tall */
+      padding: 10px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 200px 1fr; /* label width + input width */
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .form-row label {
+      text-align: right; /* keeps labels aligned */
+      margin-right: 10px;
+    }
+
+    .form-row input,
+    .form-row select {
+      width: 200px;
+      margin: 8px 0;
+      padding: 6px;
+    }
+
+    .buttonRow {
+      display: flex;
+      justify-content: flex-end; /* right aligned */
+      gap: 10px; /* space between buttons */
+      margin-top: 12px;
+    }
+
+    button {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 10px; /* rounded edges */
+      cursor: pointer;
+      font-size: 14px;
+      background-color: #4CAF50;
+    }
+
+    button:hover {
+      opacity: 0.9;
+      background-color: #ccc;
+      color: #000;
+    }
+
+    .gray-button {
+      background-color: #ccc;
+      color: white;
+    }
+
+    .menu {
+      position: relative;
+      display: inline-block;
+    }
+
+    .menu-button {
+      font-size: 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      border-radius: 0px;
+    }
+
+    .menu-content {
+      display: none;
+      position: absolute;
+      right: 0;
+      background: #fff;
+      min-width: 140px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      border-radius: 6px;
+      z-index: 1;
+    }
+
+    .menu-content button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      background: none;
+      text-align: left;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 0px;
+    }
+
+    .menu-content button:hover {
+      background: #eee;
+    }
+
+    .show {
+      display: block;
+    }
+
+    .noBorderTable,
+    .noBorderTable th,
+    .noBorderTable td {
+      border: none;
+      border-collapse: collapse;
+    }
+
+    .noBorderTable td {
+      padding: 15px;
+    }
+
+    #dataTable tfoot tr {
+      background-color: grey;
+      font-weight: bold;
+      color: white;
+    }
+
+    canvas {
+      height: 400px
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 24px;
+      height: 26px;
+      border: none;
+      border-radius: 50%;
+      background: #eee;
+      color: #333;
+      font-size: 20px;
+      font-weight: bold;
+      display: flex;              /* center X horizontally + vertically */
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s;
+      float: right;
+    }
+
+    .close-btn:hover {
+      background: #ccc;
+    }
+
+
+  </style>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+
+
+  <script src="Reports.js"></script>
+</head>
+<body>
+  <!-- Login Section -->
+  <div id="loginDiv">
+    <h2>Shop Login</h2>
+    <br /><br />
+    <div id="shopSelectDiv">
+      <label for="shopSelect">Select Shop:</label>
+      <select id="shopSelect"></select>
+      <br /><br />
+    </div>
+    <label for="password">Password:</label>
+    <input type="password" id="password">
+    <br /><br />
+    <button onclick="login()">Login</button>
+    <p id="loginError" style="color:red;"></p>
+  </div>
+
+  <!-- Spinner Overlay -->
+  <div id="spinnerOverlay">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Update Send Modal -->
+  <div id="updateModel" class="myModal">
+    <div id="updateModelContent" class="modalContent">
+      <button class="close-btn" onclick="closeDialog()">×</button>
+      <h3>Current Status: </h3>
+      <div class="form-row">
+        <label for="noOfClients">No of Clients: </label>
+        <input type="text" id="noOfClients">
+      </div>
+      <div class="form-row">
+        <label for="appointments">Appointments: </label>
+        <input type="text" id="appointments">
+      </div>
+      <div class="buttonRow">
+        <button onclick="closeDialog()" class="gray-button">Cancel</button>
+        <button onclick="submitUpdate()">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CallBack Send Modal -->
+  <div id="CallBackModel" class="myModal">
+    <div id="CallBackModelContent" class="modalContent">
+      <button class="close-btn" onclick="closeDialog()">×</button>
+      <h3>Call back Details: </h3>
+      <div class="form-row">
+        <label for="callBackPhone">Phone: </label>
+        <input type="text" id="callBackPhone" disabled>
+      </div>
+      <div class="form-row">
+        <label for="callBackName">Name: </label>
+        <input type="text" id="callBackName" disabled>
+      </div>
+      <div class="form-row">
+        <label for="callBackStatus">Status: </label>
+        <select id="callBackStatus" class="spacy-input">
+          <option>Appointment Booked</option>
+          <option>Call Again</option>
+          <option>Not Picked</option>
+          <option>Send Offers</option>
+          <option>Not Happy</option>
+          <option>Moved Out of Town</option>
+          <option>Never Call Again</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label for="callBackDueDate">Due Date: </label>
+        <input type="date" id="callBackDueDate">
+      </div>
+      <div class="form-row">
+        <label for="callBackNotes">Notes: </label>
+        <input type="text" id="callBackNotes">
+      </div>
+      <div class="buttonRow">
+        <button onclick="closeDialog()" class="gray-button">Cancel</button>
+        <button onclick="submitCallbackUpdate()">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DayClose Cash Modal -->
+  <div id="DayCloseModel" class="myModal">
+    <div id="DayCloseModelContent" class="modalContent">
+      <button class="close-btn" onclick="closeDialog()">×</button>
+      <h3>DayClose Cash Details: </h3>
+      <div class="form-row">
+        <label for="yesterdayCash">Yesterday Cash in Box:</label>
+        <input type="text" id="yesterdayCash" disabled>
+      </div>
+      <div class="form-row">
+        <label for="todayCash">Today Cash:</label>
+        <input type="text" id="todayCash" disabled>
+      </div>
+      <div class="form-row">
+        <label for="cashGiven">Cash Hand-overed:</label>
+        <input type="text" class="spacy-input cash-trigger" id="cashGiven">
+      </div>
+      <div class="form-row">
+        <label for="cashGivenTo">Cash Hand-overed To:</label>
+        <input type="text" id="cashGivenTo">
+      </div>
+      <div class="form-row">
+        <label for="changeMissed">Change Missed:</label>
+        <input type="text" class="spacy-input cash-trigger" id="changeMissed">
+      </div>
+      <div class="form-row">
+        <label for="cashInBox">Cash in Box:</label>
+        <input type="text" id="cashInBox" disabled>
+      </div>
+      <div class="form-row">
+        <label for="cashInBoxConfirm">Cash in Box Confirmed:</label>
+        <input type="text" id="cashInBoxConfirm">
+      </div>
+      <div class="buttonRow">
+        <button onclick="closeDialog()" class="gray-button">Cancel</button>
+        <button onclick="submitDayClose()">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search Table Modal -->
+  <div id="searchTableModel" class="myModal">
+    <div id="searchTableModelContent" class="modalContent searchTableModalContent">
+
+      <!-- Fixed Header -->
+      <div class="modalHeader">
+        <span id="searchDetailsSpan">Searched for : <b>Phone</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <label for="searchTableSearch">Filter Again:</label>
+        <input type="text" id="searchTableSearch">
+        <button class="close-btn" onclick="closeDialog()">×</button>
+      </div>
+
+      <!-- Scrollable Content -->
+      <div class="modalBody">
+        <div id="searchTableHolder"></div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- Data Section -->
+  <div id="dataDiv">
+    <h2 id="shopName"></h2>
+    <!-- Filter Row -->
+    <div class="filterRow">
+      <div class="leftFilters">
+        <label for="fromDatePicker">From Date:</label>
+        <input type="date" id="fromDatePicker" class="report-trigger">&nbsp;&nbsp;&nbsp;
+
+        <label for="toDatePicker">To Date:</label>
+        <input type="date" id="toDatePicker" class="report-trigger">&nbsp;&nbsp;&nbsp;
+
+        <!-- Report Type Dropdown -->
+        <label for="reportTypeSelector">Report:</label>
+        <select id="reportTypeSelector" class="report-trigger">
+          <option value="summary">Summary</option>
+          <option value="callBacks">Call Backs</option>
+          <option value="bills">Bills</option>
+          <option value="detailedBills">Detailed Bills</option>
+          <option value="services">Services</option>
+          <option value="employeeSales">Employee Sales</option>
+          <option value="employeeSectionSales">Employee Section Sales</option>
+          <option value="serviceWiseSales">Service Wise Sales</option>
+          <option value="sectionWiseSales">Section Wise Sales</option>
+          <option value="daywiseSales">DayWise Sales</option>
+          <option value="monthlySales">Monthly Sales</option>
+          <option value="daywiseSplit">DayWise Split</option>
+          <option value="monthlySplit">Monthly Split</option>
+          <option value="detailedAllBills">Detailed All Bills</option>
+          <option value="callBacksOnHold">Call Backs On Hold</option>
+          <option value="daywiseNRSOnly">DayWise NRSOnly</option>
+          <option value="monthlyNRSOnly">Monthly NRSOnly</option>
+          <option value="summaryNRSOnly">Summary NRSOnly</option>
+          <option value="dailyCash">Daily Cash</option>
+        </select>&nbsp;&nbsp;&nbsp;
+
+        <div id="searchDiv">
+          <label for="tableSearch">Search:</label>
+          <input type="text" id="tableSearch">
+        </div>
+      </div>
+
+      <div class="menu">
+        <button class="menu-button" onclick="toggleMenu()">⋮</button>
+        <div id="dropdownMenu" class="menu-content">
+          <button onclick="openUpdateDialog()">Send Update</button>
+          <button onclick="send_update(true, false)" id="nrsDayClose">NRS DayClose</button>
+          <button onclick="openDayCloseDialog()">DayClose</button>
+          <button onclick="export_as_csv()" style="display:none" id="btn_export_csv">Export as CSV</button>
+        </div>
+      </div>
+    </div>
+    <hr>
+
+    <div id="reportOutput">
+      <table id="chartsDiv" class="noBorderTable">
+        <tr>
+          <td><canvas id="dailyChart"></canvas></td>
+          <td><canvas id="growthChart"></canvas></td>
+          <td><canvas id="clientsChart"></canvas></td>
+        </tr>
+        <tr>
+          <td><canvas id="empSaleChartTop"></canvas></td>
+          <td><canvas id="empSaleChartLow"></canvas></td>
+          <td><canvas id="callBackChart"></canvas></td>
+        </tr>
+        <tr>
+          <td><canvas id="sectionSaleChartTop"></canvas></td>
+          <td><canvas id="sectionSaleChartLow"></canvas></td>
+          <td></td>
+        </tr>
+      </table>
+      <div id="tableHolder">
+        <table id="dataTable" class="display" style="width:100%">
+          <thead>
+            <tr></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
