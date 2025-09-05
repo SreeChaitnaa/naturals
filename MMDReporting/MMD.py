@@ -84,9 +84,9 @@ def main():
             f"--app={chrome_url}"
         ]
     elif system == "Darwin":  # macOS
+        chrome_binary = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
         chrome_cmd = [
-            "open", "-a", "Google Chrome",
-            "--args",
+            chrome_binary,
             f"--user-data-dir={chrome_profile}",
             f"--app={chrome_url}"
         ]
