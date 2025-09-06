@@ -89,7 +89,7 @@ def main():
     if system == "Windows":
         chrome_cmd = [
             "cmd", "/c", "start", "chrome",
-            f"--user-data-dir={chrome_profile} --start-maximized",
+            f"--user-data-dir={chrome_profile}",
             f"--app={chrome_url}"
         ]
     elif system == "Darwin":  # macOS
