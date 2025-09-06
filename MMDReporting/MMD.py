@@ -52,7 +52,7 @@ def main():
     # Construct secure Chrome URL
     chrome_url = (
         "https://sreechaitnaa.github.io/naturals/MMDReporting/Reports.html"
-        f"?shop={branch}&psw={branch_password}&from_store=true"
+        f"?shop={branch}^&psw={branch_password}^&from_store=true"
     )
 
     system = platform.system()
@@ -73,8 +73,17 @@ def main():
 
     # Start Node server
     node_cmd = ["node", NODE_ENTRY]
-    subprocess.Popen(node_cmd, cwd=node_dir, shell=False)
+    NODE_FLAGS = subprocess.DETACHED_PROCESS | subprocess.CREATE_NO_WINDOW
+
+    subprocess.Popen(
+        ["node", NODE_ENTRY],
+        cwd=node_dir,
+        creationflags=NODE_FLAGS,
+        close_fds=True
+    )
+
     print(f"✅ Started Node server: {NODE_ENTRY} in {node_dir}")
+    print(f"✅ Chrome launch: {chrome_url}")
 
     # Start Chrome app with profile
     if system == "Windows":
@@ -97,6 +106,7 @@ def main():
     subprocess.Popen(chrome_cmd, shell=False)
     print(f"✅ Launched Chrome app (profile: {chrome_profile})")
     print("🚀 Launcher exiting (services continue running).")
+    exit(0)
 
 if __name__ == "__main__":
     main()

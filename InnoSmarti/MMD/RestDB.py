@@ -119,12 +119,15 @@ class RestDB:
         self.do_rest_call(DBStrings.PUT, config, table=DBStrings.Table_config)
 
     def send_thank_you_whatsapp(self, phone, name):
-        message = (f"Hi {name},\n"
-                   f"Thank you for choosing {self.shop_name} for your pampering session!\n"
-                   f"We’d truly appreciate it if you could share your feedback here: {self.shop_review_link}\n\n"
-                   f"Looking forward to seeing you again — just call or WhatsApp us to book your next session! ")
-        payload = json.dumps({"number":f"91{phone}", "message":message})
-        return requests.post("http://localhost:3000/send", payload, headers={"Content-Type": "application/json"})
+        try:
+            message = (f"Hi {name},\n"
+                       f"Thank you for choosing {self.shop_name} for your pampering session!\n"
+                       f"We’d truly appreciate it if you could share your feedback here: {self.shop_review_link}\n\n"
+                       f"Looking forward to seeing you again — just call or WhatsApp us to book your next session! ")
+            payload = json.dumps({"number":f"91{phone}", "message":message})
+            return requests.post("http://localhost:3000/send", payload, headers={"Content-Type": "application/json"})
+        except Exception as e1:
+            self.logger.error(f"Error while sending WhatsApp - {e1}")
 
     def update_bills(self, bills_to_add, is_mmd, last_bill_key, next_bill_number):
         bills_per_day = {}
