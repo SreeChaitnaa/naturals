@@ -80,8 +80,6 @@ Sub Button1_Click(Optional ByVal print_bill_flag As Boolean = True, Optional ByV
 
     Reset_Bill
 
-    Refresh_Pivot_Tables
-
     If save_bill_flag Then
         Save_Workbook
     End If
@@ -154,8 +152,6 @@ Sub Protect_Sheets()
     Sheets("Invoice").Protect pwd, UserInterfaceOnly:=True
     Sheets("Services").Protect pwd, UserInterfaceOnly:=True
     Sheets("Bills").Protect pwd, UserInterfaceOnly:=True
-    Sheets("DayWise").Protect pwd, UserInterfaceOnly:=True
-    Sheets("EmpSale").Protect pwd, UserInterfaceOnly:=True
     Sheets("VIP Members").Protect pwd, UserInterfaceOnly:=True
 
 End Sub
@@ -166,8 +162,6 @@ Sub UnProtect_Sheets()
     Sheets("Invoice").Unprotect pwd
     Sheets("Services").Unprotect pwd
     Sheets("Bills").Unprotect pwd
-    Sheets("DayWise").Unprotect pwd
-    Sheets("EmpSale").Unprotect pwd
     Sheets("VIP Members").Unprotect pwd
 
 End Sub
@@ -182,120 +176,7 @@ Function FormatString(template As String, ParamArray args() As Variant) As Strin
     FormatString = result
 End Function
 
-Sub SendUpdate()
-    Protect_Sheets
-    Refresh_Pivot_Tables
 
-    Dim dr As Integer
-    Dim today_date As Date
-
-    Dim template As String
-    template = "*3/6pm Update*%0A" & _
-                "Store: Harlur%0A" & _
-                "Total Sales (w/o tax): {0}%0A" & _
-                "No of Bills: {1}%0A" & _
-                "No of Services: {2}%0A" & _
-                "ABV: {3}%0A" & _
-                "Retail Sales: 0%0A" & _
-                "Retail Qty: 0%0A" & _
-                "Google Reviews: 0%0A%0A" & _
-                "No of BSCs: 0%0A" & _
-                "BSC Sales: 0%0A%0A" & _
-                "Combos: 0%0A" & _
-                "Threading, Mask, Exp CleanUp: 0%0A" & _
-                "Waxing, Mask: 0%0A" & _
-                "Global and Root Touchup: 0%0A" & _
-                "PediMani: 0%0A" & _
-                "Haircut, Hair Spa: 0%0A%0A" & _
-                "No of Customers in Store: 0%0A" & _
-                "Pending Appointments - 0%0A" & _
-                "Spot Incentives: 0" & "^&phone=919663233832"
-
-    dr = 1
-    today_date = Date
-    ' today_date = DateAdd("d", -1, Date)
-    Dim DCMsg As String
-
-    While Sheets("DayWise").Cells(dr, 1).Value <> today_date
-        If Sheets("DayWise").Cells(dr, 1).Value = "Grand Total" Then
-            DCMsg = FormatString(template, 0, 0, 0, 0)
-            SendWhatsapp DCMsg
-            Exit Sub
-        End If
-        dr = dr + 1
-    Wend
-
-    cash_value = 0
-    While Sheets("DayWise").Cells(dr, 2).Value <> "Cash" And Sheets("DayWise").Cells(dr, 2).Value <> ""
-        dr = dr + 1
-    Wend
-
-    If Sheets("DayWise").Cells(dr, 2).Value = "Cash" Then
-        cash_value = Sheets("DayWise").Cells(dr, 6).Value
-        dr = dr + 1
-        While Sheets("DayWise").Cells(dr, 2).Value <> ""
-            dr = dr + 1
-        Wend
-    End If
-
-    Dim tSales, tServices, tBills, tABV As Integer
-    tBills = Sheets("DayWise").Cells(dr, 3).Value
-    tServices = Sheets("DayWise").Cells(dr, 4).Value
-    tSales = Sheets("DayWise").Cells(dr, 5).Value
-    tABV = Round(Sheets("DayWise").Cells(dr, 7).Value)
-
-    DCMsg = FormatString(template, tSales, tBills, tServices, tABV)
-
-    Save_Workbook
-    SendWhatsapp "text=" & DCMsg
-End Sub
-
-
-Sub DayClose()
-    Protect_Sheets
-    Refresh_Pivot_Tables
-
-    Dim dr As Integer
-    Dim today_date As Date
-
-    dr = 1
-    today_date = Date
-    ' today_date = DateAdd("d", -1, Date)
-    Dim DCMsg As String
-    DCMsg = "text=Date - " & today_date
-
-    While Sheets("DayWise").Cells(dr, 1).Value <> today_date
-        If Sheets("DayWise").Cells(dr, 1).Value = "Grand Total" Then
-            DCMsg = DCMsg & "%0a%0aNo Sale for the Day.%0a%0aSorry :( :( %0a%0aClosing now, Good Night!!!"
-            SendWhatsapp DCMsg
-            Exit Sub
-        End If
-        dr = dr + 1
-    Wend
-
-    cash_value = 0
-    While Sheets("DayWise").Cells(dr, 2).Value <> "Cash" And Sheets("DayWise").Cells(dr, 2).Value <> ""
-        dr = dr + 1
-    Wend
-
-    If Sheets("DayWise").Cells(dr, 2).Value = "Cash" Then
-        cash_value = Sheets("DayWise").Cells(dr, 6).Value
-        dr = dr + 1
-        While Sheets("DayWise").Cells(dr, 2).Value <> ""
-            dr = dr + 1
-        Wend
-    End If
-
-    DCMsg = DCMsg & "%0aNo of Clients - " & Sheets("DayWise").Cells(dr, 3).Value
-    DCMsg = DCMsg & "%0aNo of Services - " & Sheets("DayWise").Cells(dr, 4).Value
-    DCMsg = DCMsg & "%0a%0aTotal Sales - " & Sheets("DayWise").Cells(dr, 5).Value
-    DCMsg = DCMsg & "%0a%0aCash - " & cash_value
-    DCMsg = DCMsg & "%0aABV - " & Round(Sheets("DayWise").Cells(dr, 7).Value, 2) & "%0a%0aClosing now, Good Night!!!"
-
-    Save_Workbook
-    SendWhatsapp DCMsg
-    Application.Quit
-End Sub
 
 Sub TestWhatsapp()
     Dim mnsg As String
@@ -353,14 +234,6 @@ Sub SendWhatsapp(WaMsg As String)
     'ActiveWorkbook.FollowHyperlink "http://api.whatsapp.com/send?" & WaMsg
 End Sub
 
-
-Sub Refresh_Pivot_Tables()
-    Protect_Sheets
-    Sheets("DayWise").PivotTables("PivotTable4").RefreshTable
-    Sheets("DayWise").PivotTables("PivotTable1").RefreshTable
-    Sheets("EmpSale").PivotTables("PivotTable2").RefreshTable
-    Sheets("EmpSale").PivotTables("PivotTable3").RefreshTable
-End Sub
 
 Public Function CashBack_address() As Range
     Set CashBack_address = Sheets("VIP Members").Range("B:B").Find(Sheets("Invoice").Range("E8").Value)
@@ -487,8 +360,6 @@ Sub Protect_WorkBook()
     End If
     Sheets("Services").Visible = False
     Sheets("Bills").Visible = False
-    Sheets("DayWise").Visible = False
-    Sheets("EmpSale").Visible = False
     Sheets("VIP Members").Visible = False
     Sheets("Wallet").Visible = False
     ActiveWorkbook.Protect Password:="JSR@123", Structure:=True, Windows:=True
@@ -502,8 +373,6 @@ Sub Unprotect_WorkBook()
     ActiveWorkbook.Unprotect Password:="JSR@123"
     Sheets("Services").Visible = True
     Sheets("Bills").Visible = True
-    Sheets("DayWise").Visible = True
-    Sheets("EmpSale").Visible = True
     Sheets("VIP Members").Visible = True
     Sheets("Wallet").Visible = True
 End Sub
