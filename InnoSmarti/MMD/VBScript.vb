@@ -347,7 +347,7 @@ End Sub
 
 Sub SendWhatsapp(WaMsg As String)
     Shell "cmd /C start whatsapp://send?" & Replace(WaMsg, " ", "%20")
-    Windows("YLGBilling.xlsm").Activate
+    Windows("YLGBills.xlsm").Activate
     'MsgBox "Sending Message in Whatsapp, please confirm..."
     'Shell "cmd /C start whatsapp://send?" & Replace(WaMsg, " ", "%20")
     'ActiveWorkbook.FollowHyperlink "http://api.whatsapp.com/send?" & WaMsg
@@ -446,14 +446,14 @@ Public Function Verify_Input() As Boolean
 
     If Sheets("Invoice").Cells(8, 2) = "" Then
         MsgBox "Please provide Customer Name"
-        Application.Goto Sheets("Invoice").Cells(8, 2)
+        Application.GoTo Sheets("Invoice").Cells(8, 2)
         Verify_Input = False
         Exit Function
     End If
 
     If Sheets("Invoice").Cells(8, 5) = "" Then
         MsgBox "Please provide Customer Phone Number"
-        Application.Goto Sheets("Invoice").Cells(8, 5)
+        Application.GoTo Sheets("Invoice").Cells(8, 5)
         Verify_Input = False
         Exit Function
     End If
@@ -463,7 +463,7 @@ Public Function Verify_Input() As Boolean
             If Sheets("Invoice").Cells(i, 4) = "" Then
                 msg = "Please Select provider for " & Sheets("Invoice").Cells(i, 1)
                 MsgBox msg
-                Application.Goto Sheets("Invoice").Cells(i, 4)
+                Application.GoTo Sheets("Invoice").Cells(i, 4)
                 Verify_Input = False
                 Exit Function
             End If
@@ -472,7 +472,7 @@ Public Function Verify_Input() As Boolean
 
     If Sheets("Invoice").Cells(29, 2) = "" Then
         MsgBox "Please provide Payment Type"
-        Application.Goto Sheets("Invoice").Cells(29, 2)
+        Application.GoTo Sheets("Invoice").Cells(29, 2)
         Verify_Input = False
         Exit Function
     End If
@@ -699,7 +699,7 @@ Function CallRestDBAPI(method As String, Optional endpoint As String = "", Optio
     Dim apiKey As String
 
     url = "https://ylgharalur-be6e.restdb.io/rest/"
-    apiKey = "68b540d2b349a313344b6d85"
+    apiKey = "2940fb581a5a7e8d81b6e443f20638b0b87c0"
 
     If endpoint <> "" Then url = url & endpoint
 
