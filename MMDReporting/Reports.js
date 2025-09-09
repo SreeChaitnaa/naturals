@@ -1847,6 +1847,17 @@ function printBill(bill) {
     </style>
   </head>
   <body>
+    <image style="display:block; margin:0 auto;" src="https://sreechaitnaa.github.io/naturals/MMDReporting/ylg.png">
+    <hr>
+    <p style="text-align:center; margin-top:10px;">
+      #78/1, 1st Floor, Inspira Landmark, <br />
+      Haralur Main Road, Birla Circle,  <br />
+      Kudlu, Bengaluru, Karnataka 560068, <br />
+      Mobile - 63645 64645 <br />
+      Email - AA.Haralur@gmail.com <br />
+      GST: 29ACEFA8042J1Z7
+    </p>
+    <hr>
     <table style="clientInfo">
       <tr><td>
       Customer Name </td><td>: ${bill.Name}</td></tr><tr><td>
@@ -1888,21 +1899,23 @@ function printBill(bill) {
         </tr>
       </tbody>
     </table>
+    <hr>
 
     <p>PAID THROUGH ${paymentText}</p>
+    <hr>
 
     <p style="text-align:center; margin-top:10px;">
       THANK YOU. HAVE A NICE DAY.<br>
-      THIS IS COMPUTERIZED INVOICE. HENCE<br>
-      NO SIGNATURE REQUIRED.
+      THIS IS COMPUTERIZED INVOICE. HENCE NO SIGNATURE REQUIRED.<br><br>
+      ===== PLEASE VISIT AGAIN =====.
     </p>
 
-    <script>window.print();<\/script>
+    <script>setTimeout(window.print, 2000)<\/script>
   </body>
   </html>
   `;
 
-  let billWindow = window.open('', '', 'width=600,height=800');
+  let billWindow = window.open('', '', 'width=600');
   billWindow.document.write(billHTML);
   billWindow.document.close();
 }
