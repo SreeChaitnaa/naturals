@@ -99,7 +99,7 @@ employee_name_map = {
   'Sneha': 'Suprita',
   'Toheed': "Sameer",
   "Bhanu": "Bhuvaneshwari",
-  "Rahil", "Raheel",
+  "Rahil": "Raheel",
   "bhuvaneshwari": "Bhuvaneshwari",
   "sajid": "Sajid",
   "sona": "Sona"
