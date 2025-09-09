@@ -93,9 +93,9 @@
       box-sizing: border-box;
     }
 
-    .searchTableModalContent {
+    .wide-modal {
       margin: 5% auto;
-      width: 70%;
+      width: 80%;
     }
 
     .modalHeader {
@@ -244,6 +244,71 @@
       background: #ccc;
     }
 
+    .bill-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+    }
+    .bill-table th, .bill-table td {
+      padding: 6px;
+    }
+    .bill-table input, .bill-table select {
+      width: 100%;
+    }
+
+    #summarySection .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 4px 0;
+    }
+
+    #summarySection .summary-row span {
+      flex: 1;
+      text-align: left;
+    }
+
+    #summarySection .summary-row span:last-child {
+      flex: 0;
+      width: 100px; /* adjust for alignment */
+      text-align: right;
+    }
+
+    #summarySection .total-row span {
+      font-weight: bold;
+    }
+
+    #paymentSection {
+      width: 200px;
+      float: right;
+    }
+
+    #paymentSection .payment-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 4px 0;
+    }
+
+    #paymentSection .payment-row label {
+      flex: 1;
+    }
+
+    #paymentSection .payment-row input {
+      flex: 0;
+      width: 80px;  /* fits 5 digits */
+      text-align: right;
+    }
+
+    #paymentSection .payment-row.total-row label,
+    #paymentSection .payment-row.total-row span {
+      font-weight: bold;
+    }
+
+    #paymentSection .payment-row.total-row span {
+      width: 80px;
+      text-align: right;
+    }
+
+
 
   </style>
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
@@ -388,7 +453,7 @@
 
   <!-- Search Table Modal -->
   <div id="searchTableModel" class="myModal">
-    <div id="searchTableModelContent" class="modalContent searchTableModalContent">
+    <div id="searchTableModelContent" class="modalContent wide-modal">
 
       <!-- Fixed Header -->
       <div class="modalHeader">
@@ -405,6 +470,157 @@
 
     </div>
   </div>
+
+  <!--  New Bill Model-->
+  <div id="newBillModal" class="myModal">
+    <div class="modalContent wide-modal">
+      <button class="close-btn" onclick="closeDialog()">×</button>
+      <h2>New Bill</h2>
+      <br />
+      <hr/>
+      <br />
+
+      <!-- Step 1: Customer Info -->
+      <div>
+        <label for="phoneInput">Phone Number:</label>
+        <input type="text" id="phoneInput" list="phoneList" oninput="handlePhoneInput(this)">
+        <datalist id="phoneList"></datalist> &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+        <label for="nameInput">Name:</label>
+        <input type="text" id="nameInput">
+      </div>
+      <br />
+
+      <hr/>
+
+      <!-- Step 2: Services -->
+      <h3>Services:</h3>
+      <datalist id="servicesList"></datalist>
+      <table id="servicesTable" class="bill-table noBorderTable">
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>Employee</th>
+            <th>Qty</th>
+            <th>Price</th>
+            <th>Discount</th>
+            <th>Total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div>
+        <button class="gray-button" onclick="addServiceRow()">+ Add Service</button> &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+        <label for="billDiscountPercent">Bill Discount Percent:</label>
+        <input type="number" value="" id="billDiscountPercent" oninput="recalcAll()" style="width: 80px; text-align: right"> &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+        <label for="billDiscountAmount">Bill Discount Amount:</label>
+        <input type="number" value="" id="billDiscountAmount" oninput="recalcAll()" style="width: 80px; text-align: right">
+      </div>
+      <hr/>
+
+      <table class="noBorderTable bill-table">
+        <tr>
+          <td>
+            <!-- Summary Section -->
+            <div id="summarySection" style="width:350px">
+              <h3>Summary:</h3>
+              <div class="summary-row">
+                <span>Net Sales (before Discount):</span>
+                <span id="netBefore">0</span>
+              </div>
+              <div class="summary-row">
+                <span>Discount:</span>
+                <span id="discountTotal">0</span>
+              </div>
+              <div class="summary-row">
+                <span>Net Sales (after Discount):</span>
+                <span id="netAfter">0</span>
+              </div>
+              <div class="summary-row">
+                <span>CGST (9%):</span>
+                <span id="cgst">0</span>
+              </div>
+              <div class="summary-row">
+                <span>SGST (9%):</span>
+                <span id="sgst">0</span>
+              </div>
+              <div class="summary-row total-row">
+                <span>Total:</span>
+                <span id="grandTotal">0</span>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div id="paymentSection">
+              <h3>Payments:</h3>
+              <div class="payment-row">
+                <label>Cash:</label>
+                <input type="number" value="" min="0" id="payCash" onchange="checkPayments()">
+              </div>
+              <div class="payment-row">
+                <label>Card:</label>
+                <input type="number" value="" min="0" id="payCard" onchange="checkPayments()">
+              </div>
+              <div class="payment-row">
+                <label>EWallet:</label>
+                <input type="number" value="" min="0" id="payEWallet" onchange="checkPayments()">
+              </div>
+              <div class="payment-row">
+                <label>BSC:</label>
+                <input type="number" value="" min="0" id="payBSC" onchange="checkPayments()">
+              </div>
+              <div class="payment-row total-row">
+                <label>Total:</label>
+                <span id="paymentTotal">0</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </table>
+      <hr>
+      <div class="buttonRow">
+        <button onclick="resetBill()" class="gray-button">Reset Bill</button>
+        <button onclick="closeDialog()" class="gray-button">Cancel</button>
+        <button onclick="submitBill()" id="submitBillBtn" disabled>Submit Bill</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Service Modal -->
+  <div id="addServiceModal" class="myModal">
+    <div id="addServiceModelContent" class="modalContent">
+      <button class="close-btn" onclick="closeDialog()">×</button>
+      <div class="form-row">
+        <label for="serviceName">Service Name: </label>
+        <input type="text" id="serviceName">
+      </div>
+      <div class="form-row">
+        <label for="servicePrice">Service Price: </label>
+        <input type="number" id="servicePrice">
+      </div>
+      <div class="buttonRow">
+        <button onclick="closeDialog()" class="gray-button">Cancel</button>
+        <button onclick="add_service()">Add Service</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Employee Modal -->
+  <div id="addEmpModal" class="myModal">
+    <div id="addEmpModelContent" class="modalContent">
+      <button class="close-btn" onclick="closeDialog()">×</button>
+      <div class="form-row">
+        <label for="employeeName">Employee Name: </label>
+        <input type="text" id="employeeName">
+      </div>
+      <div class="buttonRow">
+        <button onclick="closeDialog()" class="gray-button">Cancel</button>
+        <button onclick="add_employee()">Add Employee</button>
+      </div>
+    </div>
+  </div>
+
 
 
   <!-- Data Section -->
@@ -433,13 +649,13 @@
           <option value="sectionWiseSales">Section Wise Sales</option>
           <option value="daywiseSales">DayWise Sales</option>
           <option value="monthlySales">Monthly Sales</option>
-          <option value="daywiseSplit">DayWise Split</option>
-          <option value="monthlySplit">Monthly Split</option>
+          <option value="daywiseSplit" class="nrsOnly">DayWise Split</option>
+          <option value="monthlySplit" class="nrsOnly">Monthly Split</option>
           <option value="detailedAllBills">Detailed All Bills</option>
           <option value="callBacksOnHold">Call Backs On Hold</option>
-          <option value="daywiseNRSOnly">DayWise NRSOnly</option>
-          <option value="monthlyNRSOnly">Monthly NRSOnly</option>
-          <option value="summaryNRSOnly">Summary NRSOnly</option>
+          <option value="daywiseNRSOnly" class="nrsOnly">DayWise NRSOnly</option>
+          <option value="monthlyNRSOnly" class="nrsOnly">Monthly NRSOnly</option>
+          <option value="summaryNRSOnly" class="nrsOnly">Summary NRSOnly</option>
           <option value="dailyCash">Daily Cash</option>
         </select>&nbsp;&nbsp;&nbsp;
 
@@ -452,8 +668,11 @@
       <div class="menu">
         <button class="menu-button" onclick="toggleMenu()">⋮</button>
         <div id="dropdownMenu" class="menu-content">
+          <button onclick="openNewBillModal()" class="ylgOnly">New Bill</button>
+          <button onclick="openNewServiceModal()" class="ylgOnly">Add Service</button>
+          <button onclick="openNewEmployeeModal()" class="ylgOnly">Add Employee</button>
           <button onclick="openUpdateDialog()">Send Update</button>
-          <button onclick="send_update(true, false)" id="nrsDayClose">NRS DayClose</button>
+          <button onclick="send_update(true, false)" id="nrsDayClose" class="nrsOnly">NRS DayClose</button>
           <button onclick="openDayCloseDialog()">DayClose</button>
           <button onclick="export_as_csv()" style="display:none" id="btn_export_csv">Export as CSV</button>
         </div>
