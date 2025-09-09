@@ -157,7 +157,7 @@ class RestDB:
                     nt[k] = ticket[k]
                 bill["ticket"].append(nt)
             bills_per_day[bill_date]["bills"].append(bill)
-            self.send_thank_you_whatsapp(bill["Phone"], bill["Name"])
+            # self.send_thank_you_whatsapp(bill["Phone"], bill["Name"])
 
         self.update_bills_of_days(bills_per_day)
         self.update_config_value(last_bill_key, next_bill_number)
