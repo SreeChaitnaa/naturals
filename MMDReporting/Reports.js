@@ -358,7 +358,6 @@ function login() {
       if (data == null) {return};
       console.log(data);
       loginDiv.style.display = "none";
-      shopName.textContent = "Reports for - " + shopConfig[shop].name;
       document.title = shopConfig[shop].name;
 
       // Simple render for debugging
