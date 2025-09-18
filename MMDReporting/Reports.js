@@ -15,7 +15,8 @@ const shopConfig = {
     "whatsapp_number": ["9743823134", "7892256106"]
   },
   "HRLR": {
-    "url": "https://hrlr.marammuralidhar3234.workers.dev/rest/",
+//    "url": "https://hrlr.marammuralidhar3234.workers.dev/rest/",
+    "url": "https://ylgharalur-be6e.restdb.io/rest/",
     "encKey": "bKuxUJfSNeOtp67m3v4WC39P+xPn/7a5QJNCYF1ogTW0OXSgOaxpNb+jvSBQq+93kZGHU3Bj87QFi9FAk7No+g==",
     "name": "Haralur",
 //    "whatsapp_number": ["8073959696"]
@@ -96,7 +97,12 @@ employee_name_map = {
   'Mary': "mary L",
   'Meenakshi': "Ashwini",
   'Sneha': 'Suprita',
-  'Toheed': "Sameer"
+  'Toheed': "Sameer",
+  "Bhanu": "Bhuvaneshwari",
+  "Rahil": "Raheel",
+  "bhuvaneshwari": "Bhuvaneshwari",
+  "sajid": "Sajid",
+  "sona": "Sona"
 };
 
 function is_ylg(){
@@ -161,11 +167,16 @@ let full_data = [];
 let current_rows = [];
 let all_bills = {};
 let call_backs = {};
+let services_config = {};
+let servicesDict = {};
+let employees_config = {};
+let empNames = null;
 let cash_rows = {};
 let dt_table = null;
 let store_view = true;
 let all_emp_names = new Set();
 let all_section_names = new Set();
+let next_bill_number = null;
 
 
 // ==== CRYPTO DECRYPT FUNCTION ====
@@ -225,9 +236,9 @@ window.onload = function() {
     console.log("🔹 Default shop set from URL:", shopParam);
     shopSelectDiv.style.display = "none"
   }
-  if (is_ylg()){
-    nrsDayClose.style.display = "none";
-  }
+
+  document.querySelectorAll(".ylgOnly").forEach(item => { item.style.display = is_ylg() ? "block" : "none" });
+  document.querySelectorAll(".nrsOnly").forEach(item => { item.style.display = is_ylg() ? "none" : "block" });
   if(!store_view) {
     btn_export_csv.style.display = "block";
   }
@@ -347,7 +358,7 @@ function login() {
       if (data == null) {return};
       console.log(data);
       loginDiv.style.display = "none";
-      shopName.textContent = "Reports for - " + shopConfig[shop].name;
+      document.title = shopConfig[shop].name;
 
       // Simple render for debugging
       console.log("✅ Data:", data);
@@ -356,19 +367,24 @@ function login() {
         if (row["config_name"] == "callback"){
           call_backs = row;
         }
+        if (row["config_name"] == "services"){
+          services_config = row;
+          servicesDict = services_config["config_value"];
+        }
+        if (row["config_name"] == "employees"){
+          employees_config = row;
+          empNames = employees_config["config_value"];
+        }
       });
       reset_date_pickers();
       fetch(db_url + "daysales", db_headers).then(data_res => {
         return data_res.json();
       }).then(data_response => {
         full_data = data_response;
-        formatReportData(full_data, "bills").forEach(bill_entry => {
-          if (!(bill_entry.Phone in all_bills)){
-            all_bills[bill_entry.Phone] = {"bills": [], "last_bill_date": null};
-          }
-          all_bills[bill_entry.Phone]["bills"].push(bill_entry);
-          all_bills[bill_entry.Phone]["last_bill_date"] = bill_entry.Date;
-        });
+        populate_all_bills()
+
+        populateSearchLists();
+
         full_data.forEach(day_sale => {
           cash_data = day_sale["cashdata"];
           if (cash_data){
@@ -392,6 +408,23 @@ function login() {
     alert(`Invalid password - ${e}`);
     spinnerOverlay.style.display = "none";
   }
+}
+
+function populate_all_bills() {
+  all_bills = {};
+  max_bill_id = 1;
+  formatReportData(full_data, "bills").forEach(bill_entry => {
+    if (!(bill_entry.Phone in all_bills)){
+      all_bills[bill_entry.Phone] = {"bills": [], "last_bill_date": null};
+    }
+    all_bills[bill_entry.Phone]["bills"].push(bill_entry);
+    all_bills[bill_entry.Phone]["last_bill_date"] = bill_entry.Date;
+
+    if(bill_entry.TicketID > max_bill_id) {
+      max_bill_id = bill_entry.TicketID;
+    }
+  });
+  next_bill_number = parseInt(max_bill_id) + 1;
 }
 
 function calcPayments(payments) {
@@ -1278,6 +1311,22 @@ function updateDataInDB(table_name, db_obj) {
   });
 }
 
+function insertNewDateBills(date_entry_obj) {
+  fetch(db_url + "daysales", {
+    method: "POST",
+    headers: db_headers["headers"],
+    body: JSON.stringify(date_entry_obj)
+  })
+  .then(response => response.json())
+  .then(updated => {
+    console.log("Updated Obj:", updated);
+    full_data.push(updated);
+  })
+  .catch(err => {
+    console.error("Error:", err);
+  });
+}
+
 function calculate_cash_in_box(){
   value = 0;
   value += parseInt(yesterdayCash.value, 10);
@@ -1320,6 +1369,19 @@ function updateCallBackInDB() {
   updateDataInDB("config", call_backs);
 }
 
+function add_employee(emp_name, push_to_db = true) {
+  empNames.push(emp_name || employeeName.value);
+  if(push_to_db) updateDataInDB("config", employees_config);
+  closeDialog();
+}
+
+function add_service(service_name=null, service_price=null, push_to_db= true) {
+  servicesDict[service_name || serviceName.value] = service_price || servicePrice.value;
+  if(push_to_db) updateDataInDB("config", services_config);
+  populateSearchLists();
+  closeDialog();
+}
+
 function delete_bills(bill_ids){
   updated_dates = {};
   full_data.forEach(day_sale => {
@@ -1338,7 +1400,63 @@ function delete_bills(bill_ids){
     }
   });
   Object.values(updated_dates).forEach(day_sale => {updateDataInDB("daysales", day_sale)});
+  populate_all_bills();
+  populateSearchLists();
 }
+
+function delete_service(service_name) {
+  delete servicesDict[service_name];
+  updateDataInDB("config", services_config);
+  populateSearchLists();
+}
+
+function delete_employee(emp_name) {
+  let index = empNames.indexOf(emp_name);
+  if (index !== -1) empNames.splice(index, 1);
+  updateDataInDB("config", employees_config);
+}
+
+function resetBill() {
+  // Clear service rows
+  const tbody = document.querySelector("#servicesTable tbody");
+  tbody.innerHTML = "";
+
+  // Reset payment inputs
+  document.querySelectorAll("#newBillModal input").forEach(inp => {
+    inp.value = "";
+  });
+
+  // Reset summary & totals
+  recalcAll();
+
+  // Optional: disable submit button until a new valid bill is created
+  document.getElementById("submitBillBtn").disabled = true;
+}
+
+function submitBill(){
+  if(validateBill()) {
+    bill_to_add = generateBillObject();
+    bill_date_num = parseInt(get_ist_date().toISOString().split('T')[0].replace(/-/g, ""), 10)
+    updated = false;
+    full_data.forEach(day_entry => {
+      if(day_entry.datenum == bill_date_num){
+        day_entry.bills.push(bill_to_add);
+        updateDataInDB("daysales", day_entry);
+        updated = true;
+        return;
+      }
+    });
+    if (!updated) {
+      insertNewDateBills({"datenum": bill_date_num, "bills": [bill_to_add]});
+    }
+    resetBill();
+    closeDialog();
+    populate_all_bills();
+    populateSearchLists();
+    printBill(bill_to_add);
+  }
+}
+
 
 function submitCallbackUpdate() {
   update_entry = {
@@ -1403,6 +1521,436 @@ function closeDialog() {
   fetchReport();
 }
 
+function openNewBillModal() {
+  newBillModal.style.display = "block";
+}
+
+function openNewServiceModal() {
+  serviceName.value = "";
+  servicePrice.value = "";
+  addServiceModal.style.display = "block";
+}
+
+function openNewEmployeeModal() {
+  employeeName.value = "";
+  addEmpModal.style.display = "block";
+}
+
+function addServiceRow() {
+  const tbody = document.querySelector("#servicesTable tbody");
+  const tr = document.createElement("tr");
+
+  // Service input with datalist (searchable)
+  let serviceInput = `
+    <input type="text" class="serviceInput" list="servicesList" placeholder="Search service..." />
+  `;
+
+  // Employee dropdown
+  let empSelect = `<select onchange="empChanged(this)" class="empNameInput">
+    <option value="">--Emp--</option>`;
+  empNames.forEach(emp => empSelect += `<option value="${emp}">${emp}</option>`);
+  empSelect += `</select>`;
+
+  tr.innerHTML = `
+    <td>${serviceInput}</td>
+    <td>${empSelect}</td>
+    <td><input type="number" class="qtyInput" value="1" min="1" onchange="recalcRow(this)" style="width:60px"></td>
+    <td class="price" style="width:80px; text-align:right">0</td>
+    <td><input type="number" class="discountInput" value="0" min="0" onchange="recalcRow(this)" style="width:80px"></td>
+    <td class="total" style="width:100px; text-align:right">0</td>
+    <td><button onclick="this.closest('tr').remove(); recalcAll();" class="gray-button">❌</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+// When employee dropdown changes
+function empChanged(selectEl) {
+  const row = selectEl.closest("tr");
+  const newEmp = selectEl.value;
+
+  if (!newEmp) return;
+
+  let nextRow = row.nextElementSibling;
+  while (nextRow) {
+    const empDropdown = nextRow.querySelector(".empNameInput");
+    if (!empDropdown.value) {
+      empDropdown.value = newEmp;
+    }
+    nextRow = nextRow.nextElementSibling;
+  }
+}
+
+
+function recalcRow(el) {
+  const row = el.closest("tr");
+  const qty = parseFloat(row.querySelector(".qtyInput").value) || 0;
+  const price = parseFloat(row.querySelector(".price").textContent) || 0;
+  const discount = parseFloat(row.querySelector(".discountInput").value) || 0;
+  const total = (qty * price) - discount;
+
+  row.querySelector(".total").textContent = total.toFixed(2);
+  recalcAll();
+}
+
+function recalcAll() {
+  const rows = document.querySelectorAll("#servicesTable tbody tr");
+  let netBefore = 0, discountSum = 0, netAfter = 0;
+
+  rows.forEach(row => {
+    const qty = parseFloat(row.querySelector(".qtyInput").value) || 0;
+    const price = parseFloat(row.querySelector(".price").textContent) || 0;
+
+    netBefore += qty * price;
+  });
+
+  total_dic_amount = parseFloat(billDiscountAmount.value) || 0;
+  if(total_dic_amount > 0) {
+    total_disc_percent = (total_dic_amount/netBefore) * 100;
+    billDiscountPercent.value = total_disc_percent.toFixed(2);
+  }
+  total_disc_percent = parseFloat(billDiscountPercent.value) || 0;
+
+  if(total_disc_percent > 0) {
+    rows.forEach(row => {
+      const price = parseFloat(row.querySelector(".price").textContent) || 0;
+      const qty = parseFloat(row.querySelector(".qtyInput").value) || 0;
+      row.querySelector(".discountInput").value = ((qty * price * total_disc_percent) / 100).toFixed(2);
+    });
+  }
+
+  rows.forEach(row => {
+    const qty = parseFloat(row.querySelector(".qtyInput").value) || 0;
+    const price = parseFloat(row.querySelector(".price").textContent) || 0;
+    const discount = parseFloat(row.querySelector(".discountInput").value) || 0;
+
+    total = (qty * price) - discount;
+    discountSum += discount
+    netAfter += total;
+    row.querySelector(".total").textContent = total.toFixed(2);
+
+  });
+
+  const cgst = netAfter * 0.09;
+  const sgst = netAfter * 0.09;
+  const grandTotal = netAfter + cgst + sgst;
+
+  document.getElementById("netBefore").textContent = netBefore.toFixed(2);
+  document.getElementById("discountTotal").textContent = discountSum.toFixed(2);
+  document.getElementById("netAfter").textContent = netAfter.toFixed(2);
+  document.getElementById("cgst").textContent = cgst.toFixed(2);
+  document.getElementById("sgst").textContent = sgst.toFixed(2);
+  document.getElementById("grandTotal").textContent = grandTotal.toFixed(2);
+
+  checkPayments(); // re-check payment match
+}
+
+function checkPayments() {
+  let total = 0;
+  document.querySelectorAll("#paymentSection input").forEach(inp => {
+    total += parseFloat(inp.value) || 0;
+  });
+
+  document.getElementById("paymentTotal").textContent = total.toFixed(2);
+
+  // Compare with grandTotal
+  const grandTotal = parseFloat(document.getElementById("grandTotal").textContent) || 0;
+
+  submitBillBtn.disabled = Math.abs(total - grandTotal) > 1.00;
+}
+
+function populateSearchLists() {
+  // Populate datalist with "Phone - Name"
+  const phoneList = document.getElementById("phoneList");
+  phoneList.innerHTML = "";
+
+  Object.keys(all_bills).forEach(phone => {
+    const name = all_bills[phone].bills[0].Name;
+    const option = document.createElement("option");
+    option.value = `${phone} - ${name}`;
+    phoneList.appendChild(option);
+  });
+
+  // Fill datalist only once
+  const servicesList = document.getElementById("servicesList");
+  servicesList.innerHTML = "";
+  for (let sid in servicesDict) {
+    const opt = document.createElement("option");
+    opt.value = `${sid} - ${servicesDict[sid]}`;
+    servicesList.appendChild(opt);
+  }
+}
+
+// Handle when user selects/inputs
+function handlePhoneInput(input) {
+  const val = input.value.trim();
+  const nameInput = document.getElementById("nameInput");
+
+  // Case 1: matches "{phone} - {name}"
+  let phone = null;
+  if (val.includes(" - ")) {
+    phone = val.split(" - ")[0];
+  }
+  // Case 2: exact phone entered
+  else if (all_bills[val]) {
+    phone = val;
+  }
+
+  if (phone && all_bills[phone]) {
+    nameInput.value = all_bills[phone].bills[0].Name;
+    input.value = phone; // reset input to pure phone
+  } else {
+    // If not found, allow entering freely
+    nameInput.value = "";
+  }
+}
+
+function validateBill() {
+  const errors = [];
+
+  // --- Phone & Name ---
+  const phone = document.getElementById("phoneInput").value.trim();
+  const name = document.getElementById("nameInput").value.trim();
+
+  if (!/^(0|\d{10})$/.test(phone)) {
+    errors.push("Phone number must be either 0 or a valid 10-digit number");
+  }
+
+  if (phone !== "0" && name === "") {
+    errors.push("Name is required if phone is not 0");
+  }
+
+  // --- Services Table ---
+  const rows = document.querySelectorAll("#servicesTable tbody tr");
+  rows.forEach(row => {
+    // service name from first cell (might be select or text)
+    let serviceName = row.querySelector("td").textContent;
+
+    // empname (second <select>)
+    const emp = row.querySelector(".empNameInput").value;
+    if (!emp) {
+      errors.push(`${serviceName}: Employee name is required`);
+    }
+
+    // qty
+    const qty = parseInt(row.querySelector(".qtyInput").value, 10) || 0;
+    if (qty < 1) {
+      errors.push(`${serviceName}: Quantity must be at least 1`);
+    }
+
+    // discount
+    const discountInput = row.querySelector(".discountInput");
+    let discount = discountInput.value.trim();
+    if (discount == "") discount = "0";
+    if (isNaN(discount) || Number(discount) < 0) {
+      errors.push(`${serviceName}: Discount must be 0 or a positive number`);
+    }
+  });
+
+  // --- Result ---
+  if (errors.length > 0) {
+    alert("Validation failed:\n" + errors.join("\n"));
+    return false;
+  }
+  return true;
+}
+
+function generateBillObject() {
+  const phone = document.getElementById("phoneInput").value.trim();
+  const name = document.getElementById("nameInput").value.trim();
+
+  // Auto fields
+  const TimeMark = get_ist_date().toISOString().slice(0,19).replace("T"," ");
+  const TicketID = "MMD" + next_bill_number; // replace with your own logic
+
+  // Collect services (ticket array)
+  const ticket = [];
+  document.querySelectorAll("#servicesTable tbody tr").forEach(row => {
+    const serviceId = row.querySelector("td").textContent;
+    if (!serviceId) return; // skip empty rows
+    console.log(serviceId);
+    const svc = servicesDict[serviceId];
+    const empname = row.querySelector(".empNameInput").value;
+    const qty = parseFloat(row.querySelector(".qtyInput").value) || 0;
+    const price = parseFloat(row.querySelector(".price").textContent) || 0;
+    const discount = parseFloat(row.querySelector(".discountInput").value) || 0;
+    const total = parseFloat(row.querySelector(".total").textContent) || 0;
+
+    ticket.push({
+      DiscountAmount: discount,
+      Price: price,
+      Qty: qty,
+      ServiceID: serviceId,
+      ServiceName: serviceId,
+      Sex: "1", // static for now
+      Total: total,
+      empname: empname
+    });
+  });
+
+  // Collect payments
+  const payment = [];
+  ["Cash", "Card", "EWallet", "BSC"].forEach(mode => {
+    const val = parseFloat(document.getElementById("pay" + mode).value) || 0;
+    if (val > 0) {
+      payment.push({
+        ChangeAmt: 0,
+        ModeofPayment: mode,
+        Tender: val
+      });
+    }
+  });
+
+  // Build bill object
+  const bill = {
+    payment,
+    ticket,
+    mmd: true,
+    Name: name,
+    Phone: phone,
+    TicketID,
+    TimeMark,
+    Comments: null
+  };
+
+  console.log("Generated Bill:", bill);
+  return bill;
+}
+
+function printBill(bill) {
+  // --- recompute totals ---
+  let netBefore = bill.ticket.reduce((s, t) => s + (t.Price * t.Qty), 0);
+  let discountTotal = bill.ticket.reduce((s, t) => s + (t.DiscountAmount || 0), 0);
+  let netAfter = netBefore - discountTotal;
+  let cgst = (netAfter * 0.09).toFixed(2);
+  let sgst = (netAfter * 0.09).toFixed(2);
+  let gstAmt = (parseFloat(cgst) + parseFloat(sgst)).toFixed(2);
+  let grandTotal = (netAfter + parseFloat(gstAmt)).toFixed(2);
+
+  let serviceRows = bill.ticket.map(svc => `
+    <tr>
+      <td style="text-align:left;">${svc.ServiceName}</td>
+      <td style="text-align:center;">${svc.Qty}</td>
+      <td style="text-align:right;">${svc.Price.toFixed(2)}</td>
+      <td style="text-align:right;">${(svc.Price * svc.Qty).toFixed(2)}</td>
+    </tr>`).join("");
+
+  let paymentText = bill.payment.map(p => `${p.ModeofPayment}=${p.Tender}`).join(", ");
+
+  const billHTML = `
+  <html>
+  <head>
+    <style>
+      body { font-family: monospace; font-size: 14px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+      td, th { padding: 2px 4px; }
+      th { border-bottom: 1px solid #000; }
+      .right { text-align: right; }
+      .center { text-align: center; }
+      .summary td { padding: 2px 4px; }
+      .clientInfo td { width: 150px }
+      .clientInfo { width: 300px }
+    </style>
+  </head>
+  <body>
+    <image style="display:block; margin:0 auto;" src="https://sreechaitnaa.github.io/naturals/MMDReporting/ylg.png">
+    <hr>
+    <p style="text-align:center; margin-top:10px;">
+      #78/1, 1st Floor, Inspira Landmark, <br />
+      Haralur Main Road, Birla Circle,  <br />
+      Kudlu, Bengaluru, Karnataka 560068, <br />
+      Mobile - 63645 64645 <br />
+      Email - AA.Haralur@gmail.com <br />
+      GST: 29ACEFA8042J1Z7
+    </p>
+    <hr>
+    <table style="clientInfo">
+      <tr><td>
+      Customer Name </td><td>: ${bill.Name}</td></tr><tr><td>
+      Client Phone  </td><td>: ${bill.Phone}</td></tr><tr><td>
+      Bill Date     </td><td>: ${bill.TimeMark}</td></tr><tr><td>
+      Invoice No.   </td><td>: ${bill.TicketID.replace("MMD", "")}</td></tr>
+    </table>
+
+    <table>
+      <thead>
+        <tr><th>Service</th><th class="center">QTY</th><th class="right">RATE</th><th class="right">AMOUNT</th></tr>
+      </thead>
+      <tbody>
+        ${serviceRows}
+      </tbody>
+    </table>
+    <hr>
+
+    <table class="summary">
+      <tr><td>BASIC SALES</td><td class="right">${netBefore.toFixed(2)}</td></tr>
+      <tr><td>DISCOUNT</td><td class="right">${discountTotal.toFixed(2)}</td></tr>
+      <tr><td>NET AMOUNT</td><td class="right">${netAfter.toFixed(2)}</td></tr>
+      <tr><td>GST AMOUNT</td><td class="right">${gstAmt}</td></tr>
+      <tr><td><b>BILL AMOUNT</b></td><td class="right"><b>${grandTotal}</b></td></tr>
+    </table>
+
+    <h4>GST Tax Summary</h4>
+    <table>
+      <thead>
+        <tr><th>GST</th><th>CGST</th><th>SGST</th><th>PCGST</th><th>PSGST</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>18%</td>
+          <td>${cgst}</td>
+          <td>${sgst}</td>
+          <td>0</td>
+          <td>0</td>
+        </tr>
+      </tbody>
+    </table>
+    <hr>
+
+    <p>PAID THROUGH ${paymentText}</p>
+    <hr>
+
+    <p style="text-align:center; margin-top:10px;">
+      THANK YOU. HAVE A NICE DAY.<br>
+      THIS IS COMPUTERIZED INVOICE. HENCE NO SIGNATURE REQUIRED.<br><br>
+      ===== PLEASE VISIT AGAIN =====.
+    </p>
+
+    <script>setTimeout(window.print, 2000)<\/script>
+  </body>
+  </html>
+  `;
+
+  let billWindow = window.open('', '', 'width=600');
+  billWindow.document.write(billHTML);
+  billWindow.document.close();
+}
+
+
+document.addEventListener("input", function(e) {
+  if (e.target.classList.contains("serviceInput")) {
+    const val = e.target.value;
+    const match = Object.keys(servicesDict).find(svc =>
+      val.startsWith(svc)
+    );
+    if (match) {
+      const row = e.target.closest("tr");
+      row.querySelector("td").textContent = match;
+      // Fill Price & Recalculate
+      row.querySelector(".price").textContent = servicesDict[match];
+      recalcRow(row.querySelector(".qtyInput"));
+
+      const prevRow = row.previousElementSibling;
+      if (prevRow) {
+        const prevEmp = prevRow.querySelector(".empNameInput").value;
+        if (prevEmp) {
+          row.querySelector(".empNameInput").value = prevEmp;
+        }
+      }
+    }
+  }
+});
+
+
 window.onclick = function(event) {
   if (!event.target.matches('.menu-button')) {
     document.querySelectorAll(".menu-content").forEach(menu => {
@@ -1412,3 +1960,5 @@ window.onclick = function(event) {
 }
 
 window.addEventListener("resize", resizeCanvas);
+
+
