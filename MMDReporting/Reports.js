@@ -15,8 +15,8 @@ const shopConfig = {
     "whatsapp_number": ["9743823134", "7892256106"]
   },
   "HRLR": {
-//    "url": "https://hrlr.marammuralidhar3234.workers.dev/rest/",
-    "url": "https://ylgharalur-be6e.restdb.io/rest/",
+    "url": "https://hrlr.marammuralidhar3234.workers.dev/rest/",
+//    "url": "https://ylgharalur-be6e.restdb.io/rest/",
     "encKey": "bKuxUJfSNeOtp67m3v4WC39P+xPn/7a5QJNCYF1ogTW0OXSgOaxpNb+jvSBQq+93kZGHU3Bj87QFi9FAk7No+g==",
     "name": "Haralur",
 //    "whatsapp_number": ["8073959696"]
