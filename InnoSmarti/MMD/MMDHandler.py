@@ -129,6 +129,13 @@ class Utils:
         return view_resp
 
     @staticmethod
+    def get_nrs_bill(store_id, bill_number, logger):
+        url_format = "https://ntlivewebapi.innosmarti.com/api/auth/viewTicketNew/{0},1001,{1}"
+        url = url_format.format(store_id, bill_number)
+        logger.info("Calling - {}".format(url))
+        return requests.request("GET", url, headers={"Authorization": "UseLast"}, verify=False)
+
+    @staticmethod
     def update_rest_db(store_id, bill_number, logger, settings, rest_db):
         logger.info("update_rest_db started...")
         try:
@@ -148,11 +155,8 @@ class Utils:
                 next_bill_number = bill_number
             else:
                 ddos_wait = 5
-                url_format = "https://ntlivewebapi.innosmarti.com/api/auth/viewTicketNew/{0},1001,{1}"
                 while next_bill_number <= bill_number:
-                    url = url_format.format(store_id, next_bill_number)
-                    logger.info("Calling - {}".format(url))
-                    resp = requests.request("GET", url, headers={"Authorization": "UseLast"}, verify=False)
+                    resp = Utils.get_nrs_bill(store_id, next_bill_number, logger)
                     if "Too Many Requests" in resp.text:
                         logger.info(f"Too many requests response came, wait for {ddos_wait}sec")
                         time.sleep(ddos_wait)

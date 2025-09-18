@@ -129,12 +129,13 @@ class RestDB:
         except Exception as e1:
             self.logger.error(f"Error while sending WhatsApp - {e1}")
 
-    def update_bills(self, bills_to_add, is_mmd, last_bill_key, next_bill_number):
+    def update_bills(self, bills_to_add, is_mmd, last_bill_key=None, next_bill_number=None):
         bills_per_day = {}
         if len(bills_to_add) == 0:
             self.logger.info("Got 0 Bills, returning...")
             return
         self.logger.info(f"Adding {len(bills_to_add)} bills for MMD:{is_mmd}, {last_bill_key}: {next_bill_number}")
+        bill = None
         for bill_to_add in bills_to_add:
             bill = {"payment": [], "ticket": [], "mmd": is_mmd}
             bill_date = int(bill_to_add["ticket"][0]["Created_Date"].split(" ")[0].replace("-", ""))
@@ -157,10 +158,14 @@ class RestDB:
                     nt[k] = ticket[k]
                 bill["ticket"].append(nt)
             bills_per_day[bill_date]["bills"].append(bill)
-            self.send_thank_you_whatsapp(bill["Phone"], bill["Name"])
+            # self.send_thank_you_whatsapp(bill["Phone"], bill["Name"])
 
         self.update_bills_of_days(bills_per_day)
-        self.update_config_value(last_bill_key, next_bill_number)
+        if last_bill_key:
+            self.update_config_value(last_bill_key, next_bill_number)
+        else:
+            self.logger.info(f"Bill added - {bill}")
+            return bill
 
         self.logger.info(f"Added {len(bills_to_add)} bills for MMD:{is_mmd}, {last_bill_key}: {next_bill_number}")
 
