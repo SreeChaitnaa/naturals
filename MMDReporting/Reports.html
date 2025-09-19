@@ -162,7 +162,7 @@
     }
 
     .menu-button {
-      font-size: 20px;
+      font-size: 28px;
       background: none;
       border: none;
       cursor: pointer;
@@ -307,8 +307,6 @@
       width: 80px;
       text-align: right;
     }
-
-
 
   </style>
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
@@ -665,6 +663,7 @@
       </div>
 
       <div class="menu">
+        <button class="menu-button" onclick="login()">⟳</button>
         <button class="menu-button" onclick="toggleMenu()">⋮</button>
         <div id="dropdownMenu" class="menu-content">
           <button onclick="openNewBillModal()" class="ylgOnly">New Bill</button>
