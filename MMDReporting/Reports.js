@@ -916,7 +916,7 @@ function fill_table_with_data(reportType, in_dialog=false, search_key=null, sear
   });
   $('#tableSearch').on('keyup', function() {
     dt_table.search(this.value).draw();
-  }
+  });
 }
 
 function open_selection(reportType, search_key, search_value){
