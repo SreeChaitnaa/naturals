@@ -87,9 +87,6 @@ const excludeColumnsInSearchTable = ['Tax', 'Gross', 'PaymentType', 'Cash', 'UPI
 employee_name_map = {
   "Guru": "Guru prasad",
   "Komati": "Komathi",
-  "Shajid": "Javed",
-  "Nandini": "Ritika",
-  "Lokeshwari": "Sarita",
   "sarita": "Sarita",
   "Ritu": "Ritika",
   "Ali": "Lucky",
@@ -110,7 +107,7 @@ function is_ylg(){
 }
 
 function get_emp_name(emp_name){
-  return employee_name_map[emp_name] || emp_name;
+  return employee_name_map[emp_name.trim()] || emp_name.trim();
 }
 
 function get_ticket_id(ticket_id){
