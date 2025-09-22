@@ -91,6 +91,7 @@ def main():
             "cmd", "/c", "start", "chrome",
             f"--user-data-dir={chrome_profile}",
             f"--app={chrome_url}"
+            "--start-maximized"
         ]
     elif system == "Darwin":  # macOS
         chrome_binary = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"

@@ -1370,7 +1370,7 @@ function add_employee(emp_name, push_to_db = true) {
 }
 
 function add_service(service_name=null, service_price=null, push_to_db= true) {
-  servicesDict[service_name || serviceName.value] = service_price || servicePrice.value;
+  servicesDict[service_name || serviceName.value] = (service_price || servicePrice.value)/1.05;
   if(push_to_db) updateDataInDB("config", services_config);
   populateSearchLists();
   closeDialog();
@@ -1624,8 +1624,8 @@ function recalcAll() {
 
   });
 
-  const cgst = netAfter * 0.09;
-  const sgst = netAfter * 0.09;
+  const cgst = netAfter * 0.025;
+  const sgst = netAfter * 0.025;
   const grandTotal = netAfter + cgst + sgst;
 
   document.getElementById("netBefore").textContent = netBefore.toFixed(2);
@@ -1669,7 +1669,7 @@ function populateSearchLists() {
   servicesList.innerHTML = "";
   for (let sid in servicesDict) {
     const opt = document.createElement("option");
-    opt.value = `${sid} - ${servicesDict[sid]}`;
+    opt.value = `${sid} - ${servicesDict[sid] * 1.05}`;
     servicesList.appendChild(opt);
   }
 }
@@ -1810,22 +1810,22 @@ function generateBillObject() {
   return bill;
 }
 
-function printBill(bill) {
+function printBill(bill, gst_split=0.025) {
   // --- recompute totals ---
   let netBefore = bill.ticket.reduce((s, t) => s + (t.Price * t.Qty), 0);
   let discountTotal = bill.ticket.reduce((s, t) => s + (t.DiscountAmount || 0), 0);
   let netAfter = netBefore - discountTotal;
-  let cgst = (netAfter * 0.09).toFixed(2);
-  let sgst = (netAfter * 0.09).toFixed(2);
+  let cgst = (netAfter * gst_split).toFixed(2);
+  let sgst = (netAfter * gst_split).toFixed(2);
   let gstAmt = (parseFloat(cgst) + parseFloat(sgst)).toFixed(2);
   let grandTotal = (netAfter + parseFloat(gstAmt)).toFixed(2);
 
   let serviceRows = bill.ticket.map(svc => `
     <tr>
-      <td style="text-align:left;">${svc.ServiceName}</td>
-      <td style="text-align:center;">${svc.Qty}</td>
-      <td style="text-align:right;">${svc.Price.toFixed(2)}</td>
-      <td style="text-align:right;">${(svc.Price * svc.Qty).toFixed(2)}</td>
+      <td class="left">${svc.ServiceName}</td>
+      <td class="center">${svc.Qty}</td>
+      <td class="right">${svc.Price.toFixed(2)}</td>
+      <td class="right">${(svc.Price * svc.Qty).toFixed(2)}</td>
     </tr>`).join("");
 
   let paymentText = bill.payment.map(p => `${p.ModeofPayment}=${p.Tender}`).join(", ");
@@ -1840,6 +1840,7 @@ function printBill(bill) {
       th { border-bottom: 1px solid #000; }
       .right { text-align: right; }
       .center { text-align: center; }
+      .left { text-align: left; }
       .summary td { padding: 2px 4px; }
       .clientInfo td { width: 150px }
       .clientInfo { width: 300px }
@@ -1890,11 +1891,11 @@ function printBill(bill) {
       </thead>
       <tbody>
         <tr>
-          <td>18%</td>
-          <td>${cgst}</td>
-          <td>${sgst}</td>
-          <td>0</td>
-          <td>0</td>
+          <td class="center">${gst_split * 200}%</td>
+          <td class="center">${cgst}</td>
+          <td class="center">${sgst}</td>
+          <td class="center">0</td>
+          <td class="center">0</td>
         </tr>
       </tbody>
     </table>
