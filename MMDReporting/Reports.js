@@ -525,7 +525,8 @@ function formatReportData(rawData, reportType) {
       row.Action = "Update";
       direct_rows.push(row);
     });
-  } else if (reportType == "callBacksOnHold"){
+  }
+  else if (reportType == "callBacksOnHold"){
     Object.entries(call_backs["config_value"]).forEach(function([phone_num, call_back_data]) {
       if(is_call_back_on_hold(call_back_data)) {
         row = {...call_back_data};
@@ -534,7 +535,8 @@ function formatReportData(rawData, reportType) {
         direct_rows.push(row);
       }
     });
-  } else if (reportType == "dailyCash"){
+  }
+  else if (reportType == "dailyCash"){
     rawData.forEach(day => {
       if(day["cashdata"]){
         row = {...day["cashdata"]};
@@ -543,10 +545,11 @@ function formatReportData(rawData, reportType) {
         direct_rows.push(row);
       }
     });
-  } else {
+  }
+  else {
     rawData.forEach(day => {
       const bills = day.bills || [];
-
+      gst_percent = day.datenum > 20250921 ? 0.05 : 0.18;
       bills.forEach(bill => {
         // Format date -> YYYY-MM-DD
         const [datePart, timePart] = bill.TimeMark.split(" ");
@@ -570,7 +573,8 @@ function formatReportData(rawData, reportType) {
                   NetSale: service.Price - (service.DiscountAmount / service.Qty),
                   EmpName: get_emp_name(service.empname),
                   PaymentType: payment_type,
-                  Section: getSection(service.ServiceName)
+                  Section: getSection(service.ServiceName),
+                  GSTPercent: gst_percent
                 };
                 direct_rows.push(row)
               }
@@ -587,15 +591,16 @@ function formatReportData(rawData, reportType) {
               Price: priceSum,
               Discount: discountSum,
               NetSale: netSalesSum,
-              Tax: netSalesSum * 0.18,
-              Gross: netSalesSum * 1.18,
+              Tax: netSalesSum * gst_percent,
+              Gross: netSalesSum * (1 + gst_percent),
               Services: servicesCount,
               ServiceDesc: serviceNames.join("/"),
               EmpName: Array.from(empNamesSet).join("/"),
               PaymentType: payment_type,
               Cash: cash,
               UPI: upi,
-              Card: card
+              Card: card,
+              GSTPercent: gst_percent
             };
             direct_rows.push(row)
           }
@@ -614,7 +619,8 @@ function formatReportData(rawData, reportType) {
                 Discount: 0,
                 NetSale: 0,
                 ABV: 0,
-                ASB: 0
+                ASB: 0,
+                GSTPercent: gst_percent
               };
             }
 
@@ -658,7 +664,8 @@ function formatReportData(rawData, reportType) {
                 NetSale: 0,
                 Services: new Set(),
                 Providers: new Set(),
-                Section: getSection(key)
+                Section: getSection(key),
+                GSTPercent: gst_percent
               };
             }
 
@@ -696,7 +703,8 @@ function formatReportData(rawData, reportType) {
               Card: 0,
               NewClients: 0,
               EmpSale: {},
-              SectionSale: {}
+              SectionSale: {},
+              GSTPercent: gst_percent
             };
           }
 
@@ -752,7 +760,7 @@ function formatReportData(rawData, reportType) {
       });
     } else {
       rows.forEach(row => {
-        row.Tax = row.NetSale * 0.18;
+        row.Tax = row.NetSale * row.GSTPercent;
         row.Gross = row.NetSale + row.Tax;
         row.ABV = row.Bills > 0 ? parseFloat((row.NetSale / row.Bills).toFixed(2)) : 0;
         row.ASB = row.Bills > 0 ? parseFloat((row.Services / row.Bills).toFixed(2)) : 0;
