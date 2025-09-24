@@ -1928,13 +1928,16 @@ function printBill(bill, gst_split=0.025) {
   billWindow.document.close();
 }
 
+function get_service_name_from_selected_service(service_string){
+  const idx = service_string.lastIndexOf("-");
+  if (idx === -1) return service_string.trim(); // no dash found
+  return service_string.slice(0, idx).trim();
+}
 
 document.addEventListener("input", function(e) {
   if (e.target.classList.contains("serviceInput")) {
     const val = e.target.value;
-    const match = Object.keys(servicesDict).find(svc =>
-      val.startsWith(svc)
-    );
+    const match = Object.keys(servicesDict).find(svc => get_service_name_from_selected_service(val) == svc );
     if (match) {
       const row = e.target.closest("tr");
       row.querySelector("td").textContent = match;
