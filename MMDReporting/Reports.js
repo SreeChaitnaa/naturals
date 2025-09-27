@@ -81,8 +81,9 @@ table_click_links = {
   },
 }
 
-const numericColumns = ['Price', 'Discount', 'NetSale', 'Tax', 'Gross', 'ABV', 'ASB', 'Cash', 'UPI', 'Card', 'TotalNetSale'];
-const excludeColumnsInSearchTable = ['Tax', 'Gross', 'PaymentType', 'Cash', 'UPI', 'Card'];
+const moneyColumns = ['Tax', 'Gross', 'Cash', 'UPI', 'Card', "HomeBSC", "OtherBSC"]
+const numericColumns = ['Price', 'Discount', 'NetSale', 'ABV', 'ASB', 'TotalNetSale', ...moneyColumns];
+const excludeColumnsInSearchTable = ['PaymentType', ...moneyColumns];
 
 employee_name_map = {
   "Guru": "Guru prasad",
@@ -117,9 +118,10 @@ function get_ticket_id(ticket_id){
 range_columns = ["Bills", "Services", 'Price', "Discount", "NetSale", "Tax", "Gross", "ABV", "ASB", "Cash", "UPI", "Card"];
 daywise_reports = ["daywiseSales", "daywiseSplit", "daywiseNRSOnly"];
 monthly_reports = ["monthlySales", "monthlySplit", "monthlyNRSOnly"];
+paymode_reports = [...daywise_reports, ...monthly_reports, "detailedBills"]
+
 daywise_reports.forEach(reportType => {
   table_columns[reportType] = ["Date"].concat(range_columns);
-  table_columns[reportType].push("NewClients");
 });
 monthly_reports.forEach(reportType => {
   table_columns[reportType] = ["Month"].concat(range_columns);
@@ -234,8 +236,6 @@ window.onload = function() {
     shopSelectDiv.style.display = "none"
   }
 
-  document.querySelectorAll(".ylgOnly").forEach(item => { item.style.display = is_ylg() ? "block" : "none" });
-  document.querySelectorAll(".nrsOnly").forEach(item => { item.style.display = is_ylg() ? "none" : "block" });
   if(!store_view) {
     btn_export_csv.style.display = "block";
   }
@@ -307,6 +307,7 @@ function login() {
         "cache-control": "no-cache"
       }
     }
+
     // Test fetch
     fetch(apiUrl, db_headers)
     .then(res => {
@@ -356,6 +357,19 @@ function login() {
       console.log(data);
       loginDiv.style.display = "none";
       document.title = shopConfig[shop].name;
+
+      if(is_ylg()){
+        ["HomeBSC", "OtherBSC"].forEach(bsc => {
+          paymode_reports.forEach(tblType => { table_columns[tblType].push(bsc) });
+        });
+      }
+
+      daywise_reports.forEach(reportType => {
+        table_columns[reportType].push("NewClients");
+      });
+
+      document.querySelectorAll(".ylgOnly").forEach(item => { item.style.display = is_ylg() ? "block" : "none" });
+      document.querySelectorAll(".nrsOnly").forEach(item => { item.style.display = is_ylg() ? "none" : "block" });
 
       // Simple render for debugging
       console.log("✅ Data:", data);
@@ -425,7 +439,7 @@ function populate_all_bills() {
 }
 
 function calcPayments(payments) {
-  let cash = 0, upi = 0, card = 0;
+  let cash = 0, upi = 0, card = 0, home_bsc = 0, other_bsc = 0;
   const payment_types = new Set();
   payments.forEach(p => {
     const mode = (p.ModeofPayment || "").toLowerCase();
@@ -435,13 +449,19 @@ function calcPayments(payments) {
     } else if (mode === "ewallet") {
       payment_types.add("UPI")
       upi += p.Tender || 0;
+    } else if (mode === "otherbsc") {
+      payment_types.add("OtherBSC")
+      other_bsc += p.Tender || 0;
+    } else if (mode.indexOf("bsc") > -1) {
+      payment_types.add("HomeBSC")
+      home_bsc += p.Tender || 0;
     } else {
       payment_types.add("Card")
       card += p.Tender || 0;
     }
   });
   payment_type = Array.from(payment_types).join("/")
-  return { cash, upi, card, payment_type };
+  return { cash, upi, card, home_bsc, other_bsc, payment_type };
 }
 
 function calcTickets(tickets) {
@@ -554,7 +574,7 @@ function formatReportData(rawData, reportType) {
         // Format date -> YYYY-MM-DD
         const [datePart, timePart] = bill.TimeMark.split(" ");
         if (reportType.endsWith("NRSOnly") && bill.mmd) return;
-        const { cash, upi, card, payment_type } = calcPayments(bill.payment);
+        const { cash, upi, card, home_bsc, other_bsc, payment_type } = calcPayments(bill.payment);
 
         if (non_group_reports.includes(reportType)) {
           if (reportType === "services") {
@@ -599,6 +619,8 @@ function formatReportData(rawData, reportType) {
               PaymentType: payment_type,
               Cash: cash,
               UPI: upi,
+              OtherBSC: other_bsc,
+              HomeBSC: home_bsc,
               Card: card,
               GSTPercent: gst_percent
             };
@@ -700,6 +722,8 @@ function formatReportData(rawData, reportType) {
               ASB: 0,
               Cash: 0,
               UPI: 0,
+              OtherBSC: 0,
+              HomeBSC: 0,
               Card: 0,
               NewClients: 0,
               EmpSale: {},
@@ -719,6 +743,8 @@ function formatReportData(rawData, reportType) {
           row.NetSale += netSalesSum;
           row.Cash += cash;
           row.UPI += upi;
+          row.OtherBSC += other_bsc;
+          row.HomeBSC += home_bsc;
           row.Card += card;
           row.NewClients += all_bills[bill.Phone]["bills"].length == 1? 1:0;
           Object.entries(emp_sale).forEach(([emp_name, emp_net_sale]) => {
@@ -1791,7 +1817,7 @@ function generateBillObject() {
 
   // Collect payments
   const payment = [];
-  ["Cash", "Card", "EWallet", "BSC"].forEach(mode => {
+  ["Cash", "Card", "EWallet", "HomeBSC", "OtherBSC"].forEach(mode => {
     const val = parseFloat(document.getElementById("pay" + mode).value) || 0;
     if (val > 0) {
       payment.push({
