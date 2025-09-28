@@ -104,7 +104,7 @@ class Utils:
                 "Serviceslipno": "0",
                 "Sex": "1",
                 "StoreID": settings.store_id,
-                "Taxamount": 18,
+                "Taxamount": 5,
                 "TicketID": ticket_id,
                 "TimeMark": service["timemark"] + ":00",
                 "Total": 265.5,
@@ -510,7 +510,7 @@ class MMDHandler:
                 if str(service["ServiceID"]).lower().startswith("scap"):
                     product_exists = True
                     prod_gross = service["Total"]
-                    prod_net = round(prod_gross / 1.18, 2)
+                    prod_net = round(prod_gross / 1.05, 2)
                     resp["Productbillsales"] += prod_gross
                     resp["servicebillsales"] -= prod_gross
                     resp["Productbillsalesnet"] += prod_net
@@ -586,7 +586,7 @@ class MMDHandler:
                     "ServiceID": "GS00000001",
                     "ServiceName": "HAIR CUT",
                     "Sex": "1",
-                    "Taxamount": 18,
+                    "Taxamount": 5,
                     "TicketID": 5868,
                     "Total": 0,
                     "clntid": "MURALI9591312316",
@@ -666,7 +666,7 @@ class MMDHandler:
         services = Utils.add_duplicates_in_dict(services, duplicate_entries)
         products = [product for product in self.rest_db.get_products() if product.pop("Qty") > 0]
         for product in products:
-            product["MRP"] = round(product["MRP"] / 1.18, 2)
+            product["MRP"] = round(product["MRP"] / 1.05, 2)
         duplicate_entries = {
             "ProductID": ["ServiceID", "value", "memprodid", "wsmemprodid"],
             "ProductName": ["ServiceName", "label"],
