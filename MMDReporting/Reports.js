@@ -21,6 +21,12 @@ const shopConfig = {
     "name": "Haralur",
 //    "whatsapp_number": ["8073959696"]
     "whatsapp_number": ["8073959696", "9663233832"]
+  },
+  "ADYAR": {
+    "url": "https://adyar-e5d4.restdb.io/rest/",
+    "encKey": "TWmA4zjwdd3mWhsFEHnJmP9adh8snZ6+Bkx/VOXgoiUExZnhCAG53crsV3iu3TcRBn3i8TZ3ku/uvd+fBuMyMQ==",
+    "name": "Adyar",
+    "whatsapp_number": ["9591312316"]
   }
 };
 
@@ -104,7 +110,7 @@ employee_name_map = {
 };
 
 function is_ylg(){
-  return ["HRLR"].includes(shopSelect.value);
+  return ["HRLR", "ADYAR"].includes(shopSelect.value);
 }
 
 function get_emp_name(emp_name){
@@ -1477,6 +1483,7 @@ function submitBill(){
     if (!updated) {
       insertNewDateBills({"datenum": bill_date_num, "bills": [bill_to_add]});
     }
+    next_bill_number += 1;
     resetBill();
     closeDialog();
     populate_all_bills();
@@ -1788,7 +1795,7 @@ function generateBillObject() {
 
   // Auto fields
   const TimeMark = get_ist_date().toISOString().slice(0,19).replace("T"," ");
-  const TicketID = "MMD" + next_bill_number; // replace with your own logic
+  const TicketID = "MMD" + next_bill_number;
 
   // Collect services (ticket array)
   const ticket = [];
