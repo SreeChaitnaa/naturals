@@ -967,6 +967,15 @@ function open_selection(reportType, search_key, search_value){
   searchTableModel.style.display = "block";
 }
 
+function send_wa_over_link(text, phone_num=null){
+  wa_link = "https://api.whatsapp.com/send/?";
+  if(phone_num != null){
+    wa_link = wa_link + "phone=91" + phone_num + "&";
+  }
+  wa_link = wa_link + "text=" + text.replace(/ /g, "%20").replace(/\n/g, "%0a");
+  window.open(wa_link, '_blank');
+}
+
 function send_whatsapp(text, phone_num=null){
   fetch("http://localhost:3000/send", {
     method: "POST",
@@ -978,16 +987,13 @@ function send_whatsapp(text, phone_num=null){
       alert(`Sent Whatsapp to ${phone_num} Successfully`);
     }
     else {
-      alert(`Error while sending Whatsapp update - ${response.status}`);
+      send_wa_over_link(text);
+      console.log(`Error while sending Whatsapp update - ${response.status}`);
     }
   })
   .catch(err => {
-    wa_link = "https://api.whatsapp.com/send/?";
-  //    if(phone_num != null){
-  //      wa_link = wa_link + "phone=91" + phone_num + "&";
-  //    }
-    wa_link = wa_link + "text=" + text.replace(/ /g, "%20").replace(/\n/g, "%0a");
-    window.open(wa_link, '_blank');
+    send_wa_over_link(text);
+    console.log(`Error while sending Whatsapp update - ${err}`);
   });
 }
 
