@@ -95,7 +95,7 @@ employee_name_map = {
   "Guru": "Guru prasad",
   "Komati": "Komathi",
   "sarita": "Sarita",
-  "Ritu": "Ritika",
+  "Ritu": "Sharmila",
   "Ali": "Lucky",
   "Mariya": "Rekha",
   'Mary': "mary L",
@@ -108,7 +108,7 @@ employee_name_map = {
   "sajid": "Sajid",
   "sona": "Sona",
   "Margareat": "Meenakshi",
-  "Ritika" : "Sharmila"
+  "Ritika": "Sharmila"
 };
 
 function is_ylg(){
