@@ -147,7 +147,7 @@ sections_map = {
   "Threading & Waxing": ["thread", "wax", "peel", "half legs", "underarm"],
   "Makeup": ["saree", "nail", "makeup"],
   "Membership": ["membership"],
-  "Products": ["loreal", "prime", "acia oil", " shampoo", " mask"],
+  "Products": ["loreal", "prime", "acia oil", " shampoo", " mask", "Masque"],
   "Other Combos": ["combo", "package"],
   "Others": []
 }
