@@ -99,14 +99,16 @@ employee_name_map = {
   "Ali": "Lucky",
   "Mariya": "Rekha",
   'Mary': "mary L",
-  'Meenakshi': "Ashwini",
+  'Kavya': "Ashwini",
   'Sneha': 'Suprita',
   'Toheed': "Sameer",
   "Bhanu": "Bhuvaneshwari",
   "Rahil": "Raheel",
   "bhuvaneshwari": "Bhuvaneshwari",
   "sajid": "Sajid",
-  "sona": "Sona"
+  "sona": "Sona",
+  "Margareat": "Meenakshi",
+  "Ritika" : "Sharmila"
 };
 
 function is_ylg(){
