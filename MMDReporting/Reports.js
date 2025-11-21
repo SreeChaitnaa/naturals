@@ -4,12 +4,14 @@
 const shopConfig = {
   "TNS": {
     "url": "https://tns.marammuralidhar3234.workers.dev/rest/",
+//    "url": "https://innosmartisca-d3db.restdb.io/rest/",
     "encKey": "ki62s6ktea89p72RjFNDDrqVjKrUUT9i7d78cup3kqCEK1KvuFaLDkY7PdjUrnT5S5eQzFF2/9FGDGrt3SflYA==",
     "name": "Thanisandra",
     "whatsapp_number": ["8722036021", "7829347636"]
   },
   "JKR": {
     "url": "https://jkr.marammuralidhar3234.workers.dev/rest/",
+//    "url": "https://innosmartiscajkr-30a7.restdb.io/rest/",
     "encKey": "Fr4R+Qu6i1p+hdfcmDrm4bywTHY/b863GlNnuA9p9uo3x5nnahlJqvssPOJRt1BcDXLw34a2rIrcT81DmMe7xQ==",
     "name": "Jakkur",
     "whatsapp_number": ["9743823134", "7892256106"]
@@ -148,7 +150,7 @@ sections_map = {
                         "Under Eye", "add on mask"],
   "Threading & Waxing": ["thread", "wax", "peel", "half legs", "underarm", "sides"],
   "Makeup": ["saree", "nail", "makeup", "make-up", "polish", "updo"],
-  "Membership": ["membership"],
+  "Membership": ["membership", "bsc"],
   "Products": ["loreal", "prime", "acia oil", " shampoo", " mask", "masque", "acai", "conditioner", "face wash", "sensi bright"],
   "Other Combos": ["combo", "package"],
   "Others": []
