@@ -90,7 +90,7 @@ table_click_links = {
 }
 
 const moneyColumns = ['Tax', 'Gross', 'Cash', 'UPI', 'Card', "HomeBSC", "OtherBSC"]
-const numericColumns = ['Price', 'Discount', 'NetSale', 'ABV', 'ASB', 'TotalNetSale', ...moneyColumns];
+const numericColumns = ['Price', 'Discount', 'NetSale', 'ABV', 'ASB', 'TotalNetSale', 'AANetSale', ...moneyColumns];
 const excludeColumnsInSearchTable = ['PaymentType', ...moneyColumns];
 
 employee_name_map = {
@@ -117,7 +117,11 @@ function is_ylg(){
   return ["HRLR", "ADYAR"].includes(shopSelect.value);
 }
 
-function get_emp_name(emp_name){
+function get_emp_name(service){
+  emp_name = service.empname;
+  if(service.ServiceName.indexOf("BSC -") >= 0) {
+    return "BSC Sales";
+  }
   return employee_name_map[emp_name.trim()] || emp_name.trim();
 }
 
@@ -167,6 +171,7 @@ non_group_reports = ["services", "bills", "detailedBills", "detailedAllBills", "
 never_call_again_list = ["Not Happy", "Moved Out of Town", "Never Call Again"];
 non_shop_reports = ["bills", "daywiseSplit", "monthlySplit", "monthlyNRSOnly", "summaryNRSOnly", "daywiseNRSOnly"];
 non_sum_row_reports = ["callBacks", "callBacksOnHold", "dailyCash"];
+non_aa_sales_reports = ["employeeSectionSales", ...non_sum_row_reports]
 
 let db_config = {}
 let db_url = "";
@@ -372,6 +377,14 @@ function login() {
         ["HomeBSC", "OtherBSC"].forEach(bsc => {
           paymode_reports.forEach(tblType => { table_columns[tblType].push(bsc) });
         });
+        Object.keys(table_columns).forEach(tblType => {
+          if (!non_aa_sales_reports.includes(tblType)){
+            table_columns[tblType].push("AANetSale");
+          }
+        });
+        ["bills", "detailedBills", "services"].forEach(tblType => {
+          table_columns[tblType].push("BSC");
+        });
       }
 
       daywise_reports.forEach(reportType => {
@@ -448,7 +461,7 @@ function populate_all_bills() {
   next_bill_number = parseInt(max_bill_id) + 1;
 }
 
-function calcPayments(payments) {
+function calcPayments(payments, gst_percent) {
   let cash = 0, upi = 0, card = 0, home_bsc = 0, other_bsc = 0;
   const payment_types = new Set();
   payments.forEach(p => {
@@ -470,8 +483,11 @@ function calcPayments(payments) {
       card += p.Tender || 0;
     }
   });
-  payment_type = Array.from(payment_types).join("/")
-  return { cash, upi, card, home_bsc, other_bsc, payment_type };
+  payment_type = Array.from(payment_types).join("/");
+  aa_gross = cash + upi + card + (other_bsc * 0.45) + (home_bsc * 0.60);
+  aa_net_sale =  aa_gross / (1 + gst_percent);
+  aa_ratio = aa_gross / (cash + upi + card + other_bsc + home_bsc);
+  return { cash, upi, card, home_bsc, other_bsc, aa_net_sale, aa_ratio, payment_type };
 }
 
 function calcTickets(tickets) {
@@ -483,21 +499,21 @@ function calcTickets(tickets) {
   emp_sale = {};
   section_sale = {};
 
-  tickets.forEach(item => {
-    discount = item.DiscountAmount || 0
+  tickets.forEach(service => {
+    discount = service.DiscountAmount || 0;
     discountSum += discount;
-    price = item.Qty * (item.Price || 0)
+    price = service.Qty * (service.Price || 0);
     priceSum += price;
     netSale = price - discount;
-    servicesCount += item.Qty || 0;
-    serviceNames.push(item.ServiceName);
-    emp_name = get_emp_name(item.empname);
+    servicesCount += service.Qty || 0;
+    serviceNames.push(service.ServiceName);
+    emp_name = get_emp_name(service);
     empNamesSet.add(emp_name);
     if(!emp_sale[emp_name]){
       emp_sale[emp_name] = 0;
     }
     emp_sale[emp_name] += netSale;
-    section_name = getSection(item.ServiceName);
+    section_name = getSection(service.ServiceName);
     if(!section_sale[section_name]){
       section_sale[section_name] = 0;
     }
@@ -505,9 +521,34 @@ function calcTickets(tickets) {
     all_emp_names.add(emp_name);
     all_section_names.add(section_name);
   });
-  netSalesSum = priceSum - discountSum
+  netSalesSum = priceSum - discountSum;
 
   return { servicesCount, priceSum, discountSum, netSalesSum, serviceNames, empNamesSet, emp_sale, section_sale };
+}
+
+function get_bsc_sale_flag(bill) {
+  bsc_flag = 0;
+  if(is_ylg()) {
+  //  "HomeBSC", "OtherBSC"
+    is_home_bsc = false;
+    is_other_bsc = false;
+    bill.payment.find(payment => {
+      if(payment["ModeofPayment"] == "HomeBSC") {
+        bsc_flag = 1;
+      }
+      if(payment["ModeofPayment"] == "OtherBSC") {
+        bsc_flag = 2;
+      }
+      return bsc_flag > 0;
+    });
+  }
+  return bsc_flag;
+}
+
+function get_aa_net_sales(aa_net_sale_ratio, service, is_single=false)  {
+  net_sale = ((!is_single? service.Qty : 1) * service.Price)
+  net_sale = net_sale - (service.DiscountAmount / (! is_single ? 1 : service.Qty));
+  return net_sale * aa_net_sale_ratio;
 }
 
 function is_call_back_on_hold(call_back_data){
@@ -584,7 +625,10 @@ function formatReportData(rawData, reportType) {
         // Format date -> YYYY-MM-DD
         const [datePart, timePart] = bill.TimeMark.split(" ");
         if (reportType.endsWith("NRSOnly") && bill.mmd) return;
-        const { cash, upi, card, home_bsc, other_bsc, payment_type } = calcPayments(bill.payment);
+
+        bsc_flag = get_bsc_sale_flag(bill);
+        report_bsc_flag = bsc_flag == 0 ? "No BSC" : bsc_flag == 1 ? "Home BSC" : "Other BSC";
+        const { cash, upi, card, home_bsc, other_bsc, aa_net_sale, aa_ratio, payment_type } = calcPayments(bill.payment, gst_percent);
 
         if (non_group_reports.includes(reportType)) {
           if (reportType === "services") {
@@ -601,10 +645,12 @@ function formatReportData(rawData, reportType) {
                   Price: service.Price,
                   Discount: (service.DiscountAmount / service.Qty),
                   NetSale: service.Price - (service.DiscountAmount / service.Qty),
-                  EmpName: get_emp_name(service.empname),
+                  AANetSale: get_aa_net_sales(aa_ratio, service, 1),
+                  EmpName: get_emp_name(service),
                   PaymentType: payment_type,
                   Section: getSection(service.ServiceName),
-                  GSTPercent: gst_percent
+                  GSTPercent: gst_percent,
+                  BSC: report_bsc_flag
                 };
                 direct_rows.push(row)
               }
@@ -621,6 +667,7 @@ function formatReportData(rawData, reportType) {
               Price: priceSum,
               Discount: discountSum,
               NetSale: netSalesSum,
+              AANetSale: aa_net_sale,
               Tax: netSalesSum * gst_percent,
               Gross: netSalesSum * (1 + gst_percent),
               Services: servicesCount,
@@ -632,7 +679,8 @@ function formatReportData(rawData, reportType) {
               OtherBSC: other_bsc,
               HomeBSC: home_bsc,
               Card: card,
-              GSTPercent: gst_percent
+              GSTPercent: gst_percent,
+              BSC: report_bsc_flag
             };
             direct_rows.push(row)
           }
@@ -640,7 +688,7 @@ function formatReportData(rawData, reportType) {
           const emp_in_bill = new Set();
           bill.ticket.forEach(service => {
 
-            let key = get_emp_name(service.empname);
+            let key = get_emp_name(service);
             emp_in_bill.add(key)
             if (!grouped[key]) {
               grouped[key] = {
@@ -650,6 +698,7 @@ function formatReportData(rawData, reportType) {
                 Price: 0,
                 Discount: 0,
                 NetSale: 0,
+                AANetSale: 0,
                 ABV: 0,
                 ASB: 0,
                 GSTPercent: gst_percent
@@ -661,13 +710,14 @@ function formatReportData(rawData, reportType) {
             row.Price += service.Qty * service.Price;
             row.Discount += service.DiscountAmount;
             row.NetSale += (service.Qty * service.Price) - service.DiscountAmount;
+            row.AANetSale += get_aa_net_sales(aa_ratio, service);
           });
           emp_in_bill.forEach(empName => {
               grouped[empName].Bills += 1;
           });
         } else if (reportType === "employeeSectionSales") {
           bill.ticket.forEach(service => {
-            let key = get_emp_name(service.empname);
+            let key = get_emp_name(service);
             if (!grouped[key]) {
               grouped[key] = {};
               table_columns["employeeSectionSales"].forEach(section_name => {
@@ -676,7 +726,7 @@ function formatReportData(rawData, reportType) {
               grouped[key]["Name"] = key;
             }
             emp_sec_name = getSection(service.ServiceName);
-            grouped[key][emp_sec_name] += (service.Qty * service.Price) - service.DiscountAmount;
+            grouped[key][emp_sec_name] += get_aa_net_sales(aa_ratio, service);
           });
           Object.keys(grouped).forEach(emp_name => {
             Object.keys(grouped[emp_name]).forEach(emp_sec_name => {
@@ -694,6 +744,7 @@ function formatReportData(rawData, reportType) {
                 Price: 0,
                 Discount: 0,
                 NetSale: 0,
+                AANetSale: 0,
                 Services: new Set(),
                 Providers: new Set(),
                 Section: getSection(key),
@@ -707,7 +758,8 @@ function formatReportData(rawData, reportType) {
             row.Price += service.Qty * service.Price;
             row.Discount += service.DiscountAmount;
             row.NetSale += (service.Qty * service.Price) - service.DiscountAmount;
-            row.Providers.add(get_emp_name(service.empname))
+            row.AANetSale += get_aa_net_sales(aa_ratio, service);
+            row.Providers.add(get_emp_name(service));
           });
         } else {
           let key = datePart;
@@ -726,6 +778,7 @@ function formatReportData(rawData, reportType) {
               Price: 0,
               Discount: 0,
               NetSale: 0,
+              AANetSale: 0,
               Tax: 0,
               Gross: 0,
               ABV: 0,
@@ -751,6 +804,7 @@ function formatReportData(rawData, reportType) {
           row.Price += priceSum;
           row.Discount += discountSum;
           row.NetSale += netSalesSum;
+          row.AANetSale += aa_net_sale;
           row.Cash += cash;
           row.UPI += upi;
           row.OtherBSC += other_bsc;

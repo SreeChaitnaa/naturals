@@ -42,7 +42,7 @@ class Utils:
             next_val = main_list[-1][incremental_key] + 1
         for i in range(len(merge_list)):
             if use_main_as_template:
-                template = main_list[0].copy()
+                template = main_list[1].copy()
                 template.update(merge_list[i])
                 merge_list[i] = template
             if next_val:
@@ -104,6 +104,7 @@ class Utils:
                 "Serviceslipno": "0",
                 "Sex": "1",
                 "StoreID": settings.store_id,
+                "TaxType": "Exclusive",
                 "Taxamount": 5,
                 "TicketID": ticket_id,
                 "TimeMark": service["timemark"] + ":00",
