@@ -382,9 +382,11 @@ function login() {
             table_columns[tblType].push("AANetSale");
           }
         });
-        ["bills", "detailedBills", "services"].forEach(tblType => {
-          table_columns[tblType].push("BSC");
-        });
+        if(!store_view){
+          ["bills", "detailedBills", "services"].forEach(tblType => {
+            table_columns[tblType].push("BSC");
+          });
+        }
       }
 
       daywise_reports.forEach(reportType => {
