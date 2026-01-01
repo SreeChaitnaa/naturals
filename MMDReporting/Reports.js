@@ -151,11 +151,11 @@ sections_map = {
                         "change of styl", "conditioning", "ironing", "hair wash", "trim", "Shampoo and Condition"],
   "De-tan & Facials": ["facial", "ultimo", "fruit", "detan", "de-tan", "cleanup", "blaster", "bleach", "bliss",
                         "glow", "no tan", "hydration", "back polish", "kanpeki", "Skin Radiance", "Whitening",
-                        "Under Eye", "add on mask"],
+                        "Under Eye", "add on mask", "sensi bright"],
   "Threading & Waxing": ["thread", "wax", "peel", "half legs", "underarm", "sides"],
   "Makeup": ["saree", "nail", "makeup", "make-up", "polish", "updo"],
   "Membership": ["membership", "bsc"],
-  "Products": ["loreal", "prime", "acia oil", " shampoo", " mask", "masque", "acai", "conditioner", "face wash", "sensi bright"],
+  "Products": ["loreal", "prime", "acia oil", " shampoo", " mask", "masque", "acai", "conditioner", "face wash"],
   "Other Combos": ["combo", "package"],
   "Others": []
 }
