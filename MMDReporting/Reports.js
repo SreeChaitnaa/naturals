@@ -7,7 +7,7 @@ const shopConfig = {
 //    "url": "https://innosmartisca-d3db.restdb.io/rest/",
     "encKey": "ki62s6ktea89p72RjFNDDrqVjKrUUT9i7d78cup3kqCEK1KvuFaLDkY7PdjUrnT5S5eQzFF2/9FGDGrt3SflYA==",
     "name": "Thanisandra",
-    "whatsapp_number": ["8722036021", "7829347636"]
+    "whatsapp_number": ["8722036021"]
   },
   "JKR": {
     "url": "https://jkr.marammuralidhar3234.workers.dev/rest/",
@@ -16,13 +16,20 @@ const shopConfig = {
     "name": "Jakkur",
     "whatsapp_number": ["9743823134", "7892256106"]
   },
+  "KNKN": {
+    // "url": "https://jkr.marammuralidhar3234.workers.dev/rest/",
+    "url": "https://scaknk-bb9b.restdb.io/rest/",
+    "encKey": "wdnHapRRTSCp15Tf0HskoK+FKgdLO8DeM9BeFbqAy1Oe8dqD1ja6UfKXGfhu7N4CuW10y9Fn2Wce+58++xpYWw==",
+    "name": "Kanaka Nagar",
+    "whatsapp_number": ["9591312316"]
+  },
   "HRLR": {
     "url": "https://hrlr.marammuralidhar3234.workers.dev/rest/",
 //    "url": "https://ylgharalur-be6e.restdb.io/rest/",
     "encKey": "bKuxUJfSNeOtp67m3v4WC39P+xPn/7a5QJNCYF1ogTW0OXSgOaxpNb+jvSBQq+93kZGHU3Bj87QFi9FAk7No+g==",
     "name": "Haralur",
 //    "whatsapp_number": ["8073959696"]
-    "whatsapp_number": ["8073959696", "9663233832"]
+    "whatsapp_number": ["8073959696"]
   },
   "ADYAR": {
     "url": "https://adyar-e5d4.restdb.io/rest/",
