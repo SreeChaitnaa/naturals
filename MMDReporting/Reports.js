@@ -262,6 +262,9 @@ window.onload = function() {
     btn_export_csv.style.display = "block";
   }
   else{
+    if(is_ylg()){
+      non_shop_reports.push("detailedAllBills");
+    }
     non_shop_reports.forEach(option_to_remove => {
       for (let i = 0; i < reportTypeSelector.options.length; i++) {
         if (option_to_remove == reportTypeSelector.options[i].value) {
@@ -302,6 +305,10 @@ function reset_date_pickers(){
   const today = get_ist_date();
   toDatePicker.value = today.toISOString().split('T')[0];
   set_from_date_to_month_beginning(today);
+  if(is_ylg() && store_view){
+    fromDatePicker.value = today.toISOString().split('T')[0];
+    fromDatePicker.disabled = true;
+  }
 }
 
 function get_ist_date(){
@@ -386,7 +393,9 @@ function login() {
         });
         Object.keys(table_columns).forEach(tblType => {
           if (!non_aa_sales_reports.includes(tblType)){
-            table_columns[tblType].push("AANetSale");
+            if(!table_columns[tblType].includes("AANetSale")){
+              table_columns[tblType].push("AANetSale");
+            }
           }
         });
         if(!store_view){
