@@ -899,7 +899,7 @@ function formatReportData(rawData, reportType) {
       rows.forEach(row => {
         row.Tax = row.NetSale * row.GSTPercent;
         row.Gross = row.NetSale + row.Tax;
-        row.ABV = row.Bills > 0 ? parseFloat((row.NetSale / row.Bills).toFixed(2)) : 0;
+        row.ABV = row.Bills > 0 ? parseFloat((row.RealNetSale / row.Bills).toFixed(2)) : 0;
         row.ASB = row.Bills > 0 ? parseFloat((row.Services / row.Bills).toFixed(2)) : 0;
       });
     }
@@ -1175,9 +1175,9 @@ function fill_charts(reportType){
       exp_value = exp_value / 2;
     }
     daily_chart_expected.push(exp_value);
-    daily_chart_actual.push(day_sale.NetSale);
-    growth_expected += exp_value
-    growth_actual += day_sale.NetSale
+    daily_chart_actual.push(day_sale.RealNetSale);
+    growth_expected += exp_value;
+    growth_actual += day_sale.RealNetSale;
     growth_chart_expected.push(growth_expected);
     growth_chart_actual.push(growth_actual);
     total_clients.push(day_sale.Bills);
