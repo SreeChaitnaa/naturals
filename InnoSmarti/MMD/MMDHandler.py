@@ -535,6 +535,11 @@ class MMDHandler:
                 if str(service["ServiceID"]).lower().startswith("sca"):
                     is_mmd = True
                     break
+        if not is_mmd:
+            for tender in self.payload[0]["tender"]:
+                if str(tender["paytype"]) == "Amex":
+                    is_mmd = True
+                    break
         if is_mmd:
             try:
                 _, ph_no = Utils.get_name_and_ph_no(self.payload[0]['clntid'])
@@ -647,6 +652,8 @@ class MMDHandler:
                             print_pay[k] = print_resp["merged"][0]["ChangeAmt"]
                         elif k in keys_map:
                             print_pay[k] = tender[keys_map[k]]
+                        if k == "ModeofPayment" and print_pay[k] == "Amex":
+                            print_pay[k] = "Package"
                     print_resp["paymode"].append(print_pay)
 
                 return print_resp
