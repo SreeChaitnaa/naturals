@@ -494,10 +494,10 @@ function populate_all_bills() {
   next_bill_number = parseInt(max_bill_id) + 1;
 }
 
-function calcPayments(payments, gst_percent) {
+function calcPayments(bill, gst_percent) {
   let cash = 0, upi = 0, card = 0, home_bsc = 0, other_bsc = 0, package=0;
   const payment_types = new Set();
-  payments.forEach(p => {
+  bill.payment.forEach(p => {
     const mode = (p.ModeofPayment || "").toLowerCase();
     if (mode === "cash") {
       payment_types.add("Cash")
@@ -520,9 +520,16 @@ function calcPayments(payments, gst_percent) {
     }
   });
   payment_type = Array.from(payment_types).join("/");
-  real_gross = cash + upi + card + (other_bsc * 0.45) + (home_bsc * 0.60) + (package * 0.66);
-  real_net_sale =  real_gross / (1 + gst_percent);
-  real_ratio = real_gross / (cash + upi + card + other_bsc + home_bsc + package) || 0;
+  service_name_for_real_sale = bill.ticket[0]["ServiceName"].toLowerCase();
+  if (service_name_for_real_sale.indexOf("bsc") >= 0 || service_name_for_real_sale.indexOf("sca package") >= 0){
+    real_net_sale = 0;
+    real_ratio = 0;
+  }
+  else{
+    real_gross = cash + upi + card + (other_bsc * 0.45) + (home_bsc * 0.60) + (package * 0.66);
+    real_net_sale =  real_gross / (1 + gst_percent);
+    real_ratio = real_gross / (cash + upi + card + other_bsc + home_bsc + package) || 0;
+  }
   return { cash, upi, card, home_bsc, other_bsc, package, real_net_sale, real_ratio, payment_type };
 }
 
@@ -664,7 +671,7 @@ function formatReportData(rawData, reportType) {
 
         bsc_flag = get_bsc_sale_flag(bill);
         report_bsc_flag = bsc_flag == 0 ? "No BSC" : bsc_flag == 1 ? "Home BSC" : "Other BSC";
-        const { cash, upi, card, home_bsc, other_bsc, package, real_net_sale, real_ratio, payment_type } = calcPayments(bill.payment, gst_percent);
+        const { cash, upi, card, home_bsc, other_bsc, package, real_net_sale, real_ratio, payment_type } = calcPayments(bill, gst_percent);
 
         if (non_group_reports.includes(reportType)) {
           if (reportType === "services") {
@@ -825,6 +832,7 @@ function formatReportData(rawData, reportType) {
               OtherBSC: 0,
               HomeBSC: 0,
               Card: 0,
+              Package: 0,
               NewClients: 0,
               EmpSale: {},
               SectionSale: {},
@@ -1358,7 +1366,7 @@ function send_update(nrs_only=false, is_update=true, client_count=0, appointment
   }
   summary =  "Date: *" + today.Date + "*\n";
   summary += "Salon: *" + shopConfig[shopSelect.value].name + "*\n\n";
-  summary += "Sales: " + today.NetSale.toFixed(2) + "\n";
+  summary += "Sales: " + today.RealNetSale.toFixed(2) + "\n";
   summary += "Bills: " + today.Bills + "\n";
   summary += "ABV: " + today.ABV.toFixed(2) + "\n";
   date_num = parseInt(today.Date.split("-")[2], 10)
