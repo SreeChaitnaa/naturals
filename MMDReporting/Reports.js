@@ -264,6 +264,8 @@ window.onload = function() {
   else{
     if(is_ylg()){
       non_shop_reports.push("detailedAllBills");
+      non_shop_reports.push("callBacksOnHold");
+      non_shop_reports.push("callBacks");
     }
     non_shop_reports.forEach(option_to_remove => {
       for (let i = 0; i < reportTypeSelector.options.length; i++) {
@@ -908,6 +910,11 @@ function fill_table_with_data(reportType, in_dialog=false, search_key=null, sear
   data_keys = [];
   table_columns[reportType].forEach(col_name => {
     if (in_dialog && excludeColumnsInSearchTable.includes(col_name)) { return; }
+    if (is_ylg() && store_view) {
+      if(col_name == "Phone"){
+        return;
+      }
+    }
     data_keys.push(col_name);
   });
   if (!non_sum_row_reports.includes(reportType)) {
