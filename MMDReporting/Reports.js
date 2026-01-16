@@ -394,8 +394,13 @@ function login() {
 
       pay_modes_to_add = is_ylg() ? ["HomeBSC", "OtherBSC"] : ["Package"];
       pay_modes_to_add.forEach(bsc => {
-        paymode_reports.forEach(tblType => { table_columns[tblType].push(bsc) });
+        paymode_reports.forEach(tblType => {
+          if(!table_columns[tblType].includes(bsc)){
+            table_columns[tblType].push(bsc);
+          }
+        });
       });
+
       Object.keys(table_columns).forEach(tblType => {
         if (!non_net_sales_reports.includes(tblType)){
           if(!table_columns[tblType].includes("RealNetSale")){
@@ -407,7 +412,9 @@ function login() {
       if(is_ylg()){
         if(!store_view){
           ["bills", "detailedBills", "services"].forEach(tblType => {
-            table_columns[tblType].push("BSC");
+            if(!table_columns[tblType].includes("BSC")){
+              table_columns[tblType].push("BSC");
+            }
           });
         }
       }
