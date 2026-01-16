@@ -419,9 +419,10 @@ function login() {
         }
       }
 
-
       daywise_reports.forEach(reportType => {
-        table_columns[reportType].push("NewClients");
+        if(!table_columns[tblType].includes("NewClients")){
+          table_columns[reportType].push("NewClients");
+        }
       });
 
       document.querySelectorAll(".ylgOnly").forEach(item => { item.style.display = is_ylg() ? "block" : "none" });
