@@ -420,7 +420,7 @@ function login() {
       }
 
       daywise_reports.forEach(reportType => {
-        if(!table_columns[tblType].includes("NewClients")){
+        if(!table_columns[reportType].includes("NewClients")){
           table_columns[reportType].push("NewClients");
         }
       });
