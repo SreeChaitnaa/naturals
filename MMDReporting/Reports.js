@@ -527,7 +527,7 @@ function calcPayments(bill, gst_percent) {
     real_ratio = 0;
   }
   else{
-    real_gross = cash + upi + card + (other_bsc * 0.45) + (home_bsc * 0.60) + (package * 0.66);
+    real_gross = cash + upi + card + (other_bsc * 0.45) + (home_bsc * 0.60) + (package * 2/3);
     real_net_sale =  real_gross / (1 + gst_percent);
     real_ratio = real_gross / (cash + upi + card + other_bsc + home_bsc + package) || 0;
   }
