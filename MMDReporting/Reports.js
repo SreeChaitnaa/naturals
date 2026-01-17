@@ -1110,6 +1110,7 @@ function send_whatsapp(text, phone_num=null){
 function fetchReport() {
   const fromDate = fromDatePicker.value;
   const toDate = toDatePicker.value;
+  if (new Date(toDatePicker.value)).getFullYear() < 2020 || new Date(fromDate.value)).getFullYear() < 2020) return;
   const reportType = reportTypeSelector.value || "daywiseNRSOnly";
 
   if (!fromDate || !toDate) {
