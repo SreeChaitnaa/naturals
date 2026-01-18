@@ -533,27 +533,38 @@ function calcPayments(bill, gst_percent) {
   const payment_types = new Set();
 
   bill.payment.forEach(p => {
+    p_amount = p.Tender || 0;
+    if(p_amount < 1){
+      return
+    }
     const mode = (p.ModeofPayment || "").toLowerCase();
     if (mode === "cash") {
       payment_types.add("Cash");
-      cash += (p.Tender || 0) - (p.ChangeAmt || 0);
+      cash += p_amount - (p.ChangeAmt || 0);
     } else if (mode === "ewallet") {
       payment_types.add("UPI");
-      upi += p.Tender || 0;
+      upi += p_amount;
     } else if (mode === "otherbsc") {
       payment_types.add("OtherBSC");
-      other_bsc += p.Tender || 0;
+      other_bsc += p_amount;
     } else if (mode.indexOf("bsc") > -1) {
       payment_types.add("HomeBSC");
-      home_bsc += p.Tender || 0;
+      home_bsc += p_amount;
     } else if (mode.indexOf("amex") > -1) {
       payment_types.add("Package");
-      package += p.Tender || 0;
+      package += p_amount;
     } else {
       payment_types.add("Card")
-      card += p.Tender || 0;
+      card += p_amount;
     }
   });
+  bill_ph = bill.Phone;
+  adv_amount = bill.AdvanceAmount || 0;
+  if(adv_amount > 0){
+    payment_types.add("Package");
+    package += adv_amount || 0;
+    bill_ph = "NotAPhone";
+  }
   payment_type = Array.from(payment_types).join("/");
   service_name_for_real_sale = bill.ticket[0]["ServiceName"].toLowerCase();
   if (service_name_for_real_sale.indexOf("bsc") >= 0 || service_name_for_real_sale.indexOf("sca package") >= 0){
@@ -561,13 +572,6 @@ function calcPayments(bill, gst_percent) {
     real_ratio = 0;
   }
   else{
-    bill_ph = bill.Phone;
-    adv_amount = bill.AdvanceAmount || 0;
-    if(adv_amount > 0){
-      payment_types.add("Package");
-      package += adv_amount || 0;
-      bill_ph = "NotAPhone";
-    }
     real_gross = cash + upi + card + (other_bsc * 0.45) + (home_bsc * 0.60) + get_packages_net_sale(package, bill_ph);
     real_net_sale =  real_gross / (1 + gst_percent);
     real_ratio = real_gross / (cash + upi + card + other_bsc + home_bsc + package) || 0;
