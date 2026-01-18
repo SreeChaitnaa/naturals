@@ -542,6 +542,12 @@ class MMDHandler:
                     break
         if is_mmd:
             try:
+                adv_amount = self.payload[0]['AdvanceAmount']
+                if str(adv_amount) != '0':
+                    return {
+                        "TicketID": "Error",
+                        "message": "SCA Products or Services Can not be sold with Advance Amount, Contact Murali."
+                    }
                 _, ph_no = Utils.get_name_and_ph_no(self.payload[0]['clntid'])
                 saved_bill = self.rest_db.save_bill(self.payload, ph_no)
                 return {

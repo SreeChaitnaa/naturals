@@ -188,6 +188,9 @@ let db_url = "";
 let db_headers = {};
 let last_data = [];
 let full_data = [];
+let packages_data = [];
+let packages_balance = {};
+let packages_ratio = {};
 let current_rows = [];
 let all_bills = {};
 let call_backs = {};
@@ -287,6 +290,30 @@ window.onload = function() {
 function set_from_date_to_month_beginning(today) {
   today = (new Date(today.getTime() - 330 * 60000));
   fromDatePicker.value = (new Date(Date.UTC(today.getFullYear(), today.getMonth(), 1))).toISOString().split('T')[0];
+}
+
+function process_packages_data(){
+  packages_data.forEach(pr => {
+    if(!(pr.phone in packages_balance)){
+      packages_balance[pr.phone] = 0
+    }
+    packages_balance[pr.phone] += pr.amount;
+    if(pr.amount > 0){
+      if(!(pr.phone in packages_ratio)){
+        packages_ratio[pr.phone] = [0, 0]
+      }
+      packages_ratio[pr.phone][0] += pr.netsale;
+      packages_ratio[pr.phone][1] += pr.amount;
+    }
+  });
+}
+
+function get_packages_net_sale(package_sale, phone_num){
+  pr = 1;
+  if(phone_num in packages_ratio && package_sale > 0){
+    pr = packages_ratio[phone_num][0] / packages_ratio[phone_num][1];
+  }
+  return package_sale * pr;
 }
 
 function getSection(serviceName) {
@@ -445,23 +472,29 @@ function login() {
         }
       });
       reset_date_pickers();
-      fetch(db_url + "daysales", db_headers).then(data_res => {
-        return data_res.json();
-      }).then(data_response => {
-        full_data = data_response;
-        populate_all_bills()
+      fetch(db_url + "scapackages", db_headers).then(packages_resp => {
+        return packages_resp.json();
+      }).then(packages_resp_data => {
+        packages_data = packages_resp_data;
+        process_packages_data();
+        fetch(db_url + "daysales", db_headers).then(data_res => {
+          return data_res.json();
+        }).then(data_response => {
+          full_data = data_response;
+          populate_all_bills()
 
-        populateSearchLists();
+          populateSearchLists();
 
-        full_data.forEach(day_sale => {
-          cash_data = day_sale["cashdata"];
-          if (cash_data){
-            cash_rows[day_sale["datenum"]] = cash_data;
-          }
+          full_data.forEach(day_sale => {
+            cash_data = day_sale["cashdata"];
+            if (cash_data){
+              cash_rows[day_sale["datenum"]] = cash_data;
+            }
+          });
+          fetchReport();
+          dataDiv.style.display = "block";
+          spinnerOverlay.style.display = "none";
         });
-        fetchReport();
-        dataDiv.style.display = "block";
-        spinnerOverlay.style.display = "none";
       });
     })
     .catch(err => {
@@ -498,22 +531,23 @@ function populate_all_bills() {
 function calcPayments(bill, gst_percent) {
   let cash = 0, upi = 0, card = 0, home_bsc = 0, other_bsc = 0, package=0;
   const payment_types = new Set();
+
   bill.payment.forEach(p => {
     const mode = (p.ModeofPayment || "").toLowerCase();
     if (mode === "cash") {
-      payment_types.add("Cash")
+      payment_types.add("Cash");
       cash += (p.Tender || 0) - (p.ChangeAmt || 0);
     } else if (mode === "ewallet") {
-      payment_types.add("UPI")
+      payment_types.add("UPI");
       upi += p.Tender || 0;
     } else if (mode === "otherbsc") {
-      payment_types.add("OtherBSC")
+      payment_types.add("OtherBSC");
       other_bsc += p.Tender || 0;
     } else if (mode.indexOf("bsc") > -1) {
-      payment_types.add("HomeBSC")
+      payment_types.add("HomeBSC");
       home_bsc += p.Tender || 0;
     } else if (mode.indexOf("amex") > -1) {
-      payment_types.add("Package")
+      payment_types.add("Package");
       package += p.Tender || 0;
     } else {
       payment_types.add("Card")
@@ -527,7 +561,14 @@ function calcPayments(bill, gst_percent) {
     real_ratio = 0;
   }
   else{
-    real_gross = cash + upi + card + (other_bsc * 0.45) + (home_bsc * 0.60) + (package * 2/3);
+    bill_ph = bill.Phone;
+    adv_amount = bill.AdvanceAmount || 0;
+    if(adv_amount > 0){
+      payment_types.add("Package");
+      package += adv_amount || 0;
+      bill_ph = "NotAPhone";
+    }
+    real_gross = cash + upi + card + (other_bsc * 0.45) + (home_bsc * 0.60) + get_packages_net_sale(package, bill_ph);
     real_net_sale =  real_gross / (1 + gst_percent);
     real_ratio = real_gross / (cash + upi + card + other_bsc + home_bsc + package) || 0;
   }

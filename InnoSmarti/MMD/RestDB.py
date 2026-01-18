@@ -142,7 +142,7 @@ class RestDB:
             if bill_date not in bills_per_day:
                 bills_per_day[bill_date] = {"datenum": bill_date, "bills": []}
 
-            for k in ["Name", "Phone", "TicketID", "TimeMark", "Comments"]:
+            for k in ["Name", "Phone", "TicketID", "TimeMark", "Comments", "AdvanceAmount"]:
                 bill[k] = bill_to_add["ticket"][0][k]
 
             for payment in bill_to_add["payment"]:
