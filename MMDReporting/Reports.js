@@ -535,7 +535,7 @@ function calcPayments(bill, gst_percent) {
   bill.payment.forEach(p => {
     p_amount = p.Tender || 0;
     if(p_amount < 1){
-      return
+      return;
     }
     const mode = (p.ModeofPayment || "").toLowerCase();
     if (mode === "cash") {
