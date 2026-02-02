@@ -337,10 +337,10 @@ function reset_date_pickers(){
   const today = get_ist_date();
   toDatePicker.value = today.toISOString().split('T')[0];
   set_from_date_to_month_beginning(today);
-  if(is_ylg() && store_view){
-    fromDatePicker.value = today.toISOString().split('T')[0];
-    fromDatePicker.disabled = true;
-  }
+//  if(is_ylg() && store_view){
+//    fromDatePicker.value = today.toISOString().split('T')[0];
+//    fromDatePicker.disabled = true;
+//  }
 }
 
 function get_ist_date(){
@@ -982,11 +982,11 @@ function fill_table_with_data(reportType, in_dialog=false, search_key=null, sear
   data_keys = [];
   table_columns[reportType].forEach(col_name => {
     if (in_dialog && excludeColumnsInSearchTable.includes(col_name)) { return; }
-    if (is_ylg() && store_view) {
-      if(col_name == "Phone"){
-        return;
-      }
-    }
+//    if (is_ylg() && store_view) {
+//      if(col_name == "Phone"){
+//        return;
+//      }
+//    }
     data_keys.push(col_name);
   });
   if (!non_sum_row_reports.includes(reportType)) {
@@ -1162,7 +1162,7 @@ function fetchReport() {
       return;
   }
 
-  if(is_ylg() && store_view && reportType != "sailyCash"){
+  if(is_ylg() && store_view && reportType != "dailyCash"){
     reset_date_pickers();
   }
 
