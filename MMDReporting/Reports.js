@@ -153,7 +153,7 @@ range_columns = ["Bills", "Services", 'Price', "Discount", "NetSale", "Tax", "Gr
 daywise_reports = ["daywiseSales", "daywiseSplit", "daywiseNRSOnly"];
 monthly_reports = ["monthlySales", "monthlySplit", "monthlyNRSOnly"];
 paymode_reports = [...daywise_reports, ...monthly_reports, "detailedBills"]
-tables_for_all_stores = ["monthlySales", "daywiseSales", "employeeSales"];
+tables_for_all_stores = {"monthlySales" : "Monthly Sales", "daywiseSales" : "Daily Sales", "employeeSales" : "Emp Sales"};
 
 daywise_reports.forEach(reportType => {
   table_columns[reportType] = ["Date"].concat(range_columns);
@@ -293,10 +293,10 @@ window.onload = function() {
     for (let i = reportTypeSelector.options.length - 1; i >= 0; i--) {
       reportTypeSelector.remove(i);
     }
-    tables_for_all_stores.forEach(tbl_name => {
+    Object.entries(tables_for_all_stores).forEach(tbl_entries => {
       let opt = document.createElement("option");
-      opt.value = tbl_name;
-      opt.textContent = tbl_name;
+      opt.value = tbl_entries[0];
+      opt.textContent = tbl_entries[1];
       reportTypeSelector.appendChild(opt);
     });
   }
@@ -385,6 +385,29 @@ async function login() {
     all_emp_names = new Set();
     all_section_names = new Set();
 
+    pay_modes_to_add = is_all_stores() ? ["HomeBSC", "OtherBSC", "Package"] : is_ylg() ? ["HomeBSC", "OtherBSC"] : ["Package"];
+    pay_modes_to_add.forEach(bsc => {
+      paymode_reports.forEach(tblType => {
+        if(!table_columns[tblType].includes(bsc)){
+          table_columns[tblType].push(bsc);
+        }
+      });
+    });
+
+    Object.keys(table_columns).forEach(tblType => {
+      if (!non_net_sales_reports.includes(tblType)){
+        if(!table_columns[tblType].includes("RealNetSale")){
+          table_columns[tblType].push("RealNetSale");
+        }
+      }
+    });
+
+    daywise_reports.forEach(reportType => {
+      if(!table_columns[reportType].includes("NewClients")){
+        table_columns[reportType].push("NewClients");
+      }
+    });
+
     if (is_all_stores()) {
       // Attempt to fetch config/daysales from all shops in parallel
       const shopEntries = Object.entries(shopConfig);
@@ -459,11 +482,7 @@ async function login() {
       spinnerOverlay.style.display = "none";
       loginDiv.style.display = "none";
       document.title = "All Stores Combined";
-      // Ensure pay-modes and columns are adjusted (reuse existing logic by calling same post-login block)
-      pay_modes_to_add = ["Package"]; // safe default; original code may change on is_ylg
-      // run UI toggles
-      document.querySelectorAll(".ylgOnly").forEach(item => { item.style.display = "block"; });
-      document.querySelectorAll(".nrsOnly").forEach(item => { item.style.display = "block"; });
+
       reset_date_pickers();
       populate_all_bills();
       populateSearchLists();
@@ -537,23 +556,6 @@ async function login() {
       loginDiv.style.display = "none";
       document.title = shopConfig[shop].name;
 
-      pay_modes_to_add = is_ylg() ? ["HomeBSC", "OtherBSC"] : ["Package"];
-      pay_modes_to_add.forEach(bsc => {
-        paymode_reports.forEach(tblType => {
-          if(!table_columns[tblType].includes(bsc)){
-            table_columns[tblType].push(bsc);
-          }
-        });
-      });
-
-      Object.keys(table_columns).forEach(tblType => {
-        if (!non_net_sales_reports.includes(tblType)){
-          if(!table_columns[tblType].includes("RealNetSale")){
-            table_columns[tblType].push("RealNetSale");
-          }
-        }
-      });
-
       if(is_ylg()){
         if(!store_view){
           ["bills", "detailedBills", "services"].forEach(tblType => {
@@ -563,12 +565,6 @@ async function login() {
           });
         }
       }
-
-      daywise_reports.forEach(reportType => {
-        if(!table_columns[reportType].includes("NewClients")){
-          table_columns[reportType].push("NewClients");
-        }
-      });
 
       document.querySelectorAll(".ylgOnly").forEach(item => { item.style.display = is_ylg() ? "block" : "none" });
       document.querySelectorAll(".nrsOnly").forEach(item => { item.style.display = is_ylg() ? "none" : "block" });
