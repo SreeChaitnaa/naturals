@@ -7,21 +7,24 @@ const shopConfig = {
 //    "url": "https://innosmartisca-d3db.restdb.io/rest/",
     "encKey": "ki62s6ktea89p72RjFNDDrqVjKrUUT9i7d78cup3kqCEK1KvuFaLDkY7PdjUrnT5S5eQzFF2/9FGDGrt3SflYA==",
     "name": "Thanisandra",
-    "whatsapp_number": ["8722036021"]
+    "whatsapp_number": ["8722036021"],
+    "passEncKey": "69ld7qHQJoJPBF4DOVjuosBi4TolejRpqs10lV3u2eBiwynC+1RwkThiB/y20HZZ"
   },
   "JKR": {
     "url": "https://jkr.marammuralidhar3234.workers.dev/rest/",
 //    "url": "https://innosmartiscajkr-30a7.restdb.io/rest/",
     "encKey": "Fr4R+Qu6i1p+hdfcmDrm4bywTHY/b863GlNnuA9p9uo3x5nnahlJqvssPOJRt1BcDXLw34a2rIrcT81DmMe7xQ==",
     "name": "Jakkur",
-    "whatsapp_number": ["9743823134", "7892256106"]
+    "whatsapp_number": ["9743823134", "7892256106"],
+    "passEncKey": "du5XypdqcGbw8BpvfSdpOllLtzuSp4Kgdp7y+pFq5DKzls/oE384l2qCLOOv2+bY"
   },
   "KNKN": {
     // "url": "https://jkr.marammuralidhar3234.workers.dev/rest/",
     "url": "https://scaknk-bb9b.restdb.io/rest/",
     "encKey": "wdnHapRRTSCp15Tf0HskoK+FKgdLO8DeM9BeFbqAy1Oe8dqD1ja6UfKXGfhu7N4CuW10y9Fn2Wce+58++xpYWw==",
     "name": "Kanaka Nagar",
-    "whatsapp_number": ["9591312316"]
+    "whatsapp_number": ["9591312316"],
+    "passEncKey": "69ld7qHQJoJPBF4DOVjuosBi4TolejRpqs10lV3u2eBiwynC+1RwkThiB/y20HZZ"
   },
   "HRLR": {
     "url": "https://hrlr.marammuralidhar3234.workers.dev/rest/",
@@ -29,14 +32,16 @@ const shopConfig = {
     "encKey": "bKuxUJfSNeOtp67m3v4WC39P+xPn/7a5QJNCYF1ogTW0OXSgOaxpNb+jvSBQq+93kZGHU3Bj87QFi9FAk7No+g==",
     "name": "Haralur",
 //    "whatsapp_number": ["8073959696"]
-    "whatsapp_number": ["8073959696"]
-  },
-  "ADYAR": {
-    "url": "https://adyar-e5d4.restdb.io/rest/",
-    "encKey": "TWmA4zjwdd3mWhsFEHnJmP9adh8snZ6+Bkx/VOXgoiUExZnhCAG53crsV3iu3TcRBn3i8TZ3ku/uvd+fBuMyMQ==",
-    "name": "Adyar",
-    "whatsapp_number": ["9591312316"]
+    "whatsapp_number": ["8073959696"],
+    "passEncKey": "96Q6YnI4d5LGf/rFIyMWOWKu4JF6nc6tdnysCG45u0A9OhkkjA8qxc8qKHTfbz98"
   }
+//  ,
+//  "ADYAR": {
+//    "url": "https://adyar-e5d4.restdb.io/rest/",
+//    "encKey": "TWmA4zjwdd3mWhsFEHnJmP9adh8snZ6+Bkx/VOXgoiUExZnhCAG53crsV3iu3TcRBn3i8TZ3ku/uvd+fBuMyMQ==",
+//    "name": "Adyar",
+//    "whatsapp_number": ["9591312316"]
+//  }
 };
 
 //  "HRLR": { "url": "https://ylghrlr-1795.restdb.io/rest/",
@@ -120,6 +125,11 @@ employee_name_map = {
   "Ritika": "Sharmila"
 };
 
+
+function is_all_stores(){
+  return shopSelect.value === "";
+}
+
 function is_ylg(){
   return ["HRLR", "ADYAR"].includes(shopSelect.value);
 }
@@ -143,6 +153,7 @@ range_columns = ["Bills", "Services", 'Price', "Discount", "NetSale", "Tax", "Gr
 daywise_reports = ["daywiseSales", "daywiseSplit", "daywiseNRSOnly"];
 monthly_reports = ["monthlySales", "monthlySplit", "monthlyNRSOnly"];
 paymode_reports = [...daywise_reports, ...monthly_reports, "detailedBills"]
+tables_for_all_stores = ["monthlySales", "daywiseSales", "employeeSales"];
 
 daywise_reports.forEach(reportType => {
   table_columns[reportType] = ["Date"].concat(range_columns);
@@ -268,11 +279,6 @@ window.onload = function() {
     btn_export_csv.style.display = "block";
   }
   else{
-    if(is_ylg()){
-      non_shop_reports.push("detailedAllBills");
-      non_shop_reports.push("callBacksOnHold");
-      non_shop_reports.push("callBacks");
-    }
     non_shop_reports.forEach(option_to_remove => {
       for (let i = 0; i < reportTypeSelector.options.length; i++) {
         if (option_to_remove == reportTypeSelector.options[i].value) {
@@ -280,6 +286,18 @@ window.onload = function() {
           break;
         }
       }
+    });
+  }
+  if(is_all_stores()){
+    // remove all entries in reportTypeSelector except tables_for_all_stores
+    for (let i = reportTypeSelector.options.length - 1; i >= 0; i--) {
+      reportTypeSelector.remove(i);
+    }
+    tables_for_all_stores.forEach(tbl_name => {
+      let opt = document.createElement("option");
+      opt.value = tbl_name;
+      opt.textContent = tbl_name;
+      reportTypeSelector.appendChild(opt);
     });
   }
   if (pswParam) {
@@ -349,12 +367,114 @@ function get_ist_date(){
 }
 
 // ==== LOGIN HANDLER ====
-function login() {
+async function login() {
   spinnerOverlay.style.display = "flex";
   const shop = shopSelect.value;
   const passwd = password.value;
 
   try {
+    db_config = {};
+    full_data = [];
+    packages_data = [];
+    packages_balance = {};
+    packages_ratio = {};
+    call_backs = {};
+    services_config = {};
+    employees_config = {};
+    empNames = null;
+    all_emp_names = new Set();
+    all_section_names = new Set();
+
+    if (is_all_stores()) {
+      // Attempt to fetch config/daysales from all shops in parallel
+      const shopEntries = Object.entries(shopConfig);
+      const shopPromises = shopEntries.map(async ([shopCode, cfg]) => {
+        try {
+          const encKey = cfg.encKey;
+          const url = cfg.url;
+          const encPasswd = decryptApiKey(cfg.passEncKey, passwd);
+          const apiKey = decryptApiKey(encKey, encPasswd);
+          if (!apiKey) {
+            console.warn(`Skipping ${shopCode} - bad password/API key`);
+            return null;
+          }
+          const headers = { headers: { "Content-Type": "application/json", "x-apikey": apiKey, "cache-control": "no-cache" } };
+
+          // fetch config
+          const cfgResp = await fetch(url + "config", headers);
+          if (!cfgResp.ok) throw new Error(`${shopCode} config fetch failed ${cfgResp.status}`);
+          const cfgData = await cfgResp.json();
+          // merge config entries (caller code expects db_config keys)
+          cfgData.forEach(row => {
+            db_config[row["config_name"]] = row["config_value"];
+            if (row["config_name"] == "callback"){
+              // merge callback maps (later shops may override same phone)
+              call_backs = Object.assign(call_backs || {}, { config_value: Object.assign({}, (call_backs.config_value || {}), row["config_value"]) });
+            }
+            if (row["config_name"] == "services"){
+              services_config = services_config || row;
+              servicesDict = Object.assign(servicesDict || {}, row["config_value"]);
+            }
+            if (row["config_name"] == "employees"){
+              employees_config = employees_config || row;
+              empNames = empNames || row["config_value"];
+            }
+          });
+
+          // fetch packages
+          const pkResp = await fetch(url + "scapackages", headers);
+          if (pkResp.ok) {
+            const pkData = await pkResp.json();
+            // tag package rows with shop
+            pkData.forEach(p => { p._Shop = shopCode; p._ShopName = cfg.name; packages_data.push(p); });
+          }
+
+          // fetch daysales and tag with shop
+          const daysResp = await fetch(url + "daysales", headers);
+          if (!daysResp.ok) throw new Error(`${shopCode} daysales fetch failed ${daysResp.status}`);
+          const days = await daysResp.json();
+          days.forEach(day => {
+            // tag day and each bill inside with Shop and ShopName
+            day._Shop = shopCode;
+            day._ShopName = cfg.name;
+            if (Array.isArray(day.bills)) {
+              day.bills.forEach(b => {
+                b._Shop = shopCode;
+                b._ShopName = cfg.name;
+              });
+            }
+            full_data.push(day);
+          });
+
+          return shopCode;
+        } catch (err) {
+          console.warn(`Skipping ${shopCode}:`, err);
+          return null;
+        }
+      });
+
+      await Promise.all(shopPromises);
+      process_packages_data();
+      // After aggregated fetches, continue UI setup like single-shop login success
+      spinnerOverlay.style.display = "none";
+      loginDiv.style.display = "none";
+      document.title = "All Stores Combined";
+      // Ensure pay-modes and columns are adjusted (reuse existing logic by calling same post-login block)
+      pay_modes_to_add = ["Package"]; // safe default; original code may change on is_ylg
+      // run UI toggles
+      document.querySelectorAll(".ylgOnly").forEach(item => { item.style.display = "block"; });
+      document.querySelectorAll(".nrsOnly").forEach(item => { item.style.display = "block"; });
+      reset_date_pickers();
+      populate_all_bills();
+      populateSearchLists();
+      reportTypeSelector.value = "monthlySales";
+      fetchReport();
+      spinnerOverlay.style.display = "none";
+      dataDiv.style.display = "block";
+      return;
+    }
+
+    // Original single-shop login flow (unchanged)
     const encKey = shopConfig[shop].encKey;
     db_url = shopConfig[shop].url;
     const apiUrl = db_url + "config";
@@ -372,11 +492,9 @@ function login() {
     // Test fetch
     fetch(apiUrl, db_headers)
     .then(res => {
-      console.log(res);
       if (res.status === 429) {
         return res.json().then(errData => {
-          // Example: "Try again in 0:22:57 hrs:min:sec."
-          const match = errData.msg.match(/(\d+):(\d+):(\d+)/);
+          const match = errData.msg && errData.msg.match(/(\d+):(\d+):(\d+)/);
           if (match) {
             const hours = parseInt(match[1], 10);
             const minutes = parseInt(match[2], 10);
@@ -498,10 +616,10 @@ function login() {
       });
     })
     .catch(err => {
-      loginError.textContent = `Invalid password or API key - ${err.message}`;
+      loginError.textContent = `Invalid password or API key - ${err.message || err}`;
       spinnerOverlay.style.display = "none";
       console.log(err);
-      alert(`Invalid password or API key - ${err.message}`);
+      alert(`Invalid password or API key - ${err.message || err}`);
     });
   } catch (e) {
     console.log(e);
@@ -724,6 +842,7 @@ function formatReportData(rawData, reportType) {
             bill.ticket.forEach(service => {
               for (let i = 0; i < service.Qty; i++) {
                 row = {
+                  Shop: bill._Shop,
                   TicketID: get_ticket_id(bill.TicketID),
                   Date: datePart,
                   Time: timePart,
@@ -748,6 +867,7 @@ function formatReportData(rawData, reportType) {
             const { servicesCount, priceSum, discountSum, netSalesSum, serviceNames, empNamesSet } = calcTickets(bill.ticket);
 
             row = {
+              Shop: bill._Shop,
               TicketID: get_ticket_id(bill.TicketID),
               Date: datePart,
               Time: timePart,
@@ -778,11 +898,16 @@ function formatReportData(rawData, reportType) {
           const emp_in_bill = new Set();
           bill.ticket.forEach(service => {
 
-            let key = get_emp_name(service);
+            let emp_name_key = get_emp_name(service);
+            let key = emp_name_key;
+            if(is_all_stores()){
+              key += "-" + bill._Shop;
+            }
             emp_in_bill.add(key)
             if (!grouped[key]) {
               grouped[key] = {
-                Name: key,
+                Shop: bill._Shop,
+                Name: emp_name_key,
                 Bills: 0,
                 Services: 0,
                 Price: 0,
@@ -859,10 +984,15 @@ function formatReportData(rawData, reportType) {
           if (reportType.endsWith("Split")) {
             key += "-" + (bill.mmd ? "SCA" : "NRS");
           }
+          dateOrMonth = key;
+          if (is_all_stores()){
+            key += "-" + bill._Shop;
+          }
           if (!grouped[key]) {
             grouped[key] = {
-              Date: key,
-              Month: key,
+              Date: dateOrMonth,
+              Month: dateOrMonth,
+              Shop: bill._Shop,
               Bills: 0,
               Services: 0,
               Price: 0,
@@ -980,6 +1110,9 @@ function fill_table_with_data(reportType, in_dialog=false, search_key=null, sear
     tableHolder.innerHTML = get_empty_table("dataTable");
   }
   data_keys = [];
+  if (is_all_stores()) {
+    data_keys.push("Shop");
+  }
   table_columns[reportType].forEach(col_name => {
     if (in_dialog && excludeColumnsInSearchTable.includes(col_name)) { return; }
 //    if (is_ylg() && store_view) {
