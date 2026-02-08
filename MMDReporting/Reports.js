@@ -164,7 +164,7 @@ range_columns = ["Bills", "Services", 'Price', "Discount", "NetSale", "Tax", "Gr
 daywise_reports = ["daywiseSales", "daywiseSplit", "daywiseNRSOnly"];
 monthly_reports = ["monthlySales", "monthlySplit", "monthlyNRSOnly"];
 paymode_reports = [...daywise_reports, ...monthly_reports, "detailedBills", "detailedAllBills"];
-tables_for_all_stores = {"monthlySales" : "Monthly Sales", "daywiseSales" : "Daily Sales",
+tables_for_all_stores = {"daywiseSales" : "Daily Sales", "monthlySales" : "Monthly Sales",
                           "employeeSales" : "Emp Sales", "detailedBills" : "Bills", "services" : "Services",
                           "detailedAllBills": "All Bills", "packages": "Packages"};
 
@@ -390,8 +390,9 @@ function rangeChanged(update_report=true) {
   if (rangeValue === "today") {
     toDate = today;
     fromDate = today;
-  } else if (rangeValue === "yesterday") {
-    toDate = today - 24*3600*1000;
+  }
+  else if (rangeValue === "yesterday") {
+    toDate = new Date(today.getTime() - 24 * 3600 * 1000);
     fromDate = toDate;
   }
   else if (rangeValue === "thisWeek") {
@@ -430,6 +431,15 @@ function rangeChanged(update_report=true) {
   toDatePicker.value = toDate.toISOString().split('T')[0];
   if(update_report){
     fetchReport();
+  }
+}
+
+function reportsShopSelectorChanged(){
+  if(reportsShopSelector.value === "all"){
+    dt_table.column(0).search('').draw();
+  }
+  else{
+    dt_table.column(0).search('^' + reportsShopSelector.value + '$', true, false).draw();
   }
 }
 
@@ -554,7 +564,11 @@ async function login() {
       reset_date_pickers();
       populate_all_bills();
       populateSearchLists();
-      reportTypeSelector.value = "monthlySales";
+      reportTypeSelector.value = "daywiseSales";
+      reportsShopSelector.innerHTML = `<option value="all">All Stores</option>` +
+      Object.entries(shopConfig).map(([code, cfg]) => `<option value="${code}">${cfg.name}</option>`).join("");
+      reportsShopSelector.value = 'all';
+      reportsShopSelectorDiv.style.display = "block";
       fetchReport();
       spinnerOverlay.style.display = "none";
       dataDiv.style.display = "block";
@@ -1402,6 +1416,9 @@ function fetchReport() {
   } catch (error) {
     console.error(`Failed to fetch data:`, error);
     alert(`Could not fetch report. Please try again.`);
+  }
+  if(is_all_stores()){
+    reportsShopSelectorChanged();
   }
 }
 
