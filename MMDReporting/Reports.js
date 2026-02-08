@@ -58,7 +58,8 @@ table_columns = {
   "callBacks": ['Phone', 'Name', 'Visits', 'BillsSummary', 'TotalNetSale', 'TicketID', 'ServiceDesc', 'EmpName', 'NetSale', 'Notes', 'Action'],
   "callBacksOnHold": ['Phone', 'Name', 'UpdatedDate', 'DueDate', 'Status', 'Notes', 'Action'],
   "dailyCash": ['Date', 'OpeningBalance', 'Cash', 'CashGiven', 'CashGivenTo', 'ChangeMissed', 'CashInBox'],
-  "serviceWiseSales": ['Name', 'Count', 'Price', 'Discount', 'NetSale', 'Section', 'Providers']
+  "serviceWiseSales": ['Name', 'Count', 'Price', 'Discount', 'NetSale', 'Section', 'Providers'],
+  "packages": ['TicketID', 'Phone', 'NetSale', 'Type', 'Amount', 'Balance', 'Ratio']
 };
 
 table_click_links = {
@@ -66,7 +67,8 @@ table_click_links = {
     "Phone": ["detailedAllBills", "Phone"]
   },
   "employeeSales": {
-    "Name": ["services", "EmpName"]
+    "Name": ["services", "EmpName"],
+    "Shop": ["employeeSales", "Shop"]
   },
   "employeeSectionSales": {
     "Name": ["services", "EmpName"]
@@ -79,11 +81,13 @@ table_click_links = {
     "Name": ["services", "Section"]
   },
   "daywiseSales": {
-    "Date": ["detailedBills", "Date"]
+    "Date": ["detailedBills", "Date"],
+    "Shop": ["detailedBills", "Shop"]
   },
   "detailedBills": {
     "TicketID": ["services", "TicketID"],
-    "Phone": ["detailedAllBills", "Phone"]
+    "Phone": ["detailedAllBills", "Phone"],
+    "Shop": ["services", "Shop"]
   },
   "services": {
     "Phone": ["detailedAllBills", "Phone"],
@@ -99,6 +103,13 @@ table_click_links = {
   "callBacksOnHold": {
     "Phone": ["detailedAllBills", "Phone"]
   },
+  "packages": {
+    "TicketID": ["detailedAllBills", "TicketID"],
+    "Phone": ["detailedAllBills", "Phone"]
+  },
+  "monthlySales": {
+    "Shop": ["daywiseSales", "Shop"]
+  }
 }
 
 const moneyColumns = ['Tax', 'Gross', 'Cash', 'UPI', 'Card', "HomeBSC", "OtherBSC", "Package"]
@@ -152,8 +163,10 @@ function get_ticket_id(ticket_id){
 range_columns = ["Bills", "Services", 'Price', "Discount", "NetSale", "Tax", "Gross", "ABV", "ASB", "Cash", "UPI", "Card"];
 daywise_reports = ["daywiseSales", "daywiseSplit", "daywiseNRSOnly"];
 monthly_reports = ["monthlySales", "monthlySplit", "monthlyNRSOnly"];
-paymode_reports = [...daywise_reports, ...monthly_reports, "detailedBills"]
-tables_for_all_stores = {"monthlySales" : "Monthly Sales", "daywiseSales" : "Daily Sales", "employeeSales" : "Emp Sales"};
+paymode_reports = [...daywise_reports, ...monthly_reports, "detailedBills", "detailedAllBills"];
+tables_for_all_stores = {"monthlySales" : "Monthly Sales", "daywiseSales" : "Daily Sales",
+                          "employeeSales" : "Emp Sales", "detailedBills" : "Bills", "services" : "Services",
+                          "detailedAllBills": "All Bills", "packages": "Packages"};
 
 daywise_reports.forEach(reportType => {
   table_columns[reportType] = ["Date"].concat(range_columns);
@@ -188,10 +201,10 @@ table_columns["employeeSectionSales"] = ["Name"];
 Object.keys(sections_map).forEach(section_name => {table_columns["employeeSectionSales"].push(section_name)});
 
 bill_reports = ["bills", "detailedBills", "detailedAllBills"];
-non_group_reports = ["services", "bills", "detailedBills", "detailedAllBills", "callBacks", "callBacksOnHold", "dailyCash"];
+non_group_reports = ["services", "bills", "detailedBills", "detailedAllBills", "callBacks", "callBacksOnHold", "dailyCash", "packages"];
 never_call_again_list = ["Not Happy", "Moved Out of Town", "Never Call Again"];
 non_shop_reports = ["bills", "daywiseSplit", "monthlySplit", "monthlyNRSOnly", "summaryNRSOnly", "daywiseNRSOnly"];
-non_sum_row_reports = ["callBacks", "callBacksOnHold", "dailyCash"];
+non_sum_row_reports = ["callBacks", "callBacksOnHold", "dailyCash", "packages"];
 non_net_sales_reports = ["employeeSectionSales", ...non_sum_row_reports]
 
 let db_config = {}
@@ -202,6 +215,7 @@ let full_data = [];
 let packages_data = [];
 let packages_balance = {};
 let packages_ratio = {};
+let pkgs_bills_to_add = [];
 let current_rows = [];
 let all_bills = {};
 let call_backs = {};
@@ -311,6 +325,8 @@ function set_from_date_to_month_beginning(today) {
 }
 
 function process_packages_data(){
+  packages_balance = [];
+  packages_ratio = [];
   packages_data.forEach(pr => {
     if(!(pr.phone in packages_balance)){
       packages_balance[pr.phone] = 0
@@ -450,6 +466,7 @@ async function login() {
             const pkData = await pkResp.json();
             // tag package rows with shop
             pkData.forEach(p => { p._Shop = shopCode; p._ShopName = cfg.name; packages_data.push(p); });
+            packages_data.sort((a, b) => (a.bill_id < b.bill_id ? -1 : 1))
           }
 
           // fetch daysales and tag with shop
@@ -590,6 +607,7 @@ async function login() {
         return packages_resp.json();
       }).then(packages_resp_data => {
         packages_data = packages_resp_data;
+        packages_data.sort((a, b) => (a.bill_id < b.bill_id ? -1 : 1))
         process_packages_data();
         fetch(db_url + "daysales", db_headers).then(data_res => {
           return data_res.json();
@@ -818,6 +836,19 @@ function formatReportData(rawData, reportType) {
         row.Date = str.slice(0, 4) + "-" + str.slice(4, 6) + "-" + str.slice(6, 8);
         direct_rows.push(row);
       }
+    });
+  }
+  else if (reportType == "packages"){
+    packages_data.forEach(pr => {
+      phone = pr["phone"];
+      net_sale = pr.netsale || 0;
+      row = {"TicketID": pr.bill_id, "Phone": pr.phone, "NetSale": net_sale, "Shop": pr._Shop,
+              "Amount": net_sale > 0 ? pr["amount"] : 0 - pr["amount"],
+              "Balance": net_sale > 0 ? packages_balance[phone] : "-",
+              "Ratio": net_sale > 0 ? (packages_ratio[phone][0] / packages_ratio[phone][1]).toFixed(2) : "-",
+              "Type": net_sale > 0 ? "Sale" : "Redemption"};
+      direct_rows.push(row);
+      direct_rows.sort((a, b) => (a.TicketID < b.TicketID ? 1 : -1))
     });
   }
   else {
@@ -1640,20 +1671,23 @@ function updateDataInDB(table_name, db_obj) {
   });
 }
 
-function insertNewDateBills(date_entry_obj) {
-  fetch(db_url + "daysales", {
+function insertDataInDB(table_name, db_obj) {
+  fetch(db_url + table_name, {
     method: "POST",
     headers: db_headers["headers"],
-    body: JSON.stringify(date_entry_obj)
+    body: JSON.stringify(db_obj)
   })
   .then(response => response.json())
-  .then(updated => {
-    console.log("Updated Obj:", updated);
-    full_data.push(updated);
+  .then(inserted => {
+    console.log("Inserted Obj:", inserted);
   })
   .catch(err => {
     console.error("Error:", err);
   });
+}
+
+function insertNewDateBills(date_entry_obj) {
+  return insertDataInDB("daysales", date_entry_obj);
 }
 
 function calculate_cash_in_box(){
@@ -1682,6 +1716,70 @@ function openDayCloseDialog() {
   changeMissed.value = 0;
   calculate_cash_in_box();
   DayCloseModel.style.display = "block";
+}
+
+
+function openPackageDialog() {
+  pkgs_bills_to_add = [];
+  full_data.forEach(daySale => {
+    daySale.bills.forEach(bill => {
+      bill.ticket.forEach(service => {
+          if(service.ServiceName.indexOf("SCA Package") >= 0) {
+              bill_id = bill.TicketID;
+              found = false;
+              packages_data.forEach(package => {
+                if(package.bill_id == bill_id){
+                  found = true;
+                }
+              });
+              if(!found){
+                pkgs_bills_to_add.push({"bill_id": bill_id, "phone": bill.Phone, "netsale": service.Total});
+              }
+          }
+      })
+    })
+  })
+  if(pkgs_bills_to_add.length == 0){
+    alert("No bills available for adding package details, \nPlease refresh if a bill added recently with package sale");
+    return;
+  }
+  pkg_bill_id.innerHTML = "";
+  pkgs_bills_to_add.forEach(bill => {
+    let opt = document.createElement("option");
+    opt.value = bill.bill_id;
+    opt.textContent = bill.bill_id;
+    pkg_bill_id.appendChild(opt);
+  });
+  packageBillChanged();
+
+  addPackageModal.style.display = "block";
+}
+
+function add_Package(){
+  pkg_data = {
+    "bill_id": pkg_bill_id.value,
+    "phone": pkg_phone.value,
+    "netsale": parseInt(pkg_netsale.value),
+    "amount": parseInt(pkg_amount.value)
+  };
+  packages_data.push(pkg_data);
+  process_packages_data();
+  insertDataInDB("scapackages", pkg_data);
+  closeDialog();
+  reportTypeSelector.value = "packages";
+  fetchReport();
+}
+
+function packageBillChanged(){
+  selected_bill_id = pkg_bill_id.value;
+  pkgs_bills_to_add.forEach(bill => {
+    if(bill.bill_id == selected_bill_id){
+      pkg_phone.value = bill.phone;
+      pkg_netsale.value = bill.netsale;
+      pkg_phone.disabled = true;
+      pkg_netsale.disabled = true;
+    }
+  });
 }
 
 function submitDayClose() {

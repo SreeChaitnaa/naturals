@@ -30,6 +30,7 @@ class RestDB:
     def __init__(self, store_id, settings, logger):
         self.store_id = store_id
         self.logger = logger
+        self.settings = settings
         self.url = settings.RestDBData[store_id]["url"]
         self.headers = settings.RestDBData[store_id].copy()
         self.shop_name = settings.RestDBData[store_id]["shop_name"]
@@ -61,7 +62,15 @@ class RestDB:
                 self.set_product_sold(service[DBStrings.ServiceID])
         resp = self.do_rest_call(DBStrings.POST, body=bill_payload)
         resp[DBStrings.Bill_Data] = json.loads(resp[DBStrings.Bill_Data])
+
+        for tender in bill_data[0]["tender"]:
+            if str(tender["paytype"]) == "Amex":
+                self.add_package_usage("{0}{1}".format(self.settings.bill_prefix, resp["id"]), ph_no, tender["paytender"])
         return resp
+
+    def add_package_usage(self, bill_id, phone, amount):
+        package_usage_payload = {"bill_id": bill_id, "phone": phone, "amount": 0 - int(str(amount.split(".")[0]))}
+        self.do_rest_call(DBStrings.POST, body=package_usage_payload, table="scapackages")
 
     def get_bills(self, bill_id=None, phone_num=None, date_start=None, date_end=None, bill_start=None, bill_end=None):
         query = None
