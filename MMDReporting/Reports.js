@@ -59,7 +59,8 @@ table_columns = {
   "callBacksOnHold": ['Phone', 'Name', 'UpdatedDate', 'DueDate', 'Status', 'Notes', 'Action'],
   "dailyCash": ['Date', 'OpeningBalance', 'Cash', 'CashGiven', 'CashGivenTo', 'ChangeMissed', 'CashInBox'],
   "serviceWiseSales": ['Name', 'Count', 'Price', 'Discount', 'NetSale', 'Section', 'Providers'],
-  "packages": ['TicketID', 'Phone', 'NetSale', 'Type', 'Amount', 'Balance', 'Ratio']
+  "packages": ['TicketID', 'Phone', 'Name', 'NetSale', 'Type', 'Amount', 'Balance', 'Ratio'],
+  "packagesBalances": ['TicketID', 'Phone', 'Name', 'NetSale', 'Amount', 'Balance']
 };
 
 table_click_links = {
@@ -106,6 +107,10 @@ table_click_links = {
   "packages": {
     "TicketID": ["detailedAllBills", "TicketID"],
     "Phone": ["detailedAllBills", "Phone"]
+  },
+  "packagesBalances": {
+    "TicketID": ["detailedAllBills", "TicketID"],
+    "Phone": ["packages", "Phone"]
   },
   "monthlySales": {
     "Shop": ["daywiseSales", "Shop"]
@@ -201,10 +206,11 @@ table_columns["employeeSectionSales"] = ["Name"];
 Object.keys(sections_map).forEach(section_name => {table_columns["employeeSectionSales"].push(section_name)});
 
 bill_reports = ["bills", "detailedBills", "detailedAllBills"];
-non_group_reports = ["services", "bills", "detailedBills", "detailedAllBills", "callBacks", "callBacksOnHold", "dailyCash", "packages"];
+non_group_reports = ["services", "bills", "detailedBills", "detailedAllBills", "callBacks", "callBacksOnHold",
+                      "dailyCash", "packages", "packagesBalances"];
 never_call_again_list = ["Not Happy", "Moved Out of Town", "Never Call Again"];
 non_shop_reports = ["bills", "daywiseSplit", "monthlySplit", "monthlyNRSOnly", "summaryNRSOnly", "daywiseNRSOnly"];
-non_sum_row_reports = ["callBacks", "callBacksOnHold", "dailyCash", "packages"];
+non_sum_row_reports = ["callBacks", "callBacksOnHold", "dailyCash", "packages", "packagesBalances"];
 non_net_sales_reports = ["employeeSectionSales", ...non_sum_row_reports]
 
 let db_config = {}
@@ -920,15 +926,19 @@ function formatReportData(rawData, reportType) {
       }
     });
   }
-  else if (reportType == "packages"){
+  else if (reportType.indexOf("packages") >= 0){
     packages_data.forEach(pr => {
       phone = pr["phone"];
       net_sale = pr.netsale || 0;
-      row = {"TicketID": pr.bill_id, "Phone": pr.phone, "NetSale": net_sale, "Shop": pr._Shop,
+      if (net_sale == 0 && reportType != "packages"){
+        return;
+      }
+      row = {"TicketID": pr.bill_id, "Phone": phone, "NetSale": net_sale, "Shop": pr._Shop,
               "Amount": net_sale > 0 ? pr["amount"] : 0 - pr["amount"],
               "Balance": net_sale > 0 ? packages_balance[phone] : "-",
               "Ratio": net_sale > 0 ? (packages_ratio[phone][0] / packages_ratio[phone][1]).toFixed(2) : "-",
-              "Type": net_sale > 0 ? "Sale" : "Redemption"};
+              "Type": net_sale > 0 ? "Sale" : "Redemption",
+              "Name": all_bills[phone] ? all_bills[phone].bills[0].Name : "Unknown"};
       direct_rows.push(row);
       direct_rows.sort((a, b) => (a.TicketID < b.TicketID ? 1 : -1))
     });
@@ -1851,7 +1861,7 @@ function add_Package(){
   process_packages_data();
   insertDataInDB("scapackages", pkg_data);
   closeDialog();
-  reportTypeSelector.value = "packages";
+  reportTypeSelector.value = "packagesBalances";
   fetchReport();
 }
 
