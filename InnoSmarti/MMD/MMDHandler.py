@@ -1,7 +1,7 @@
 import json
 import operator
 import time
-from datetime import date
+from datetime import date, timedelta
 
 import requests
 from multiprocessing.connection import Client
@@ -137,6 +137,20 @@ class Utils:
         url = url_format.format(store_id, bill_number)
         logger.info("Calling - {}".format(url))
         return requests.request("GET", url, headers=headers, verify=False)
+
+    @staticmethod
+    def get_latest_bill_number(store_id, headers):
+        url_format = "https://ntlivewebapi.innosmarti.com/api/auth/getTicketByDate/{0},1001,{1},{2}"
+        today = date.today()
+        yesterday = today - timedelta(days=1)
+        url = url_format.format(store_id, yesterday.__format__("%Y-%m-%d"), today.__format__("%Y-%m-%d"))
+        resp = requests.request("GET", url, headers=headers, verify=False)
+        latest_bill = 0
+        if resp.status_code == 200:
+            bills = json.loads(resp.text).get("bills", [])
+            latest_bill = max([int(bill["TicketID"]) for bill in bills]) if len(bills) > 0 else 0
+        return latest_bill
+
 
     @staticmethod
     def update_rest_db(store_id, bill_number, logger, settings, rest_db, headers=None):

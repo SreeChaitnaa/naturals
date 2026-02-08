@@ -382,6 +382,23 @@ function get_ist_date(){
   return new Date(nowUtc.getTime() + 330 * 60000);
 }
 
+function get_duplicates(){
+  all_nums = [];
+  duplicates = [];
+  full_data.forEach(daySale => {
+    daySale['bills'].forEach(bill => {
+        tkt_id = bill.TicketID;
+        if(all_nums.includes(tkt_id)){ duplicates.push(tkt_id)}
+        else {all_nums.push(tkt_id)}
+    });
+  });
+  return duplicates;
+}
+
+function delete_duplicates(){
+  delete_bills(get_duplicates());
+}
+
 function rangeChanged(update_report=true) {
   rangeValue = rangeSelector.value;
   const today = new Date();

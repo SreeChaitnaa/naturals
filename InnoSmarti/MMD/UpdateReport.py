@@ -1,9 +1,9 @@
-import time
 from playwright.sync_api import sync_playwright
 from RestDB import RestDB
 from Settings import Settings
 from MMDHandler import Utils
 import logging
+import time
 
 
 def run_browser_and_capture_headers(config):
@@ -20,7 +20,7 @@ def run_browser_and_capture_headers(config):
 
         def on_request(request):
             if "/api/auth/getServices" in request.url and request.method == "POST":
-                print("Captured API call:", request.url)
+                logger.info("Captured API call: {}".format(request.url))
                 captured_headers.update(request.headers)
 
         page.on("request", on_request)
@@ -62,8 +62,22 @@ def run_browser_and_capture_headers(config):
 if __name__ == '__main__':
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
+
+    handler = logging.FileHandler('update_task.log')  # Log to a file
+    handler.setLevel(logging.INFO)
+    # Formatter with date, time, and log level
+    formatter = logging.Formatter(
+        '%(asctime)s [%(levelname)s] %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
     settings = Settings()
     rest_db = RestDB(settings.store_id, settings, logger)
+    logger.info("Starting Browser to get Auth headers for Store ID - {}".format(settings.store_id))
     headers = run_browser_and_capture_headers(settings)
-    Utils.update_rest_db(settings.store_id, 9,logger, settings, rest_db, headers)
+    latest_bill_number = Utils.get_latest_bill_number(settings.store_id, headers)
+    logger.info("Latest Bill Number - {}".format(latest_bill_number))
+    Utils.update_rest_db(settings.store_id, latest_bill_number,logger, settings, rest_db, headers)
 
