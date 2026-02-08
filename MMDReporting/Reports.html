@@ -658,6 +658,18 @@
     <!-- Filter Row -->
     <div class="filterRow">
       <div class="leftFilters">
+        <label for="rangeSelector">Date Range:</label>
+        <select id="rangeSelector" onchange="rangeChanged()">
+          <option value="today">Today</option>
+          <option value="yesterday">Yesterday</option>
+          <option value="thisWeek">This Week</option>
+          <option value="lastWeek">Last Week</option>
+          <option value="thisMonth">This Month</option>
+          <option value="lastMonth">Last Month</option>
+          <option value="thisYear">This Year</option>
+          <option value="lastYear">Last Year</option>
+        </select>&nbsp;&nbsp;&nbsp;
+
         <label for="fromDatePicker">From Date:</label>
         <input type="date" id="fromDatePicker" class="report-trigger">&nbsp;&nbsp;&nbsp;
 

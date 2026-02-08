@@ -368,18 +368,69 @@ function get_yesterday_date_num(today_date) {
 }
 
 function reset_date_pickers(){
-  const today = get_ist_date();
-  toDatePicker.value = today.toISOString().split('T')[0];
-  set_from_date_to_month_beginning(today);
-//  if(is_ylg() && store_view){
-//    fromDatePicker.value = today.toISOString().split('T')[0];
-//    fromDatePicker.disabled = true;
-//  }
+  if(is_all_stores()){
+    rangeSelector.value = "today";
+  }
+  else{
+    rangeSelector.value = "thisMonth";
+  }
+  rangeChanged(false);
 }
 
 function get_ist_date(){
   const nowUtc = new Date();
   return new Date(nowUtc.getTime() + 330 * 60000);
+}
+
+function rangeChanged(update_report=true) {
+  rangeValue = rangeSelector.value;
+  const today = new Date();
+  let fromDate, toDate;
+  toDate = today
+  if (rangeValue === "today") {
+    toDate = today;
+    fromDate = today;
+  } else if (rangeValue === "yesterday") {
+    toDate = today - 24*3600*1000;
+    fromDate = toDate;
+  }
+  else if (rangeValue === "thisWeek") {
+    const dayOfWeek = today.getDay(); // Sunday - Saturday : 0 - 6
+    const diffToMonday = (dayOfWeek + 6) % 7; // Convert Sunday=0 to 6, Monday=1 to 0, ..., Saturday=6 to 5
+    fromDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - diffToMonday);
+  }
+  else if (rangeValue === "lastWeek") {
+    const dayOfWeek = today.getDay();
+    const diffToLastMonday = (dayOfWeek + 6) % 7 + 7; // Go back to last week's Monday
+    fromDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - diffToLastMonday);
+    toDate = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate() + 6); // Last week's Sunday
+  }
+  else if (rangeValue === "thisMonth") {
+    fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
+  }
+  else if (rangeValue === "lastMonth") {
+    fromDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    toDate = new Date(today.getFullYear(), today.getMonth(), 0);
+  }
+  else if (rangeValue === "thisYear") {
+    fromDate = new Date(today.getFullYear(), 0, 1);
+  }
+  else if (rangeValue === "lastYear") {
+    fromDate = new Date(today.getFullYear() - 1, 0, 1);
+    toDate = new Date(today.getFullYear() - 1, 11, 31);
+  }
+  else{
+    alert("Invalid range selection", rangeValue);
+    return
+  }
+  const offset = today.getTimezoneOffset()
+  fromDate = new Date(fromDate.getTime() - offset * 60000);
+  toDate = new Date(toDate.getTime() - offset * 60000);
+  fromDatePicker.value = fromDate.toISOString().split('T')[0];
+  toDatePicker.value = toDate.toISOString().split('T')[0];
+  if(update_report){
+    fetchReport();
+  }
 }
 
 // ==== LOGIN HANDLER ====

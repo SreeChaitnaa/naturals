@@ -1,6 +1,4 @@
 import time
-import json
-import requests
 from playwright.sync_api import sync_playwright
 from RestDB import RestDB
 from Settings import Settings
@@ -43,9 +41,15 @@ def run_browser_and_capture_headers(config):
 
         # --- Open Billing and wait ---
         page.goto(config.bill_url + "/#/User/Billing", timeout=60000)
-        page.wait_for_load_state("networkidle")
 
-        page.wait_for_timeout(5000)  # wait for API to fire
+        #wait for captured_headers to be populated
+        retries = 0
+        while not captured_headers:
+            time.sleep(500)
+            retries += 1
+            if retries > 10:
+                print("Timed out waiting for API headers")
+                break
 
         browser.close()
 
