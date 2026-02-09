@@ -117,7 +117,9 @@ table_click_links = {
   }
 }
 
-const moneyColumns = ['Tax', 'Gross', 'Cash', 'UPI', 'Card', "HomeBSC", "OtherBSC", "Package"]
+const nrs_pkg_cols = ["SCAPackage", "NRSPackage", "PackagesSold"]
+const ylg_pkg_cols = ["HomeBSC", "OtherBSC", "BSCSold"]
+const moneyColumns = ['Tax', 'Gross', 'Cash', 'UPI', 'Card'] + nrs_pkg_cols + ylg_pkg_cols
 const numericColumns = ['Price', 'Discount', 'NetSale', 'ABV', 'ASB', 'TotalNetSale', 'RealNetSale', ...moneyColumns];
 const excludeColumnsInSearchTable = ['PaymentType', ...moneyColumns];
 
@@ -485,7 +487,7 @@ async function login() {
     all_emp_names = new Set();
     all_section_names = new Set();
 
-    pay_modes_to_add = is_all_stores() ? ["HomeBSC", "OtherBSC", "Package"] : is_ylg() ? ["HomeBSC", "OtherBSC"] : ["Package"];
+    pay_modes_to_add = is_all_stores() ? nrs_pkg_cols + ylg_pkg_cols : is_ylg() ? ylg_pkg_cols : nrs_pkg_cols;
     pay_modes_to_add.forEach(bsc => {
       paymode_reports.forEach(tblType => {
         if(!table_columns[tblType].includes(bsc)){
@@ -749,7 +751,7 @@ function populate_all_bills() {
 }
 
 function calcPayments(bill, gst_percent) {
-  let cash = 0, upi = 0, card = 0, home_bsc = 0, other_bsc = 0, package=0;
+  let cash = 0, upi = 0, card = 0, home_bsc = 0, other_bsc = 0, nrs_pkg=0, sca_pkg=0, pkg_sold=0;
   const payment_types = new Set();
 
   bill.payment.forEach(p => {
@@ -771,8 +773,8 @@ function calcPayments(bill, gst_percent) {
       payment_types.add("HomeBSC");
       home_bsc += p_amount;
     } else if (mode.indexOf("amex") > -1) {
-      payment_types.add("Package");
-      package += p_amount;
+      payment_types.add("SCAPackage");
+      sca_pkg += p_amount;
     } else {
       payment_types.add("Card")
       card += p_amount;
@@ -781,8 +783,8 @@ function calcPayments(bill, gst_percent) {
   bill_ph = bill.Phone;
   adv_amount = bill.AdvanceAmount || 0;
   if(adv_amount > 0){
-    payment_types.add("Package");
-    package += adv_amount || 0;
+    payment_types.add("NRSPackage");
+    nrs_pkg += adv_amount || 0;
     bill_ph = "NotAPhone";
   }
   payment_type = Array.from(payment_types).join("/");
@@ -790,13 +792,14 @@ function calcPayments(bill, gst_percent) {
   if (service_name_for_real_sale.indexOf("bsc") >= 0 || service_name_for_real_sale.indexOf("sca package") >= 0){
     real_net_sale = 0;
     real_ratio = 0;
+    pkg_sold = bill.ticket[0].Price;
   }
   else{
-    real_gross = cash + upi + card + (other_bsc * 0.45) + (home_bsc * 0.60) + get_packages_net_sale(package, bill_ph);
+    real_gross = cash + upi + card + (other_bsc * 0.45) + (home_bsc * 0.60) + nrs_pkg + get_packages_net_sale(sca_pkg, bill_ph);
     real_net_sale =  real_gross / (1 + gst_percent);
-    real_ratio = real_gross / (cash + upi + card + other_bsc + home_bsc + package) || 0;
+    real_ratio = real_gross / (cash + upi + card + other_bsc + home_bsc + nrs_pkg + sca_pkg) || 0;
   }
-  return { cash, upi, card, home_bsc, other_bsc, package, real_net_sale, real_ratio, payment_type };
+  return { cash, upi, card, home_bsc, other_bsc, nrs_pkg, sca_pkg, real_net_sale, real_ratio, payment_type, pkg_sold };
 }
 
 function calcTickets(tickets) {
@@ -954,7 +957,8 @@ function formatReportData(rawData, reportType) {
 
         bsc_flag = get_bsc_sale_flag(bill);
         report_bsc_flag = bsc_flag == 0 ? "No BSC" : bsc_flag == 1 ? "Home BSC" : "Other BSC";
-        const { cash, upi, card, home_bsc, other_bsc, package, real_net_sale, real_ratio, payment_type } = calcPayments(bill, gst_percent);
+        const { cash, upi, card, home_bsc, other_bsc, nrs_pkg,
+                sca_pkg, real_net_sale, real_ratio, payment_type, pkg_sold } = calcPayments(bill, gst_percent);
 
         if (non_group_reports.includes(reportType)) {
           if (reportType === "services") {
@@ -996,8 +1000,8 @@ function formatReportData(rawData, reportType) {
               Discount: discountSum,
               NetSale: netSalesSum,
               RealNetSale: real_net_sale,
-              Tax: netSalesSum * gst_percent,
-              Gross: netSalesSum * (1 + gst_percent),
+              Tax: (netSalesSum * gst_percent).toFixed(2),
+              Gross: (netSalesSum * (1 + gst_percent)).toFixed(2),
               Services: servicesCount,
               ServiceDesc: serviceNames.join("/"),
               EmpName: Array.from(empNamesSet).join("/"),
@@ -1007,7 +1011,10 @@ function formatReportData(rawData, reportType) {
               OtherBSC: other_bsc,
               HomeBSC: home_bsc,
               Card: card,
-              Package: package,
+              SCAPackage: sca_pkg,
+              NRSPackage: nrs_pkg,
+              PackagesSold: pkg_sold,
+              BSCSold: pkg_sold,
               GSTPercent: gst_percent,
               BSC: report_bsc_flag
             };
@@ -1033,6 +1040,8 @@ function formatReportData(rawData, reportType) {
                 Discount: 0,
                 NetSale: 0,
                 RealNetSale: 0,
+                PackagesSold: 0,
+                BSCSold: 0,
                 ABV: 0,
                 ASB: 0,
                 GSTPercent: gst_percent
@@ -1045,6 +1054,8 @@ function formatReportData(rawData, reportType) {
             row.Discount += service.DiscountAmount;
             row.NetSale += (service.Qty * service.Price) - service.DiscountAmount;
             row.RealNetSale += get_real_net_sales(real_ratio, service);
+            row.PackagesSold += pkg_sold;
+            row.BSCSold += pkg_sold;
           });
           emp_in_bill.forEach(empName => {
               grouped[empName].Bills += 1;
@@ -1127,7 +1138,10 @@ function formatReportData(rawData, reportType) {
               OtherBSC: 0,
               HomeBSC: 0,
               Card: 0,
-              Package: 0,
+              SCAPackage: 0,
+              NRSPackage: 0,
+              PackagesSold: 0,
+              BSCSold : 0,
               NewClients: 0,
               EmpSale: {},
               SectionSale: {},
@@ -1150,7 +1164,10 @@ function formatReportData(rawData, reportType) {
           row.OtherBSC += other_bsc;
           row.HomeBSC += home_bsc;
           row.Card += card;
-          row.Package += package;
+          row.SCAPackage += sca_pkg;
+          row.NRSPackage += nrs_pkg;
+          row.PackagesSold += pkg_sold;
+          row.BSCSold += pkg_sold;
           row.NewClients += all_bills[bill.Phone]["bills"].length == 1? 1:0;
           Object.entries(emp_sale).forEach(([emp_name, emp_net_sale]) => {
             if(!row.EmpSale[emp_name]){
@@ -1191,8 +1208,8 @@ function formatReportData(rawData, reportType) {
       });
     } else {
       rows.forEach(row => {
-        row.Tax = row.NetSale * row.GSTPercent;
-        row.Gross = row.NetSale + row.Tax;
+        row.Tax = (row.NetSale * row.GSTPercent).toFixed(2);
+        row.Gross = parseFloat(row.NetSale + row.Tax).toFixed(2);
         row.ABV = row.Bills > 0 ? parseFloat((row.RealNetSale / row.Bills).toFixed(2)) : 0;
         row.ASB = row.Bills > 0 ? parseFloat((row.Services / row.Bills).toFixed(2)) : 0;
       });
@@ -1716,7 +1733,19 @@ function send_update(nrs_only=false, is_update=true, client_count=0, appointment
       if(cash_data["ChangeMissed"] != 0){
         summary += "  Change Missed: " + cash_data["ChangeMissed"] + "\n";
       }
-      summary += "  Cash in Box: " + cash_data["CashInBox"] + "\n";
+      summary += "  Cash in Box: " + cash_data["CashInBox"] + "\n\n";
+
+      summary += "Package Details: \n";
+      if(is_ylg()){
+        summary += "  BSC Sales: " + today.BSCSold + "\n";
+        summary += "  Home BSC Redemption: " + today.HomeBSC + "\n";
+        summary += "  Other BSC Redemption: " + today.OtherBSC + "\n";
+      }
+      else{
+        summary += "  SCA Package Sales: " + today.PackagesSold + "\n";
+        summary += "  SCA Package Redemption: " + today.SCAPackage + "\n";
+        summary += "  NRS Package Redemption: " + today.NRSPackage + "\n";
+      }
       summary += "\nClosing now, Good Night!!!\n";
 
       today_day_sales = full_data.filter(item => item.datenum == dayCloseDateNum)[0];
