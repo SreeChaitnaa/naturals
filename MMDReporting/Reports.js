@@ -119,7 +119,7 @@ table_click_links = {
 
 const nrs_pkg_cols = ["SCAPackage", "NRSPackage", "PackagesSold"]
 const ylg_pkg_cols = ["HomeBSC", "OtherBSC", "BSCSold"]
-const moneyColumns = ['Tax', 'Gross', 'Cash', 'UPI', 'Card'] + nrs_pkg_cols + ylg_pkg_cols
+const moneyColumns = ['Tax', 'Gross', 'Cash', 'UPI', 'Card', ...nrs_pkg_cols, ...ylg_pkg_cols]
 const numericColumns = ['Price', 'Discount', 'NetSale', 'ABV', 'ASB', 'TotalNetSale', 'RealNetSale', ...moneyColumns];
 const excludeColumnsInSearchTable = ['PaymentType', ...moneyColumns];
 
@@ -487,7 +487,7 @@ async function login() {
     all_emp_names = new Set();
     all_section_names = new Set();
 
-    pay_modes_to_add = is_all_stores() ? nrs_pkg_cols + ylg_pkg_cols : is_ylg() ? ylg_pkg_cols : nrs_pkg_cols;
+    pay_modes_to_add = is_all_stores() ? [...nrs_pkg_cols, ...ylg_pkg_cols] : is_ylg() ? ylg_pkg_cols : nrs_pkg_cols;
     pay_modes_to_add.forEach(bsc => {
       paymode_reports.forEach(tblType => {
         if(!table_columns[tblType].includes(bsc)){
