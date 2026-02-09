@@ -73,6 +73,12 @@ if __name__ == '__main__':
 
     handler.setFormatter(formatter)
     logger.addHandler(handler)
+    # Add console handler as well
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG)
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+
     settings = Settings()
     rest_db = RestDB(settings.store_id, settings, logger)
     logger.info("Starting Browser to get Auth headers for Store ID - {}".format(settings.store_id))
