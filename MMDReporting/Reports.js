@@ -1262,7 +1262,7 @@ function fill_table_with_data(reportType, in_dialog=false, search_key=null, sear
     (in_dialog ? dialog_rows : rows).forEach(item => {
       data_keys.forEach(dk => {
         dk_value = item[dk]
-        if (typeof dk_value === 'number' && !isNaN(dk_value)) {
+        if (typeof dk_value === 'number' && !isNaN(dk_value) && !(['TicketID', 'Phone'].includes(dk))) {
           sum_row[dk] += dk_value;
         }
         else{
