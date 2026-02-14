@@ -297,10 +297,7 @@ window.onload = function() {
     shopSelectDiv.style.display = "none"
   }
 
-  if(!store_view) {
-    btn_export_csv.style.display = "block";
-  }
-  else{
+  if(store_view) {
     non_shop_reports.forEach(option_to_remove => {
       for (let i = 0; i < reportTypeSelector.options.length; i++) {
         if (option_to_remove == reportTypeSelector.options[i].value) {
@@ -675,6 +672,7 @@ async function login() {
 
       document.querySelectorAll(".ylgOnly").forEach(item => { item.style.display = is_ylg() ? "block" : "none" });
       document.querySelectorAll(".nrsOnly").forEach(item => { item.style.display = is_ylg() ? "none" : "block" });
+      document.querySelectorAll(".ownerOnly").forEach(item => { item.style.display = store_view ? "none" : "block" });
 
       // Simple render for debugging
       console.log("✅ Data:", data);
@@ -1935,7 +1933,7 @@ function add_service(service_name=null, service_price=null, push_to_db= true) {
 
 function delete_bills(bill_ids){
   updated_dates = {};
-  full_data.forEach(day_sale => {
+  last_data.forEach(day_sale => {
     for (let i = day_sale.bills.length - 1; i >= 0; i--) {
       const ticketId = get_ticket_id(day_sale.bills[i].TicketID);
       const idx = bill_ids.indexOf(ticketId);
