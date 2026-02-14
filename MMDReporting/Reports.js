@@ -1206,8 +1206,8 @@ function formatReportData(rawData, reportType) {
       });
     } else {
       rows.forEach(row => {
-        row.Tax = (row.NetSale * row.GSTPercent).toFixed(2);
-        row.Gross = parseFloat(row.NetSale + row.Tax).toFixed(2);
+        row.Tax = Number((row.NetSale * row.GSTPercent).toFixed(2));
+        row.Gross = Number(parseFloat(row.NetSale + row.Tax).toFixed(2));
         row.ABV = row.Bills > 0 ? parseFloat((row.RealNetSale / row.Bills).toFixed(2)) : 0;
         row.ASB = row.Bills > 0 ? parseFloat((row.Services / row.Bills).toFixed(2)) : 0;
       });
@@ -1275,7 +1275,7 @@ function fill_table_with_data(reportType, in_dialog=false, search_key=null, sear
     data_keys.forEach(dk => {
       dk_value = sum_row[dk];
       if (dk == "ABV") {
-        dk_value = parseFloat((sum_row["NetSale"] / sum_row["Bills"]).toFixed(2));
+        dk_value = parseFloat((sum_row["RealNetSale"] / sum_row["Bills"]).toFixed(2));
       }
       if (dk == "ASB") {
         dk_value = parseFloat((sum_row["Services"] / sum_row["Bills"]).toFixed(2));
