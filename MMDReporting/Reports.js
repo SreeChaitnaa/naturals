@@ -793,7 +793,7 @@ function calcPayments(bill, gst_percent) {
     pkg_sold = bill.ticket[0].Price;
   }
   else{
-    real_gross = cash + upi + card + (other_bsc * 0.45) + (home_bsc * 0.60) + nrs_pkg + get_packages_net_sale(sca_pkg, bill_ph);
+    real_gross = cash + upi + card + (other_bsc * 0.45) + (home_bsc * 0.60) + (nrs_pkg * 0.9) + get_packages_net_sale(sca_pkg, bill_ph);
     real_net_sale =  real_gross / (1 + gst_percent);
     real_ratio = real_gross / (cash + upi + card + other_bsc + home_bsc + nrs_pkg + sca_pkg) || 0;
   }
