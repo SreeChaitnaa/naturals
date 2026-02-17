@@ -1995,7 +1995,7 @@ function resetBill() {
 function submitBill(){
   if(validateBill()) {
     bill_to_add = generateBillObject();
-    if(bill_to_add.payment[0].modeOfPayment = "SCAPackage"){
+    if(bill_to_add.payment[0].modeOfPayment == "SCAPackage"){
       insertPackageDataInDB(bill_to_add.TicketID, bill_to_add.Phone, 0, 0 - parseInt(bill_to_add.payment[0].Tender));
     }
     bill_date_num = parseInt(get_ist_date().toISOString().split('T')[0].replace(/-/g, ""), 10)
