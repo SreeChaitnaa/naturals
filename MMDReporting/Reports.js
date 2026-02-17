@@ -1842,7 +1842,7 @@ function openPackageDialog() {
   full_data.forEach(daySale => {
     daySale.bills.forEach(bill => {
       bill.ticket.forEach(service => {
-          if(service.ServiceName.lower().indexOf("sca package") >= 0) {
+          if(service.ServiceName.indexOf("SCA Package") >= 0) {
               bill_id = bill.TicketID;
               found = false;
               packages_data.forEach(package => {
