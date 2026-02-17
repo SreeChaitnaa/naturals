@@ -1429,10 +1429,6 @@ function fetchReport() {
       return;
   }
 
-  if(is_ylg() && store_view && reportType != "dailyCash"){
-    reset_date_pickers();
-  }
-
   const startDateNum = parseInt(fromDate.replace(/-/g, ""), 10);
   const endDateNum = parseInt(toDate.replace(/-/g, ""), 10);
 
