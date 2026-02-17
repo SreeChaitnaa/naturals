@@ -484,7 +484,13 @@
         <input type="text" id="phoneInput" list="phoneList" oninput="handlePhoneInput(this)">
         <datalist id="phoneList"></datalist> &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
         <label for="nameInput">Name:</label>
-        <input type="text" id="nameInput">
+        <input type="text" id="nameInput"> &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+        <div id="packageBalanceDiv" style="display:none">
+          <br /> <hr /> <br />
+          <label for="packageBalanceValue">Package Balance:</label>
+          <input type="text" id="packageBalanceValue" disabled>
+          <br />
+        </div>
       </div>
       <br />
 
@@ -571,6 +577,10 @@
               <div class="payment-row">
                 <label>Other BSC:</label>
                 <input type="number" value="" min="0" id="payOtherBSC" onchange="checkPayments()">
+              </div>
+              <div class="payment-row">
+                <label>SCA Package:</label>
+                <input type="number" value="" min="0" id="paySCAPackage" onchange="checkPayments()">
               </div>
               <div class="payment-row total-row">
                 <label>Total:</label>

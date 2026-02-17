@@ -117,9 +117,10 @@ table_click_links = {
   }
 }
 
-const nrs_pkg_cols = ["SCAPackage", "NRSPackage", "PackagesSold"]
+const common_pkg_cols = ["SCAPackage", "PackagesSold"]
+const nrs_pkg_cols = ["NRSPackage"]
 const ylg_pkg_cols = ["HomeBSC", "OtherBSC", "BSCSold"]
-const moneyColumns = ['Tax', 'Gross', 'Cash', 'UPI', 'Card', ...nrs_pkg_cols, ...ylg_pkg_cols]
+const moneyColumns = ['Tax', 'Gross', 'Cash', 'UPI', 'Card', ...common_pkg_cols, ...nrs_pkg_cols, ...ylg_pkg_cols]
 const numericColumns = ['Price', 'Discount', 'NetSale', 'ABV', 'ASB', 'TotalNetSale', 'RealNetSale', ...moneyColumns];
 const excludeColumnsInSearchTable = ['PaymentType', ...moneyColumns];
 
@@ -485,6 +486,7 @@ async function login() {
     all_section_names = new Set();
 
     pay_modes_to_add = is_all_stores() ? [...nrs_pkg_cols, ...ylg_pkg_cols] : is_ylg() ? ylg_pkg_cols : nrs_pkg_cols;
+    pay_modes_to_add = [...common_pkg_cols, ...pay_modes_to_add];
     pay_modes_to_add.forEach(bsc => {
       paymode_reports.forEach(tblType => {
         if(!table_columns[tblType].includes(bsc)){
@@ -749,7 +751,7 @@ function populate_all_bills() {
 }
 
 function calcPayments(bill, gst_percent) {
-  let cash = 0, upi = 0, card = 0, home_bsc = 0, other_bsc = 0, nrs_pkg=0, sca_pkg=0, pkg_sold=0;
+  let cash = 0, upi = 0, card = 0, home_bsc = 0, other_bsc = 0, nrs_pkg=0, sca_pkg=0, pkg_sold=0, bsc_sold=0;
   const payment_types = new Set();
 
   bill.payment.forEach(p => {
@@ -770,7 +772,7 @@ function calcPayments(bill, gst_percent) {
     } else if (mode.indexOf("bsc") > -1) {
       payment_types.add("HomeBSC");
       home_bsc += p_amount;
-    } else if (mode.indexOf("amex") > -1) {
+    } else if (mode.indexOf("amex") > -1 || mode.indexOf("scapackage") > -1) {
       payment_types.add("SCAPackage");
       sca_pkg += p_amount;
     } else {
@@ -787,7 +789,12 @@ function calcPayments(bill, gst_percent) {
   }
   payment_type = Array.from(payment_types).join("/");
   service_name_for_real_sale = bill.ticket[0]["ServiceName"].toLowerCase();
-  if (service_name_for_real_sale.indexOf("bsc") >= 0 || service_name_for_real_sale.indexOf("sca package") >= 0){
+  if (service_name_for_real_sale.indexOf("bsc") >= 0){
+    real_net_sale = 0;
+    real_ratio = 0;
+    bsc_sold = bill.ticket[0].Price;
+  }
+  else if (service_name_for_real_sale.indexOf("sca package") >= 0){
     real_net_sale = 0;
     real_ratio = 0;
     pkg_sold = bill.ticket[0].Price;
@@ -797,7 +804,8 @@ function calcPayments(bill, gst_percent) {
     real_net_sale =  real_gross / (1 + gst_percent);
     real_ratio = real_gross / (cash + upi + card + other_bsc + home_bsc + nrs_pkg + sca_pkg) || 0;
   }
-  return { cash, upi, card, home_bsc, other_bsc, nrs_pkg, sca_pkg, real_net_sale, real_ratio, payment_type, pkg_sold };
+  return { cash, upi, card, home_bsc, other_bsc, nrs_pkg, sca_pkg,
+          real_net_sale, real_ratio, payment_type, pkg_sold, bsc_sold };
 }
 
 function calcTickets(tickets) {
@@ -955,8 +963,8 @@ function formatReportData(rawData, reportType) {
 
         bsc_flag = get_bsc_sale_flag(bill);
         report_bsc_flag = bsc_flag == 0 ? "No BSC" : bsc_flag == 1 ? "Home BSC" : "Other BSC";
-        const { cash, upi, card, home_bsc, other_bsc, nrs_pkg,
-                sca_pkg, real_net_sale, real_ratio, payment_type, pkg_sold } = calcPayments(bill, gst_percent);
+        const { cash, upi, card, home_bsc, other_bsc, nrs_pkg, sca_pkg,
+                real_net_sale, real_ratio, payment_type, pkg_sold, bsc_sold } = calcPayments(bill, gst_percent);
 
         if (non_group_reports.includes(reportType)) {
           if (reportType === "services") {
@@ -1012,7 +1020,7 @@ function formatReportData(rawData, reportType) {
               SCAPackage: sca_pkg,
               NRSPackage: nrs_pkg,
               PackagesSold: pkg_sold,
-              BSCSold: pkg_sold,
+              BSCSold: bsc_sold,
               GSTPercent: gst_percent,
               BSC: report_bsc_flag
             };
@@ -1053,7 +1061,7 @@ function formatReportData(rawData, reportType) {
             row.NetSale += (service.Qty * service.Price) - service.DiscountAmount;
             row.RealNetSale += get_real_net_sales(real_ratio, service);
             row.PackagesSold += pkg_sold;
-            row.BSCSold += pkg_sold;
+            row.BSCSold += bsc_sold;
           });
           emp_in_bill.forEach(empName => {
               grouped[empName].Bills += 1;
@@ -1165,7 +1173,7 @@ function formatReportData(rawData, reportType) {
           row.SCAPackage += sca_pkg;
           row.NRSPackage += nrs_pkg;
           row.PackagesSold += pkg_sold;
-          row.BSCSold += pkg_sold;
+          row.BSCSold += bsc_sold;
           row.NewClients += all_bills[bill.Phone]["bills"].length == 1? 1:0;
           Object.entries(emp_sale).forEach(([emp_name, emp_net_sale]) => {
             if(!row.EmpSale[emp_name]){
@@ -1734,6 +1742,8 @@ function send_update(nrs_only=false, is_update=true, client_count=0, appointment
         summary += "  BSC Sales: " + today.BSCSold + "\n";
         summary += "  Home BSC Redemption: " + today.HomeBSC + "\n";
         summary += "  Other BSC Redemption: " + today.OtherBSC + "\n";
+        summary += "  SCA Package Sales: " + today.PackagesSold + "\n";
+        summary += "  SCA Package Redemption: " + today.SCAPackage + "\n";
       }
       else{
         summary += "  SCA Package Sales: " + today.PackagesSold + "\n";
@@ -1842,7 +1852,7 @@ function openPackageDialog() {
   full_data.forEach(daySale => {
     daySale.bills.forEach(bill => {
       bill.ticket.forEach(service => {
-          if(service.ServiceName.indexOf("SCA Package") >= 0) {
+          if(service.ServiceName.toLowerCase().indexOf("sca package") >= 0) {
               bill_id = bill.TicketID;
               found = false;
               packages_data.forEach(package => {
@@ -1874,18 +1884,22 @@ function openPackageDialog() {
 }
 
 function add_Package(){
-  pkg_data = {
-    "bill_id": pkg_bill_id.value,
-    "phone": pkg_phone.value,
-    "netsale": parseInt(pkg_netsale.value),
-    "amount": parseInt(pkg_amount.value)
-  };
-  packages_data.push(pkg_data);
-  process_packages_data();
-  insertDataInDB("scapackages", pkg_data);
+  insertPackageDataInDB(pkg_bill_id.value, pkg_phone.value, parseInt(pkg_netsale.value), parseInt(pkg_amount.value));
   closeDialog();
   reportTypeSelector.value = "packagesBalances";
   fetchReport();
+}
+
+function insertPackageDataInDB(bill_id, phone, netsale, amount) {
+  pkg_data = {
+    "bill_id": bill_id,
+    "phone": phone,
+    "netsale": netsale,
+    "amount": amount
+  };
+  packages_data.push(pkg_data);
+  process_packages_data();
+  return insertDataInDB("scapackages", pkg_data);
 }
 
 function packageBillChanged(){
@@ -1981,10 +1995,13 @@ function resetBill() {
 function submitBill(){
   if(validateBill()) {
     bill_to_add = generateBillObject();
+    if(bill_to_add.payment[0].modeOfPayment = "SCAPackage"){
+      insertPackageDataInDB(bill_to_add.TicketID, bill_to_add.Phone, 0, 0 - parseInt(bill_to_add.payment[0].Tender));
+    }
     bill_date_num = parseInt(get_ist_date().toISOString().split('T')[0].replace(/-/g, ""), 10)
     updated = false;
     full_data.forEach(day_entry => {
-      if(day_entry.datenum == bill_date_num){
+      if(day_entry.datenum == bill_date_num && !updated){
         day_entry.bills.push(bill_to_add);
         updateDataInDB("daysales", day_entry);
         updated = true;
@@ -2248,6 +2265,13 @@ function handlePhoneInput(input) {
     // If not found, allow entering freely
     nameInput.value = "";
   }
+  if(packages_balance[phone]){
+    packageBalanceValue.value = packages_balance[phone];
+    packageBalanceDiv.style.display = "block";
+  }
+  else{
+    packageBalanceDiv.style.display = "none";
+  }
 }
 
 function validateBill() {
@@ -2335,7 +2359,7 @@ function generateBillObject() {
 
   // Collect payments
   const payment = [];
-  ["Cash", "Card", "EWallet", "HomeBSC", "OtherBSC"].forEach(mode => {
+  ["Cash", "Card", "EWallet", "HomeBSC", "OtherBSC", "SCAPackage"].forEach(mode => {
     const val = parseFloat(document.getElementById("pay" + mode).value) || 0;
     if (val > 0) {
       payment.push({
