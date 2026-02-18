@@ -1,3 +1,5 @@
+import sys
+
 from playwright.sync_api import sync_playwright
 from RestDB import RestDB
 from Settings import Settings
@@ -79,7 +81,12 @@ if __name__ == '__main__':
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
 
-    settings = Settings()
+    store_id = None
+    if len(sys.argv) > 1:
+        store_id = sys.argv[1]
+        logger.info("Store ID provided as argument: {}".format(store_id))
+
+    settings = Settings(store_id=store_id)
     rest_db = RestDB(settings.store_id, settings, logger)
     logger.info("Starting Browser to get Auth headers for Store ID - {}".format(settings.store_id))
     headers = run_browser_and_capture_headers(settings)
