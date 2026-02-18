@@ -898,7 +898,7 @@ function formatReportData(rawData, reportType) {
       row.Visits = selected_entry.bills.length;
       row.BillsSummary = [];
       selected_entry.bills.forEach(bill => {
-        row.BillsSummary.push(bill.Date + " : " + bill.NetSale);
+        row.BillsSummary.push(bill.Date + " : " + bill.NetSale.toFixed(0));
         row.TotalNetSale += bill.NetSale;
       });
       row.BillsSummary = row.BillsSummary.join("<br />");
@@ -1257,11 +1257,6 @@ function fill_table_with_data(reportType, in_dialog=false, search_key=null, sear
   }
   table_columns[reportType].forEach(col_name => {
     if (in_dialog && excludeColumnsInSearchTable.includes(col_name)) { return; }
-//    if (is_ylg() && store_view) {
-//      if(col_name == "Phone"){
-//        return;
-//      }
-//    }
     data_keys.push(col_name);
   });
   if (!non_sum_row_reports.includes(reportType)) {
