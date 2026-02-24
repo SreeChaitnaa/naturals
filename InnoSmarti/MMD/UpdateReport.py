@@ -86,11 +86,17 @@ if __name__ == '__main__':
         store_id = sys.argv[1]
         logger.info("Store ID provided as argument: {}".format(store_id))
 
+    bills_to_add = None
+    if len(sys.argv) > 2:
+        bills_to_add = [int(k) for k in sys.argv[2].split(",")]
+        logger.info("Bills to add: {}".format(bills_to_add))
+
+
     settings = Settings(store_id=store_id)
     rest_db = RestDB(settings.store_id, settings, logger)
     logger.info("Starting Browser to get Auth headers for Store ID - {}".format(settings.store_id))
     headers = run_browser_and_capture_headers(settings)
     latest_bill_number = Utils.get_latest_bill_number(settings.store_id, headers)
     logger.info("Latest Bill Number - {}".format(latest_bill_number))
-    Utils.update_rest_db(settings.store_id, latest_bill_number,logger, settings, rest_db, headers)
+    Utils.update_rest_db(settings.store_id, latest_bill_number, logger, settings, rest_db, headers, bills_to_add)
 

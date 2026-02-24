@@ -153,7 +153,7 @@ class Utils:
 
 
     @staticmethod
-    def update_rest_db(store_id, bill_number, logger, settings, rest_db, headers=None):
+    def update_rest_db(store_id, bill_number, logger, settings, rest_db, headers=None, bill_nums_to_add=None):
         logger.info("update_rest_db started...")
         try:
             bill_number = str(bill_number).lower()
@@ -163,16 +163,18 @@ class Utils:
             last_bill_key = "mmd_last_bill" if is_mmd else "nrs_last_bill"
             last_bill_number = int(rest_db.get_config_value(last_bill_key))
             next_bill_number = last_bill_number + 1
-            if int(bill_number) <= last_bill_number:
+            if int(bill_number) <= last_bill_number and bill_nums_to_add is None:
                 logger.info(f"Already {bill_number} is updated as last updated is {last_bill_number}")
-                return
+                return None
             if is_mmd:
                 for mmd_bill in rest_db.get_bills(bill_start=next_bill_number, bill_end=bill_number):
                     bills_to_add.append(Utils.get_bill_view_resp(mmd_bill, settings))
                 next_bill_number = bill_number
             else:
                 ddos_wait = 5
-                while next_bill_number <= bill_number:
+                if bill_nums_to_add is None:
+                    bill_nums_to_add = [k for k in range(next_bill_number, bill_number+1)]
+                for next_bill_number in bill_nums_to_add:
                     resp = Utils.get_nrs_bill(store_id, next_bill_number, logger, headers)
                     if "Too Many Requests" in resp.text:
                         logger.info(f"Too many requests response came, wait for {ddos_wait}sec")
@@ -190,9 +192,8 @@ class Utils:
                     if len(bills_to_add) > 99:
                         rest_db.update_bills(bills_to_add, is_mmd, last_bill_key, next_bill_number)
                         bills_to_add = []
-                    next_bill_number += 1
-                next_bill_number -= 1
-            rest_db.update_bills(bills_to_add, is_mmd, last_bill_key, next_bill_number)
+            rest_db.update_bills(bills_to_add, is_mmd, last_bill_key,
+                                 next_bill_number if bill_nums_to_add is None else last_bill_number)
             logger.info("update_rest_db completed.")
             return "Success - {}".format(next_bill_number)
         except Exception as e1:
