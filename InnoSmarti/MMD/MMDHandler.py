@@ -166,6 +166,7 @@ class Utils:
             if int(bill_number) <= last_bill_number and bill_nums_to_add is None:
                 logger.info(f"Already {bill_number} is updated as last updated is {last_bill_number}")
                 return None
+            bill_num_to_mark = None
             if is_mmd:
                 for mmd_bill in rest_db.get_bills(bill_start=next_bill_number, bill_end=bill_number):
                     bills_to_add.append(Utils.get_bill_view_resp(mmd_bill, settings))
@@ -174,6 +175,8 @@ class Utils:
                 ddos_wait = 5
                 if bill_nums_to_add is None:
                     bill_nums_to_add = [k for k in range(next_bill_number, bill_number+1)]
+                else:
+                    bill_num_to_mark = last_bill_number
                 for next_bill_number in bill_nums_to_add:
                     resp = Utils.get_nrs_bill(store_id, next_bill_number, logger, headers)
                     if "Too Many Requests" in resp.text:
@@ -190,10 +193,9 @@ class Utils:
                         logger.info("Resp is - {0} - {1}".format(resp.status_code, resp.text))
                     time.sleep(1)
                     if len(bills_to_add) > 99:
-                        rest_db.update_bills(bills_to_add, is_mmd, last_bill_key, next_bill_number)
+                        rest_db.update_bills(bills_to_add, is_mmd, last_bill_key, bill_num_to_mark or next_bill_number)
                         bills_to_add = []
-            rest_db.update_bills(bills_to_add, is_mmd, last_bill_key,
-                                 next_bill_number if bill_nums_to_add is None else last_bill_number)
+            rest_db.update_bills(bills_to_add, is_mmd, last_bill_key, bill_num_to_mark or next_bill_number)
             logger.info("update_rest_db completed.")
             return "Success - {}".format(next_bill_number)
         except Exception as e1:
@@ -809,3 +811,4 @@ class MMDHandler:
                 conn.close()
         except Exception as e1:
             self.logger.error(f"exception in post task - {e1}")
+ 
