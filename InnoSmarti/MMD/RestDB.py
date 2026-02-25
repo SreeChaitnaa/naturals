@@ -69,7 +69,7 @@ class RestDB:
         return resp
 
     def add_package_usage(self, bill_id, phone, amount):
-        package_usage_payload = {"bill_id": bill_id, "phone": phone, "amount": 0 - int(str(amount.split(".")[0]))}
+        package_usage_payload = {"bill_id": bill_id, "phone": phone, "amount": 0 - int(str(amount).split(".")[0])}
         self.do_rest_call(DBStrings.POST, body=package_usage_payload, table="scapackages")
 
     def get_bills(self, bill_id=None, phone_num=None, date_start=None, date_end=None, bill_start=None, bill_end=None):
