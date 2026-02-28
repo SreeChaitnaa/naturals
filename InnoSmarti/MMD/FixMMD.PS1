@@ -21,9 +21,9 @@ if (Test-Path $chromeUserData) {
 }
 
 # 3. Get latest Stable version from Chrome for Testing API
-$stableData = Invoke-RestMethod "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json"
-$latestStable = $stableData.channels.Stable.version
-Write-Host "Latest stable Chrome version: $latestStable"
+#$stableData = Invoke-RestMethod "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json"
+#$latestStable = $stableData.channels.Stable.version
+#Write-Host "Latest stable Chrome version: $latestStable"
 
 # 4. Check installed Chrome version
 $chromePath = "$env:LOCALAPPDATA\Google\Chrome\Application\chrome.exe"
@@ -37,7 +37,7 @@ $installed = if (Test-Path $chromePath) { (Get-Item $chromePath).VersionInfo.Pro
 Write-Host "Installed Chrome version: $installed"
 
 # 5. Download & install Chrome only if versions differ
-if ($installed -ne $latestStable) {
+<# if ($installed -ne $latestStable) {
     Write-Host "Downloading offline MSI installer..."
     $msiUrl = "https://dl.google.com/dl/chrome/install/googlechromestandaloneenterprise64.msi"
     Invoke-WebRequest -Uri $msiUrl -OutFile $installer
@@ -49,10 +49,10 @@ if ($installed -ne $latestStable) {
     Write-Host "Installed Chrome version now: $installed"
 } else {
     Write-Host "Chrome is up to date. Skipping install."
-}
+} #>
 
 # 6. Handle ChromeDriver
-$desired = $latestStable
+#$desired = $latestStable
 $currentDriver = $null
 $driverExe = "$driverDir\chromedriver.exe"
 if (Test-Path $driverExe) {
@@ -60,9 +60,10 @@ if (Test-Path $driverExe) {
 }
 Write-Host "Current driver: $currentDriver"
 
-if ($currentDriver -notlike "*$desired*") {
-    Write-Host "Downloading ChromeDriver version $desired..."
-    $driverUrl = ($stableData.channels.Stable.downloads.chromedriver | Where-Object { $_.platform -eq "win64" }).url
+if ($currentDriver -notlike "*$installed*") {
+    Write-Host "Downloading ChromeDriver version $installed..."
+    $driverUrl = "https://storage.googleapis.com/chrome-for-testing-public/$installed/win64/chromedriver-win64.zip"
+    Write-Host $driverUrl
     Invoke-WebRequest -Uri $driverUrl -OutFile $driverZip
 
     Expand-Archive -Path $driverZip -DestinationPath $extract -Force
@@ -70,7 +71,7 @@ if ($currentDriver -notlike "*$desired*") {
     if ($exe) {
         if (Test-Path $driverDir) { Remove-Item "$driverDir\*" -Recurse -Force }
         else { New-Item -ItemType Directory -Path $driverDir | Out-Null }
-        Copy-Item "$extract\*" -Destination $driverDir -Recurse -Force
+        Copy-Item "$extract\chromedriver-win64\*" -Destination $driverDir -Recurse -Force
         Write-Host "ChromeDriver updated at $driverDir"
     } else {
         Write-Host "Driver download failed; keeping old driver."
