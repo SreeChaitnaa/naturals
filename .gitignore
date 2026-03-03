@@ -11,3 +11,5 @@ MMDReporting/.idea/misc.xml
 MMDReporting/.idea/MMDReporting.iml
 MMDReporting/.idea/modules.xml
 MMDReporting/.idea/vcs.xml
+*.pyc
+/InnoSmarti/MMD/PW/chrome-profile
