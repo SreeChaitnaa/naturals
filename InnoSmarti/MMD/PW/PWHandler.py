@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-import time
 import aiohttp
 
 from playwright.async_api import async_playwright
@@ -45,7 +44,10 @@ class Launcher:
             args = ["google-chrome"]
 
         args.extend([f"--remote-debugging-port={self.port}",
-                     f"--user-data-dir={profile_dir}",
+                     # f"--user-data-dir={profile_dir}",
+                     # "--start-maximized", "--disable-infobars", "--disable-extensions",
+                     # "--disable-session-crashed-bubble",
+                     # self.launch_url])
                      f"--app={self.launch_url}"])
 
         subprocess.Popen(args)
