@@ -27,6 +27,7 @@ class Launcher:
         self.context = None
         self.port = 9222
         self.path = os.path.dirname(os.path.abspath(__file__))
+        self.launch_url = os.path.join(self.path, "Naturals.html") if self.is_mmd else "https://naturals.innosmarti.com"
 
     def launch_chrome(self):
         system = platform.system()
@@ -44,8 +45,7 @@ class Launcher:
 
         args.extend([f"--remote-debugging-port={self.port}",
                      f"--user-data-dir={profile_dir}",
-                     "--app=https://example.com/"])
-        # args.extend([f"--remote-debugging-port={self.port}", f"--user-data-dir={profile_dir}", "--app=https://naturals.innosmarti.com/"])
+                     f"--app={self.launch_url}"])
 
         subprocess.Popen(args)
 
@@ -129,7 +129,9 @@ class Launcher:
             print("Browser opened in app mode. Close it manually to exit...")
 
             self.page = await self.wait_for_page()
-            await self.page.goto("https://naturals.innosmarti.com/", wait_until="networkidle")
+            if "innosmarti" not in str(self.page.url):
+                await asyncio.sleep(5)
+                await self.page.goto("https://naturals.innosmarti.com/", wait_until="networkidle")
 
             if await self.set_element(self.settings.user):
                 await self.set_element(self.settings.password)

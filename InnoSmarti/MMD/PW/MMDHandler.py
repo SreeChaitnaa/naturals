@@ -4,7 +4,6 @@ import time
 from datetime import date, timedelta
 
 import requests
-from multiprocessing.connection import Client
 
 from RestDB import RestDB
 from collections import OrderedDict
