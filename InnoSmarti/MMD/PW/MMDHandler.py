@@ -801,8 +801,8 @@ class MMDHandler:
                     resp = json.loads(resp)
                 ticket_id = resp['TicketID']
                 self.logger.warn(f"New Bill After parse - {type(resp)} - {resp}")
-                Utils.update_rest_db(self.settings.store_id, ticket_id, self.logger, self.settings, self.rest_db,
-                                     headers)
+                print(Utils.update_rest_db(self.settings.store_id, ticket_id, self.logger, self.settings, self.rest_db,
+                                           headers))
         except Exception as e1:
             self.logger.error(f"exception in post task - {e1}")
  
