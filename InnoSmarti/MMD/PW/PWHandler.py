@@ -129,7 +129,7 @@ class Launcher:
             print("Browser opened in app mode. Close it manually to exit...")
 
             self.page = await self.wait_for_page()
-            if "innosmarti" not in str(self.page.url):
+            if "naturals.innosmarti.com" not in str(self.page.url):
                 await asyncio.sleep(5)
                 await self.page.goto("https://naturals.innosmarti.com/", wait_until="networkidle")
 
