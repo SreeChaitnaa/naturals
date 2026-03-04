@@ -26,41 +26,28 @@ class Launcher:
         self.page = None
         self.context = None
         self.port = 9222
+        self.path = os.path.dirname(os.path.abspath(__file__))
 
     def launch_chrome(self):
         system = platform.system()
 
-        profile_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chrome-profile")
+        profile_dir = os.path.join(self.path, "chrome-profile")
+        args = ["C:\\Program Files\\Google\\Chrome\\Application\\Chrome.exe"]
 
         if system == "Darwin":
             subprocess.run(["pkill", "-f", "Google Chrome"])
             time.sleep(1)
-            subprocess.Popen([
-                "open",
-                "-n",
-                "-a",
-                "Google Chrome",
-                "--args",
-                f"--remote-debugging-port={self.port}",
-                f"--user-data-dir={profile_dir}",
-                "--app=https://naturals.innosmarti.com/"
-            ])
+            args = ["open", "-n", "-a", "Google Chrome", "--args"]
 
-        elif system == "Windows":
-            subprocess.Popen([
-                "C:\\Program Files\\Google\\Chrome\\Application\\Chrome.exe",
-                f"--remote-debugging-port={self.port}",
-                f"--user-data-dir={profile_dir}",
-                "--app=https://naturals.innosmarti.com/"
-            ])
+        elif system != "Windows":
+            args = ["google-chrome"]
 
-        else:
-            subprocess.Popen([
-                "google-chrome",
-                f"--remote-debugging-port={self.port}",
-                f"--user-data-dir={profile_dir}",
-                "--app=https://naturals.innosmarti.com/"
-            ])
+        args.extend([f"--remote-debugging-port={self.port}",
+                     f"--user-data-dir={profile_dir}",
+                     "--app=https://example.com/"])
+        # args.extend([f"--remote-debugging-port={self.port}", f"--user-data-dir={profile_dir}", "--app=https://naturals.innosmarti.com/"])
+
+        subprocess.Popen(args)
 
     async def set_element(self, element_setting):
         selector = element_setting['selector']
@@ -69,7 +56,7 @@ class Launcher:
 
             locator = self.page.locator(selector)
 
-            await locator.wait_for(state="visible", timeout=15000)
+            await locator.wait_for(state="visible", timeout=5000)
 
             if value == "click":
                 await locator.click()
@@ -142,12 +129,12 @@ class Launcher:
             print("Browser opened in app mode. Close it manually to exit...")
 
             self.page = await self.wait_for_page()
-
-            await self.page.wait_for_load_state("domcontentloaded")
+            await self.page.goto("https://naturals.innosmarti.com/", wait_until="networkidle")
 
             if await self.set_element(self.settings.user):
                 await self.set_element(self.settings.password)
                 await self.set_element(self.settings.login)
+
             await self.page.wait_for_event("close", timeout=0)
             await self.context.close()
 
