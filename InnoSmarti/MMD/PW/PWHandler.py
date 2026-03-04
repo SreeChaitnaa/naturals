@@ -44,10 +44,7 @@ class Launcher:
             args = ["google-chrome"]
 
         args.extend([f"--remote-debugging-port={self.port}",
-                     # f"--user-data-dir={profile_dir}",
-                     # "--start-maximized", "--disable-infobars", "--disable-extensions",
-                     # "--disable-session-crashed-bubble",
-                     # self.launch_url])
+                     f"--user-data-dir={profile_dir}",
                      f"--app={self.launch_url}"])
 
         subprocess.Popen(args)
@@ -115,7 +112,7 @@ class Launcher:
         for _ in range(timeout * 10):
             if self.context.pages:
                 return self.context.pages[0]
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.5)
         raise RuntimeError("No page created by Chrome")
 
     async def process(self):
@@ -132,6 +129,7 @@ class Launcher:
             print("Browser opened in app mode. Close it manually to exit...")
 
             self.page = await self.wait_for_page()
+            print("Page URL is {}".format(self.page.url))
             if self.innosmarti_url not in str(self.page.url):
                 await self.page.goto(self.innosmarti_url, wait_until="networkidle")
 
