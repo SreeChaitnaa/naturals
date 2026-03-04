@@ -565,6 +565,12 @@ class MMDHandler:
                         "message": "SCA Products or Services Can not be sold with Advance Amount, Contact Murali."
                     }
                 _, ph_no = Utils.get_name_and_ph_no(self.payload[0]['clntid'])
+                services_to_remove = []
+                for service in self.payload:
+                    if str(service["ServiceID"]).lower().startswith("sca") and service["Price"] == 0:
+                        services_to_remove.append(service)
+                for service in services_to_remove:
+                    self.payload.remove(service)
                 saved_bill = self.rest_db.save_bill(self.payload, ph_no)
                 return {
                     "TicketID": "{0}{1}".format(self.settings.bill_prefix, saved_bill["id"]),

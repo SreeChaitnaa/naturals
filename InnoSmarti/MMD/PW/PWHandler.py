@@ -27,7 +27,10 @@ class Launcher:
         self.context = None
         self.port = 9222
         self.path = os.path.dirname(os.path.abspath(__file__))
-        self.launch_url = os.path.join(self.path, "Naturals.html") if self.is_mmd else "https://naturals.innosmarti.com"
+        self.launch_url = "https://sreechaitnaa.github.io/naturals/MMDReporting/Naturals.html"
+        self.innosmarti_url = "https://naturals.innosmarti.com/".lower()
+        if not self.is_mmd:
+            self.launch_url = self.innosmarti_url
 
     def launch_chrome(self):
         system = platform.system()
@@ -36,8 +39,6 @@ class Launcher:
         args = ["C:\\Program Files\\Google\\Chrome\\Application\\Chrome.exe"]
 
         if system == "Darwin":
-            subprocess.run(["pkill", "-f", "Google Chrome"])
-            time.sleep(1)
             args = ["open", "-n", "-a", "Google Chrome", "--args"]
 
         elif system != "Windows":
@@ -124,14 +125,13 @@ class Launcher:
             self.context = browser.contexts[0]
 
             # 🔥 IMPORTANT → Attach route to CONTEXT (not page)
-            await self.context.route("**/api/**", self.conditional_route)
+            await self.context.route("https://ntlivewebapi.innosmarti.com/api/**", self.conditional_route)
 
             print("Browser opened in app mode. Close it manually to exit...")
 
             self.page = await self.wait_for_page()
-            if "naturals.innosmarti.com" not in str(self.page.url):
-                await asyncio.sleep(5)
-                await self.page.goto("https://naturals.innosmarti.com/", wait_until="networkidle")
+            if self.innosmarti_url not in str(self.page.url):
+                await self.page.goto(self.innosmarti_url, wait_until="networkidle")
 
             if await self.set_element(self.settings.user):
                 await self.set_element(self.settings.password)
