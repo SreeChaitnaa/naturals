@@ -53,9 +53,9 @@
     },
     "flask_command": "python -m flask run --debug -p 443 --cert Certs\\server2.crt --key Certs\\server2.key",
     "user": {
-        "by": "name",
-        "selector": "email",
-        "value": "naturals.jakkur@gmail.com"
+        "by": "xpath",
+        "selector": "//input[@name='email']",
+        "value": "naturals.thanisandra@gmail.com"
     },
     "password": {
         "by": "xpath",

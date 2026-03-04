@@ -1,132 +1,158 @@
 import asyncio
 import json
+import logging
 import time
+import aiohttp
 
 from playwright.async_api import async_playwright
 import subprocess
 import platform
 import os
 
-
-def launch_chrome():
-    system = platform.system()
-
-    profile_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chrome-profile")
-
-    if system == "Darwin":
-        subprocess.run(["pkill", "-f", "Google Chrome"])
-        time.sleep(1)
-        subprocess.Popen([
-            "open",
-            "-n",
-            "-a",
-            "Google Chrome",
-            "--args",
-            "--remote-debugging-port=9222",
-            f"--user-data-dir={profile_dir}",
-            "--app=https://naturals.innosmarti.com/"
-        ])
-
-    elif system == "Windows":
-        subprocess.Popen([
-            "C:\\Program Files\\Google\\Chrome\\Application\\Chrome.exe",
-            "--remote-debugging-port=9222",
-            f"--user-data-dir={profile_dir}",
-            "--app=https://naturals.innosmarti.com/"
-        ])
-
-    else:
-        subprocess.Popen([
-            "google-chrome",
-            "--remote-debugging-port=9222",
-            f"--user-data-dir={profile_dir}",
-            "--app=https://naturals.innosmarti.com/"
-        ])
+from Settings import Settings
+from MMDHandler import MMDHandler, MMDStatus
 
 
-async def conditional_route(route, request):
-    if request.method not in ["POST"]:
-        await route.continue_()
-        return
 
-    # Only handle POST JSON safely
-    try:
-        payload = request.post_data_json()
-    except Exception:
-        payload = None
+class Launcher:
+    def __init__(self, is_mmd=True, show_invoices=True, store_id=None):
+        self.driver = None
+        self.is_mmd = is_mmd
+        self.settings = Settings(store_id=store_id)
+        self.settings.set("show_invoices", show_invoices)
+        self.settings.save()
+        self.headers = {}
+        self.show_invoices = show_invoices
+        self.page = None
+        self.context = None
+        self.port = 9222
 
-    if "/getServices/" in str(request.url):
-        # 🔹 Log the payload for debugging
-        print(f"Intercepted {request.method} request to {request.url}")
-        print("Payload:", json.dumps(payload, indent=2))
+    def launch_chrome(self):
+        system = platform.system()
 
-        response = await route.fetch()
-        resp_json = await response.json()
-        print("Response from server:", resp_json)
-        print("Response Type from server:", type(resp_json))
+        profile_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chrome-profile")
 
-        # 🔹 Modify the payload as needed (example: add a dummy field)
-        if isinstance(resp_json, dict):
+        if system == "Darwin":
+            subprocess.run(["pkill", "-f", "Google Chrome"])
+            time.sleep(1)
+            subprocess.Popen([
+                "open",
+                "-n",
+                "-a",
+                "Google Chrome",
+                "--args",
+                f"--remote-debugging-port={self.port}",
+                f"--user-data-dir={profile_dir}",
+                "--app=https://naturals.innosmarti.com/"
+            ])
 
-            resp_json["dummyField"] = "dummyValue"
+        elif system == "Windows":
+            subprocess.Popen([
+                "C:\\Program Files\\Google\\Chrome\\Application\\Chrome.exe",
+                f"--remote-debugging-port={self.port}",
+                f"--user-data-dir={profile_dir}",
+                "--app=https://naturals.innosmarti.com/"
+            ])
 
-            # respond the resp_json
-            await route.fulfill(
-                status=200,
-                content_type="application/json",
-                body=json.dumps(resp_json)
-            )
-        elif isinstance(resp_json, list):
-
-            resp_json.append("dummyValue")
-
-            # respond the resp_json
-            await route.fulfill(
-                status=200,
-                content_type="application/json",
-                body=json.dumps(resp_json)
-            )
         else:
-            # If response is not a dict, just pass it through
+            subprocess.Popen([
+                "google-chrome",
+                f"--remote-debugging-port={self.port}",
+                f"--user-data-dir={profile_dir}",
+                "--app=https://naturals.innosmarti.com/"
+            ])
+
+    async def set_element(self, element_setting):
+        selector = element_setting['selector']
+        value = element_setting["value"]
+        try:
+
+            locator = self.page.locator(selector)
+
+            await locator.wait_for(state="visible", timeout=15000)
+
+            if value == "click":
+                await locator.click()
+            else:
+                await locator.fill(value)
+            return True
+
+        except Exception as e:
+            print(f"Error interacting with {selector}: {e}")
+            return False
+
+    async def conditional_route(self, route, request):
+        if not self.is_mmd or request.method not in ["GET", "POST"]:
             await route.continue_()
+            return None
 
-    else:
-        # 🔹 Let it go untouched
-        await route.continue_()
+        self.headers = request.headers
+        payload = None
+        if type(request.post_data_json) is dict or type(request.post_data_json) is list:
+            payload = request.post_data_json
+        mmd_handler = MMDHandler(request.method, request.url, self.settings, logging.getLogger(), payload)
 
+        if mmd_handler.pre_resp_code == MMDStatus.NoServerCall:
+            resp = mmd_handler.pre_resp
+        else:
+            response = await route.fetch()
+            resp = await response.json()
+            if mmd_handler.pre_resp_code != MMDStatus.ReturnServerCall:
+                resp = mmd_handler.post_handler(resp)
+        await route.fulfill(status=200, content_type="application/json", body=json.dumps(resp))
+        mmd_handler.post_task(resp, self.headers)
+        return None
 
-async def main():
-    launch_chrome()
-    async with async_playwright() as p:
-        await asyncio.sleep(1)  # wait for chrome to start
+    async def wait_for_chrome_debug(self, timeout=15):
+        url = f"http://localhost:{self.port}/json/version"
+        start = asyncio.get_event_loop().time()
 
-        browser = await p.chromium.connect_over_cdp("http://localhost:9222")
-        context = browser.contexts[0]
+        while True:
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(url) as resp:
+                        if resp.status == 200:
+                            return
+            except Exception:
+                pass
 
-        # 🔥 Launch Chrome in App/Kiosk mode with persistent profile
-        # context = await p.chromium.launch_persistent_context(
-        #     user_data_dir="/Users/muralidharmaram/Documents/Git2/naturals/InnoSmarti/MMD/PW/pw-profile",
-        #     headless=False,
-        #     channel="chrome",  # Use real Chrome
-        #     args=[
-        #         "--app=https://naturals.innosmarti.com/",
-        #         "--no-first-run",
-        #         "--no-default-browser-check",
-        #         "--disable-blink-features=AutomationControlled",
-        #         "--disable-infobars",
-        #     ],
-        # )
+            if asyncio.get_event_loop().time() - start > timeout:
+                raise RuntimeError("Chrome debugging port not available")
 
-        # 🔥 IMPORTANT → Attach route to CONTEXT (not page)
-        await context.route("**/api/**", conditional_route)
+            await asyncio.sleep(0.5)
 
-        print("Browser opened in app mode. Close it manually to exit...")
+    async def wait_for_page(self, timeout=15):
+        for _ in range(timeout * 10):
+            if self.context.pages:
+                return self.context.pages[0]
+            await asyncio.sleep(0.1)
+        raise RuntimeError("No page created by Chrome")
 
-        page = context.pages[0]
-        await page.wait_for_event("close", timeout=0)
-        await context.close()
+    async def process(self):
+        self.launch_chrome()
+        async with async_playwright() as p:
+            await self.wait_for_chrome_debug()
 
-        print("Browser process terminated cleanly.")
+            browser = await p.chromium.connect_over_cdp(f"http://localhost:{self.port}")
+            self.context = browser.contexts[0]
+
+            # 🔥 IMPORTANT → Attach route to CONTEXT (not page)
+            await self.context.route("**/api/**", self.conditional_route)
+
+            print("Browser opened in app mode. Close it manually to exit...")
+
+            self.page = await self.wait_for_page()
+
+            await self.page.wait_for_load_state("domcontentloaded")
+
+            if await self.set_element(self.settings.user):
+                await self.set_element(self.settings.password)
+                await self.set_element(self.settings.login)
+            await self.page.wait_for_event("close", timeout=0)
+            await self.context.close()
+
+            print("Browser process terminated cleanly.")
+
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(Launcher().process())

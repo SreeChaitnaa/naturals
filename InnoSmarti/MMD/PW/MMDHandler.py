@@ -212,11 +212,12 @@ class MMDStatus:
 
 
 class MMDHandler:
-    def __init__(self, request, settings, logger):
-        self.request = request
+    def __init__(self, request_method, request_url, settings, logger, payload):
+        self.request_method = request_method
+        self.request_url = str(request_url)
         self.settings = settings
+        self.payload = payload
 
-        self.payload = Utils.get_data_json(request.data)
         self.pre_resp_code = MMDStatus.ReturnServerCall
         self.pre_resp = None
         self.rest_db = None
@@ -230,27 +231,27 @@ class MMDHandler:
         code_on_resp = MMDStatus.NoServerCall
         store_id = None
 
-        if request.method == "POST":
-            if "/savebill/" in request.url:
+        if self.request_method == "POST":
+            if "/savebill/" in self.request_url:
                 handler = self.save_bill_handler
                 store_id = self.get_store_id_from_url()
 
-            elif str(request.url).endswith('/printreceipt'):
+            elif self.request_url.endswith('/printreceipt'):
                 handler = self.print_bill_handler
                 store_id = self.get_store_id_from_payload()
 
-            elif str(request.url).endswith('/salesOftheday'):
+            elif self.request_url.endswith('/salesOftheday'):
                 handler = self.day_close_handler
                 store_id = self.get_store_id_from_payload()
                 code_on_resp = MMDStatus.ReturnPostMerge
 
-            elif "/getServices/" in str(self.request.url):
-                if self.payload["TypeofService"] == "Normal":
+            elif "/getServices/" in self.request_url:
+                if self.payload.get("TypeofService", "") == "Normal":
                     handler = self.get_services_handler
                     store_id = self.get_store_id_from_url()
                     code_on_resp = MMDStatus.ReturnPostMerge
 
-            elif str(request.url).endswith("/employeewisesales"):
+            elif self.request_url.endswith("/employeewisesales"):
                 handler = self.get_employee_sales_handler
                 store_id = self.payload["SoreID"]
                 code_on_resp = MMDStatus.ReturnPostMerge
@@ -258,21 +259,21 @@ class MMDHandler:
                 self.merge_keys["data"] = "EmpID"
                 self.treat_as_int = ["TotalProductCount", "TotalServiceCount"]
 
-        elif self.settings.show_invoices and request.method == "GET":
-            if "/getTodayTicket/" in request.url or "/getTicketByDate/" in request.url:
+        elif self.settings.show_invoices and self.request_method == "GET":
+            if "/getTodayTicket/" in self.request_url or "/getTicketByDate/" in self.request_url:
                 handler = self.get_tickets_handler
                 store_id = self.get_store_id_from_url()
                 code_on_resp = MMDStatus.ReturnPostMerge
                 self.merge_types["bills"] = MMDStatus.Extend
                 self.post_merge_sort_keys["bills"] = ["Created_Date"]
 
-            if "/viewTicketNew/" in request.url:
+            if "/viewTicketNew/" in self.request_url:
                 handler = self.view_ticket_handler
                 store_id = self.get_store_id_from_url()
 
         if handler and store_id:
             try:
-                logger.info("Handling URL is {0}-{1}".format(request.method, str(request.url)))
+                logger.info("Handling URL is {0}-{1}".format(self.request_method, self.request_url))
                 self.rest_db = RestDB(str(store_id), self.settings, logger)
                 self.pre_resp = handler()
                 if self.pre_resp is not None:
@@ -287,7 +288,7 @@ class MMDHandler:
                     self.pre_resp_code = MMDStatus.NoServerCall
 
     def get_store_id_from_url(self, position=0):
-        return self.request.url.split("/")[-1].split(",")[position]
+        return self.request_url.split("/")[-1].split(",")[position]
 
     def get_store_id_from_payload(self, key="StoreID"):
         store_id = self.payload
@@ -381,7 +382,7 @@ class MMDHandler:
         start_date = date.today().__format__("%Y%m%d")
         end_date = start_date
 
-        if "/getTicketByDate/" in self.request.url:
+        if "/getTicketByDate/" in self.request_url:
             start_date = self.get_store_id_from_url(-2).replace("-", "")
             end_date = self.get_store_id_from_url(-1).replace("-", "")
 
@@ -647,7 +648,6 @@ class MMDHandler:
                             if k in service:
                                 print_svc[k] = service[k]
                         elif k in keys_map:
-                            self.logger.error("Getting {0} from {1}".format(k, keys_map[k]))
                             if keys_map[k] in service:
                                 print_svc[k] = service[keys_map[k]]
                         if k == "Created_Date":
@@ -751,16 +751,11 @@ class MMDHandler:
 
     def post_handler(self, orig_resp):
         try:
-            resp_json_orig = json.loads(orig_resp)
-        except:
-            return orig_resp
-
-        try:
-            resp_json = resp_json_orig.copy()
+            resp_json = orig_resp.copy()
             if self.pre_resp_code == MMDStatus.ReturnPostMerge:
-                if "/getServices/" in str(self.request.url):
-                    return json.dumps(Utils.merge_lists(resp_json, self.pre_resp, incremental_key="Row"))
-                elif str(self.request.url).endswith('/salesOftheday'):
+                if "/getServices/" in self.request_url:
+                    return Utils.merge_lists(resp_json, self.pre_resp, incremental_key="Row")
+                elif self.request_url.endswith('/salesOftheday'):
                     resp_json["MessageSent"] = self.send_day_close(resp_json)
                     return resp_json
                 resp_json = self.merge_json_numbers(resp_json, self.pre_resp)
@@ -792,23 +787,22 @@ class MMDHandler:
                                 for item in resp_json[key]:
                                     item["id"] = id_count
                                     id_count = id_count + 1
-            return json.dumps(resp_json)
+            return resp_json
         except Exception as e2:
             self.logger.error(e2)
-            resp_json_orig["SCA_Exception"] = str(e2)
-            return resp_json_orig
+            orig_resp["SCA_Exception"] = str(e2)
+            return orig_resp
 
-    def post_task(self, resp):
-        # Fire the DB update in background
+    def post_task(self, resp, headers):
         try:
-            if "/savebill/" in self.request.url and self.request.method == "POST":
+            if "/savebill/" in self.request_url and self.request_method == "POST":
                 self.logger.warn(f"New Bill - {type(resp)} - {resp}")
                 if type(resp) is str:
                     resp = json.loads(resp)
+                ticket_id = resp['TicketID']
                 self.logger.warn(f"New Bill After parse - {type(resp)} - {resp}")
-                conn = Client(('localhost', 6000), authkey=b'secret123')
-                conn.send(f"update_rest_db;{self.settings.store_id};{resp['TicketID']}")
-                conn.close()
+                Utils.update_rest_db(self.settings.store_id, ticket_id, self.logger, self.settings, self.rest_db,
+                                     headers)
         except Exception as e1:
             self.logger.error(f"exception in post task - {e1}")
  
