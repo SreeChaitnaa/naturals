@@ -191,7 +191,6 @@ class Utils:
                             bills_to_add.append(parsed_resp)
                     else:
                         logger.info("Resp is - {0} - {1}".format(resp.status_code, resp.text))
-                    time.sleep(1)
                     if len(bills_to_add) > 99:
                         rest_db.update_bills(bills_to_add, is_mmd, last_bill_key, bill_num_to_mark or next_bill_number)
                         bills_to_add = []
