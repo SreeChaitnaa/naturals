@@ -12,7 +12,6 @@ from Settings import Settings
 from MMDHandler import MMDHandler, MMDStatus
 
 
-
 class Launcher:
     def __init__(self, is_mmd=True, show_invoices=True, store_id=None):
         self.driver = None
@@ -35,7 +34,8 @@ class Launcher:
         system = platform.system()
 
         profile_dir = os.path.join(self.path, "chrome-profile")
-        args = ["C:\\Program Files\\Google\\Chrome\\Application\\Chrome.exe"]
+
+        args = ["C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"]
 
         if system == "Darwin":
             args = ["open", "-n", "-a", "Google Chrome", "--args", f"--user-data-dir={profile_dir}"]
@@ -43,10 +43,14 @@ class Launcher:
         elif system != "Windows":
             args = ["google-chrome"]
 
+        else:
+            subprocess.call("taskkill /F /IM msedge.exe", shell=True)
+            subprocess.call("taskkill /F /IM msedge.exe", shell=True)
+
         args.extend([f"--remote-debugging-port={self.port}",
-                     # f"--user-data-dir={profile_dir}",
                      f"--app={self.launch_url}"])
 
+        print(args)
         subprocess.Popen(args)
 
     async def set_element(self, element_setting):
@@ -56,7 +60,7 @@ class Launcher:
 
             locator = self.page.locator(selector)
 
-            await locator.wait_for(state="visible", timeout=5000)
+            await locator.wait_for(state="visible", timeout=15000)
 
             if value == "click":
                 await locator.click()
@@ -108,11 +112,15 @@ class Launcher:
 
             await asyncio.sleep(0.5)
 
-    async def wait_for_page(self, timeout=15):
+    async def wait_for_page(self, contexts, timeout=15):
         for _ in range(timeout * 10):
-            pages = self.context.pages
-            if pages:
-                return pages[-1]  # last page is usually the app window
+            for context in contexts:
+                if context.pages:
+                    for page in context.pages:
+                        if self.launch_url in str(page.url):
+                            return context, page  # last page is usually the app window
+                        else:
+                            print(f"Not my Page - {page.url}")
             await asyncio.sleep(1)
         raise RuntimeError("No page created by Chrome")
 
@@ -122,14 +130,12 @@ class Launcher:
             await self.wait_for_chrome_debug()
 
             browser = await p.chromium.connect_over_cdp(f"http://localhost:{self.port}")
-            self.context = browser.contexts[-1]
-
-            # 🔥 IMPORTANT → Attach route to CONTEXT (not page)
-            await self.context.route("https://ntlivewebapi.innosmarti.com/api/**", self.conditional_route)
 
             print("Browser opened in app mode. Close it manually to exit...")
 
-            self.page = await self.wait_for_page()
+            self.context, self.page = await self.wait_for_page(browser.contexts)
+            # 🔥 IMPORTANT → Attach route to CONTEXT (not page)
+            await self.context.route("https://ntlivewebapi.innosmarti.com/api/**", self.conditional_route)
             print("Page URL is {}".format(self.page.url))
             if self.innosmarti_url not in str(self.page.url):
                 await self.page.goto(self.innosmarti_url, wait_until="networkidle")
