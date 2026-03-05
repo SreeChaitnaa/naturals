@@ -38,13 +38,13 @@ class Launcher:
         args = ["C:\\Program Files\\Google\\Chrome\\Application\\Chrome.exe"]
 
         if system == "Darwin":
-            args = ["open", "-n", "-a", "Google Chrome", "--args"]
+            args = ["open", "-n", "-a", "Google Chrome", "--args", f"--user-data-dir={profile_dir}"]
 
         elif system != "Windows":
             args = ["google-chrome"]
 
         args.extend([f"--remote-debugging-port={self.port}",
-                     f"--user-data-dir={profile_dir}",
+                     # f"--user-data-dir={profile_dir}",
                      f"--app={self.launch_url}"])
 
         subprocess.Popen(args)
@@ -110,9 +110,10 @@ class Launcher:
 
     async def wait_for_page(self, timeout=15):
         for _ in range(timeout * 10):
-            if self.context.pages:
-                return self.context.pages[0]
-            await asyncio.sleep(0.5)
+            pages = self.context.pages
+            if pages:
+                return pages[-1]  # last page is usually the app window
+            await asyncio.sleep(1)
         raise RuntimeError("No page created by Chrome")
 
     async def process(self):
@@ -121,7 +122,7 @@ class Launcher:
             await self.wait_for_chrome_debug()
 
             browser = await p.chromium.connect_over_cdp(f"http://localhost:{self.port}")
-            self.context = browser.contexts[0]
+            self.context = browser.contexts[-1]
 
             # 🔥 IMPORTANT → Attach route to CONTEXT (not page)
             await self.context.route("https://ntlivewebapi.innosmarti.com/api/**", self.conditional_route)
@@ -133,9 +134,10 @@ class Launcher:
             if self.innosmarti_url not in str(self.page.url):
                 await self.page.goto(self.innosmarti_url, wait_until="networkidle")
 
-            if await self.set_element(self.settings.user):
-                await self.set_element(self.settings.password)
-                await self.set_element(self.settings.login)
+            if self.is_mmd:
+                if await self.set_element(self.settings.user):
+                    await self.set_element(self.settings.password)
+                    await self.set_element(self.settings.login)
 
             await self.page.wait_for_event("close", timeout=0)
             await self.context.close()
