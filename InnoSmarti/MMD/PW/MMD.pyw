@@ -6,4 +6,10 @@ from PWHandler import Launcher
 logging.getLogger().setLevel(logging.INFO)
 
 if __name__ == '__main__':
-    asyncio.run(Launcher(True, False).process())
+    launcher = Launcher(True, False)
+    try:
+        asyncio.run(launcher.process())
+    except KeyboardInterrupt:
+        print("Interrupted by user.")
+    finally:
+        launcher.kill_browser()

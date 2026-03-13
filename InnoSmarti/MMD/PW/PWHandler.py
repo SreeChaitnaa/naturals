@@ -27,6 +27,7 @@ class Launcher:
         self.path = os.path.dirname(os.path.abspath(__file__))
         self.launch_url = "https://sreechaitnaa.github.io/naturals/MMDReporting/Naturals.html"
         self.innosmarti_url = "https://naturals.innosmarti.com/".lower()
+        self.chrome_process = None
         if not self.is_mmd:
             self.launch_url = self.innosmarti_url
 
@@ -51,7 +52,7 @@ class Launcher:
                      f"--app={self.launch_url}"])
 
         print(args)
-        subprocess.Popen(args)
+        self.chrome_process = subprocess.Popen(args)
 
     async def set_element(self, element_setting):
         selector = element_setting['selector']
@@ -71,6 +72,14 @@ class Launcher:
         except Exception as e:
             print(f"Error interacting with {selector}: {e}")
             return False
+
+    def kill_browser(self):
+        try:
+            if self.chrome_process and self.chrome_process.poll() is None:
+                print("Killing browser process...")
+                self.chrome_process.kill()
+        except Exception as e:
+            print(f"Failed to kill browser: {e}")
 
     async def conditional_route(self, route, request):
         if not self.is_mmd or request.method not in ["GET", "POST"]:
@@ -125,31 +134,43 @@ class Launcher:
         raise RuntimeError("No page created by Chrome")
 
     async def process(self):
-        self.launch_chrome()
-        async with async_playwright() as p:
-            await self.wait_for_chrome_debug()
+        try:
+            self.launch_chrome()
+            async with async_playwright() as p:
+                await self.wait_for_chrome_debug()
 
-            browser = await p.chromium.connect_over_cdp(f"http://localhost:{self.port}")
+                browser = await p.chromium.connect_over_cdp(f"http://localhost:{self.port}")
 
-            print("Browser opened in app mode. Close it manually to exit...")
+                print("Browser opened in app mode. Close it manually to exit...")
 
-            self.context, self.page = await self.wait_for_page(browser.contexts)
-            # 🔥 IMPORTANT → Attach route to CONTEXT (not page)
-            await self.context.route("https://ntlivewebapi.innosmarti.com/api/**", self.conditional_route)
-            print("Page URL is {}".format(self.page.url))
-            if self.innosmarti_url not in str(self.page.url):
-                await self.page.goto(self.innosmarti_url, wait_until="networkidle")
+                self.context, self.page = await self.wait_for_page(browser.contexts)
+                # 🔥 IMPORTANT → Attach route to CONTEXT (not page)
+                await self.context.route("https://ntlivewebapi.innosmarti.com/api/**", self.conditional_route)
+                print("Page URL is {}".format(self.page.url))
+                if self.innosmarti_url not in str(self.page.url):
+                    await self.page.goto(self.innosmarti_url, wait_until="networkidle")
 
-            if self.is_mmd:
-                if await self.set_element(self.settings.user):
-                    await self.set_element(self.settings.password)
-                    await self.set_element(self.settings.login)
+                if self.is_mmd:
+                    if await self.set_element(self.settings.user):
+                        await self.set_element(self.settings.password)
+                        await self.set_element(self.settings.login)
 
-            await self.page.wait_for_event("close", timeout=0)
-            await self.context.close()
+                await self.page.wait_for_event("close", timeout=0)
+                await self.context.close()
 
-            print("Browser process terminated cleanly.")
+                print("Browser process terminated cleanly.")
+        except Exception as e:
+            print(f"Fatal error in launcher: {e}")
+
+        finally:
+            self.kill_browser()
 
 
 if __name__ == "__main__":
-    asyncio.run(Launcher().process())
+    launcher = Launcher()
+    try:
+        asyncio.run(launcher.process())
+    except KeyboardInterrupt:
+        print("Interrupted by user.")
+    finally:
+        launcher.kill_browser()
