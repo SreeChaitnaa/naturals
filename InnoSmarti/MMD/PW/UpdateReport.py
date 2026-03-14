@@ -47,7 +47,7 @@ def run_browser_and_capture_headers(config):
         #wait for captured_headers to be populated
         retries = 0
         while not captured_headers:
-            time.sleep(500)
+            time.sleep(2)
             retries += 1
             if retries > 10:
                 print("Timed out waiting for API headers")
