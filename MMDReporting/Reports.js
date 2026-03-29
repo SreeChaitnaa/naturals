@@ -140,7 +140,7 @@ employee_name_map = {
   "bhuvaneshwari": "Bhuvaneshwari",
   "sajid": "Sajid",
   "sona": "Sona",
-  "Margareat": "Meenakshi",
+  "Margareat": "Danish",
   "Ritika": "Sharmila"
 };
 
