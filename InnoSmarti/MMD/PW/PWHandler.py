@@ -39,7 +39,7 @@ class Launcher:
         args = ["C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"]
 
         if system == "Darwin":
-            args = ["open", "-n", "-a", "Google Chrome", "--args", f"--user-data-dir={profile_dir}"]
+            args = ["open", "-n", "-a", "Google Chrome", "--args"]
 
         elif system != "Windows":
             args = ["google-chrome"]
@@ -49,7 +49,7 @@ class Launcher:
             subprocess.call("taskkill /F /IM msedge.exe", shell=True)
 
         args.extend([f"--remote-debugging-port={self.port}",
-                     f"--app={self.launch_url}"])
+                     f"--app={self.launch_url}" , f"--user-data-dir={profile_dir}"])
 
         print(args)
         self.chrome_process = subprocess.Popen(args)
@@ -96,7 +96,22 @@ class Launcher:
             resp = mmd_handler.pre_resp
         else:
             response = await route.fetch()
-            resp = await response.json()
+
+            content_type = response.headers.get("content-type", "")
+
+            # ONLY intercept JSON responses
+            if "application/json" not in content_type:
+                await route.fulfill(response=response)
+                return None
+
+            text = await response.text()
+
+            try:
+                resp = json.loads(text)
+            except Exception:
+                # fallback: don't break routing
+                await route.fulfill(response=response)
+                return None
             if mmd_handler.pre_resp_code != MMDStatus.ReturnServerCall:
                 resp = mmd_handler.post_handler(resp)
         await route.fulfill(status=200, content_type="application/json", body=json.dumps(resp))
